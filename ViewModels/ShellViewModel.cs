@@ -31,6 +31,9 @@ namespace SPP_Config_Generator
 		public string StatusBox { get; set; }
 		public string LogText { get; set; }
 
+		// To Do -
+		// Fix crash during check (and save/export) if no saved files loaded - refresh from template first?
+
 		public ShellViewModel()
 		{
 			Log("App Initializing...");
@@ -69,7 +72,7 @@ namespace SPP_Config_Generator
 			{
 				// Update Bnet entry
 				BnetCollection = UpdateConfigCollection(BnetCollection, "LoginREST.ExternalAddress", input);
-				
+
 				// Update database realm entry
 				var result = MySqlManager.MySQLQuery($"UPDATE realmlist SET address = '{input}' WHERE id = 1");
 				if (!result.Contains("ordinal"))  // I don't understand SQL, it works if this error pops up...
@@ -118,6 +121,23 @@ namespace SPP_Config_Generator
 				BnetCollection = BnetCollectionTemplate;
 		}
 
+		public bool CheckCollectionForMatch(BindableCollection<ConfigEntry> collection, string searchItem)
+		{
+			bool match = false;
+
+			foreach (var item in collection)
+			{
+				if (item.Name == searchItem)
+				{
+					// Found a match, can stop checking this round
+					match = true;
+					break;
+				}
+			}
+
+			return match;
+		}
+
 		public void CheckSPPConfig()
 		{
 			// We don't care about actual SPP config files, only our active collections
@@ -130,6 +150,7 @@ namespace SPP_Config_Generator
 			string addressFromDB = MySqlManager.MySQLQuery(@"SELECT address FROM realmlist WHERE id = 1");
 			string localAddressFromDB = MySqlManager.MySQLQuery(@"SELECT localAddress FROM realmlist WHERE id = 1");
 			string wowConfigPortal = string.Empty;
+			string wowConfigFile = string.Empty;
 			string bnetBindIP = string.Empty;
 			string worldBindIP = string.Empty;
 			string result = string.Empty;
@@ -137,8 +158,6 @@ namespace SPP_Config_Generator
 			bool flexcraftHealth = false;
 			bool flexcraftUnitMod = false;
 			bool flexcraftCombatRating = false;
-			bool match;
-			bool problem = false;
 
 			// Populate from world collection
 			foreach (var item in WorldCollection)
@@ -167,129 +186,84 @@ namespace SPP_Config_Generator
 
 			foreach (var item in BnetCollectionTemplate)
 			{
-				match = false;
-
-				foreach (var item2 in BnetCollection)
-				{
-					if (item.Name == item2.Name)
-					{
-						// Found a match, can stop checking this round
-						match = true;
-						break;
-					}
-				}
-
-				if (!match)
+				if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
 				{
 					result += $"Alert - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
-					problem = true;
 					BnetCollection.Add(item);
 				}
 			}
 
 			foreach (var item in BnetCollection)
-			{
-				match = false;
-
-				foreach (var item2 in BnetCollectionTemplate)
-				{
-					if (item.Name == item2.Name)
-					{
-						// Found a match, can stop checking this round
-						match = true;
-						break;
-					}
-				}
-
-				if (!match)
-				{
+				if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
 					result += $"Alert - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
-					problem = true;
-				}
-			}
+
 
 			// Compare world to default - any missing/extra items?
 			result += "\nChecking World config compared to template...\n";
 
 			foreach (var item in WorldCollectionTemplate)
 			{
-				match = false;
-
-				foreach (var item2 in WorldCollection)
-				{
-					if (item.Name == item2.Name)
-					{
-						// Found a match, can stop checking this round
-						match = true;
-						break;
-					}
-				}
-
-				if (!match)
+				if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
 				{
 					result += $"Alert - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
-					problem = true;
 					WorldCollection.Add(item);
 				}
 			}
 
 			foreach (var item in WorldCollection)
-			{
-				match = false;
-
-				foreach (var item2 in WorldCollectionTemplate)
-				{
-					if (item.Name == item2.Name)
-					{
-						// Found a match, can stop checking this round
-						match = true;
-						break;
-					}
-				}
-
-				if (!match)
-				{
+				if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
 					result += $"Alert - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
-					problem = true;
-				}
-			}
 
 			// Compare build# between bnet/world/realm
 			result += $"\nBuild from DB Realm - {buildFromDB}\n";
 			result += $"Build from WorldConfig - {buildFromWorld}\n";
 			result += $"Build from BnetConfig - {buildFromBnet}\n";
 			if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
-			{
 				result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n";
-				problem = true;
-			}
+
 
 			// Compare IP bindings
 			result += $"\nWorld BindIP - {worldBindIP}\n";
 			result += $"Bnet BindIP - {bnetBindIP}\n";
 			if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
-			{
 				result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n";
-				problem = true;
-			}
+
 
 			// Compare listening IPs between bnet/world/realm/wow config
 			result += $"\nLoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
 			result += $"Address from DB Realm - {addressFromDB}\n";
-			// To-Do - Check on Wow config portal entry to compare as well
-			if (loginRESTExternalAddress != addressFromDB)
+
+			// Gather WoW portal IP from config.wtf
+			wowConfigFile = GetWowConfigFile();
+
+			if (wowConfigFile == string.Empty)
+				Log("WOW Config File cannot be found - cannot parse SET portal entry");
+			else
 			{
-				result += "Alert - Both of these addresses should match. Set these to the Local/LAN/WAN IP depending on hosting goals.\n";
-				problem = true;
+				// Pull in our WOW config
+				List<string> allLinesText = File.ReadAllLines(wowConfigFile).ToList();
+
+				foreach (var item in allLinesText)
+				{
+					// If it's the portal entry, process further
+					// split by " and 2nd item will be IP
+					if (item.Contains("SET portal"))
+					{
+						string[] phrase = item.Split('"');
+						wowConfigPortal = phrase[1];
+						result += $"WoW config.wtf Set Portal IP - {wowConfigPortal}\n";
+					}
+				}
 			}
+
+			if (loginRESTExternalAddress != addressFromDB || loginRESTExternalAddress != wowConfigPortal)
+				result += "Alert - All of these addresses should match. Set these to the Local/LAN/WAN IP depending on hosting goals.\n";
 
 			result += $"\nLoginREST.LocalAddress - {loginRESTLocalAddress}\n";
 			result += $"local Address from DB - {localAddressFromDB}\n";
 			if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))
-			{
 				result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n";
-				problem = true;
-			}
+
 
 			// Check if solo/flexcraft both enabled
 			foreach (var item in WorldCollection)
@@ -307,26 +281,19 @@ namespace SPP_Config_Generator
 			if (solocraft)
 			{
 				if (flexcraftHealth)
-				{
 					result += "\nAlert - Solocraft and HealthCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
-					problem = true;
-				}
+
 				if (flexcraftUnitMod)
-				{
 					result += "\nAlert - Solocraft and UnitModCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
-					problem = true;
-				}
+
 				if (flexcraftCombatRating)
-				{
 					result += "\nAlert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
-					problem = true;
-				}
 			}
 
 			// Warn if VAS enabled?
 
 			// Anything else?
-			if (problem)
+			if (result.Contains("Alert"))
 				result += "\nAlert - Issues were found!";
 			else
 				result += "\nNo known problems were found!";
@@ -363,7 +330,6 @@ namespace SPP_Config_Generator
 
 		public async void SaveConfig()
 		{
-
 			string worldConfigFile = string.Empty;
 			string bnetConfigFile = string.Empty;
 			string tmpstr = string.Empty;
@@ -465,8 +431,21 @@ namespace SPP_Config_Generator
 			}
 
 			UpdateWowConfig();
-
 			StatusBox = "Export Complete";
+		}
+
+		public string GetWowConfigFile()
+		{
+			string wowConfigFile = string.Empty;
+
+			// Find the exact file we need
+			if (File.Exists($"{WOWConfigLocation}\\WTF\\config.wtf"))
+				wowConfigFile = $"{WOWConfigLocation}\\WTF\\config.wtf";
+
+			if (File.Exists($"{WOWConfigLocation}\\config.wtf"))
+				wowConfigFile = $"{WOWConfigLocation}\\config.wtf";
+
+			return wowConfigFile;
 		}
 
 		public async void UpdateWowConfig()
@@ -475,13 +454,8 @@ namespace SPP_Config_Generator
 			string wowConfigFile = string.Empty;
 			int count = 0;
 
-			// Update config.wtf for WoW installation
-			// Find the exact file we need
-			if (File.Exists($"{WOWConfigLocation}\\WTF\\config.wtf"))
-				wowConfigFile = $"{WOWConfigLocation}\\WTF\\config.wtf";
-
-			if (File.Exists($"{WOWConfigLocation}\\config.wtf"))
-				wowConfigFile = $"{WOWConfigLocation}\\config.wtf";
+			// Update config.wtf for WoW installation			
+			wowConfigFile = GetWowConfigFile();
 
 			if (wowConfigFile == string.Empty)
 				Log("WOW Config File cannot be found - cannot update SET portal entry");
