@@ -1,7 +1,9 @@
 ﻿using Caliburn.Micro;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows;
 
 namespace SPP_Config_Generator
@@ -64,6 +66,50 @@ namespace SPP_Config_Generator
 			catch { return null; } // failed to load the file
 
 			return loadresult;
+		}
+
+		public static BindableCollection<ConfigEntry> CreateDefaultTemplateFromFile(string inFile)
+		{
+			string tmpDescription = string.Empty;
+			string tmpName = string.Empty;
+			string tmpValue = string.Empty;
+			BindableCollection<ConfigEntry> tempCollection = new BindableCollection<ConfigEntry>();
+			int count = 0;
+
+			try
+			{
+				// Pull in our config
+				List<string> allLinesText = File.ReadAllLines(inFile).ToList();
+
+				foreach (var item in allLinesText)
+				{
+					count++;
+
+					// Check if comment or not
+					if (item.Contains("=") && item.Contains("#") == false)
+					{
+						// Split based on = sign
+						string[] strArray = item.Split('=');
+
+						// Now we should have 2 parts, the entry[0] and the value[1]
+						ConfigEntry entry = new ConfigEntry();
+						entry.Name = strArray[0];
+						entry.Value = strArray[1];
+						entry.Description = tmpDescription;
+						tempCollection.Add(entry);
+						tmpDescription = string.Empty; // reset our description
+					}
+					else
+					{
+						// If we're here, then the line doesn't have =, so it's description or other
+						// so we'll keep adding to the tmpDescription until it's used/flushed to the collection
+						tmpDescription += item + "\n";
+					}
+				}
+			}
+			catch { return null; }
+
+			return tempCollection;
 		}
 
 		// If the saved window settings are out of bounds (resolution change, multiple monitors change)

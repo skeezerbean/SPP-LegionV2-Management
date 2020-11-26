@@ -33,7 +33,8 @@ namespace SPP_Config_Generator
 
 		// To Do -
 		// Fix crash during check (and save/export) if no saved files loaded - refresh from template first?
-		// check for both bshop entries, warn if both enabled at same time
+		// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
+		// If Bpay.Enabled & Purchase.Shop.Enabled - if either enabled, both should be enabled
 
 		public ShellViewModel()
 		{
@@ -378,10 +379,7 @@ namespace SPP_Config_Generator
 			else
 			{
 				count = 0;
-				tmpstr = "################################################\n";
-				tmpstr += "# Trinity Core Auth Server configuration file #\n";
-				tmpstr += "################################################\n";
-				tmpstr += "[bnetserver]\n\n";
+				tmpstr = string.Empty;
 
 				foreach (var item in tempBnetCollection)
 				{
@@ -391,13 +389,10 @@ namespace SPP_Config_Generator
 					// Let our UI update
 					await Task.Delay(1);
 
-					// Make sure our description starts with #
-					if (!item.Description.StartsWith("#") && item.Description.Length > 1)
-						tmpstr += "# ";
 					if (item.Description.Length > 1)
-						tmpstr += item.Description + "\n";
+						tmpstr += item.Description;
 					if (item.Name.Length > 1 && item.Value.Length > 0)
-						tmpstr += $"{item.Name} = {item.Value}\n\n";
+						tmpstr += $"{item.Name} = {item.Value}\n";
 				}
 
 				// flush to file
@@ -410,10 +405,7 @@ namespace SPP_Config_Generator
 			else
 			{
 				count = 0;
-				tmpstr = "################################################\n";
-				tmpstr += "# Trinity Core World Server configuration file #\n";
-				tmpstr += "################################################\n";
-				tmpstr += "[worldserver]\n\n";
+				tmpstr = string.Empty;
 
 				foreach (var item in tempWorldCollection)
 				{
@@ -423,13 +415,10 @@ namespace SPP_Config_Generator
 					// Let our UI update
 					await Task.Delay(1);
 
-					// Make sure our description starts with #
-					if (!item.Description.StartsWith("#") && item.Description.Length > 1)
-						tmpstr += "# ";
 					if (item.Description.Length > 1)
-						tmpstr += item.Description + "\n";
+						tmpstr += item.Description;
 					if (item.Name.Length > 1 && item.Value.Length > 0)
-						tmpstr += $"{item.Name} = {item.Value}\n\n";
+						tmpstr += $"{item.Name} = {item.Value}\n";
 				}
 
 				// flush to file
@@ -517,18 +506,18 @@ namespace SPP_Config_Generator
 			Log("Loading general settings");
 			GeneralSettingsManager.LoadGeneralSettings();
 
-			// load up templates
-			Log("Loading World/Bnet templates");
-			WorldCollectionTemplate = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.WorldTemplatePath);
-			BnetCollectionTemplate = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.BNetTemplatePath);
+			Log("Loading World/Bnet default templates from .conf files");
+			BnetCollectionTemplate = GeneralSettingsManager.CreateDefaultTemplateFromFile("bnetserver.conf");
+			WorldCollectionTemplate = GeneralSettingsManager.CreateDefaultTemplateFromFile("worldserver.conf");
+						
 			Log("Loading World/Bnet saved settings");
 			WorldCollection = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.WorldConfigPath);
 			BnetCollection = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.BNetConfigPath);
 
 			if (WorldCollectionTemplate == null)
-				Log($"WorldTemplate is null, error loading file {GeneralSettingsManager.WorldTemplatePath}");
+				Log("WorldCollectionTemplate is null, error loading file worldserver.conf");
 			if (BnetCollectionTemplate == null)
-				Log($"BnetTemplate is null, error loading file {GeneralSettingsManager.BNetTemplatePath}");
+				Log("BnetCollectionTemplate is null, error loading file bnetserver.conf");
 			if (WorldCollection == null)
 				Log($"WorldConfig is null, error loading file {GeneralSettingsManager.WorldConfigPath} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
 			if (BnetCollection == null)
