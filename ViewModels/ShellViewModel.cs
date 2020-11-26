@@ -33,6 +33,7 @@ namespace SPP_Config_Generator
 
 		// To Do -
 		// Fix crash during check (and save/export) if no saved files loaded - refresh from template first?
+		// check for both bshop entries, warn if both enabled at same time
 
 		public ShellViewModel()
 		{
@@ -64,7 +65,7 @@ namespace SPP_Config_Generator
 			string input = string.Empty;
 			// Check if there are valid targets for spp/wow config, sql - report if any missing
 			// As long as we set Bnet REST IP first, then WoW config will be updated as well
-			input = Microsoft.VisualBasic.Interaction.InputBox("Enter the Listening/Hosted IP Address to set. Note this entry will not be validated to accuracy.", "Set IP", "127.0.0.1");
+			input = Microsoft.VisualBasic.Interaction.InputBox("Enter the Listening/Hosted IP Address to set. If this is to be hosted for local network then use the LAN ipv4 address. If external hosting, use the WAN address. Note this entry will not be validated to accuracy.", "Set IP", "127.0.0.1");
 
 			// If user hit didn't cancel or enter something stupid...
 			// length > 7 is 4 at least 4 numbers for an IP, and 3 . within an IP
@@ -88,7 +89,7 @@ namespace SPP_Config_Generator
 			string input = string.Empty;
 
 			// Grab the input
-			input = Microsoft.VisualBasic.Interaction.InputBox("Available builds: 26124, 26365, 26654, 26822, 26899, or 26972", "Set Build", "26972");
+			input = Microsoft.VisualBasic.Interaction.InputBox("Enter the 7.3.5 (xxxxx) build from your client. Available builds: 26124, 26365, 26654, 26822, 26899, or 26972", "Set Build", "26972");
 
 			// If user hit didn't cancel or enter something stupid...
 			// all build numbers are 5 total chars
@@ -142,6 +143,8 @@ namespace SPP_Config_Generator
 		{
 			// We don't care about actual SPP config files, only our active collections
 			// since we export to overwrite those with settings from this app
+			BindableCollection<ConfigEntry> tempBnetCollection = BnetCollection;
+			BindableCollection<ConfigEntry> tempWorldCollection = WorldCollection;
 			string buildFromDB = MySqlManager.MySQLQuery(@"SELECT gamebuild FROM realmlist WHERE id = 1");
 			string buildFromWorld = string.Empty;
 			string buildFromBnet = string.Empty;
@@ -160,7 +163,7 @@ namespace SPP_Config_Generator
 			bool flexcraftCombatRating = false;
 
 			// Populate from world collection
-			foreach (var item in WorldCollection)
+			foreach (var item in tempWorldCollection)
 			{
 				if (item.Name.Contains("Game.Build.Version"))
 					buildFromWorld = item.Value;
@@ -169,7 +172,7 @@ namespace SPP_Config_Generator
 			}
 
 			// Populate from Bnet collection
-			foreach (var item in BnetCollection)
+			foreach (var item in tempBnetCollection)
 			{
 				if (item.Name.Contains("Game.Build.Version"))
 					buildFromBnet = item.Value;
@@ -186,14 +189,14 @@ namespace SPP_Config_Generator
 
 			foreach (var item in BnetCollectionTemplate)
 			{
-				if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
+				if (CheckCollectionForMatch(tempBnetCollection, item.Name) == false)
 				{
 					result += $"Alert - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
 					BnetCollection.Add(item);
 				}
 			}
 
-			foreach (var item in BnetCollection)
+			foreach (var item in tempBnetCollection)
 				if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
 					result += $"Alert - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
 
@@ -203,14 +206,14 @@ namespace SPP_Config_Generator
 
 			foreach (var item in WorldCollectionTemplate)
 			{
-				if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
+				if (CheckCollectionForMatch(tempWorldCollection, item.Name) == false)
 				{
 					result += $"Alert - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
 					WorldCollection.Add(item);
 				}
 			}
 
-			foreach (var item in WorldCollection)
+			foreach (var item in tempWorldCollection)
 				if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
 					result += $"Alert - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
 
@@ -266,7 +269,7 @@ namespace SPP_Config_Generator
 
 
 			// Check if solo/flexcraft both enabled
-			foreach (var item in WorldCollection)
+			foreach (var item in tempWorldCollection)
 			{
 				if (item.Name == "Solocraft.Enable" && item.Value == "1")
 					solocraft = true;
@@ -290,7 +293,7 @@ namespace SPP_Config_Generator
 					result += "\nAlert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
 			}
 
-			// Warn if VAS enabled?
+			// Check for both battleshop entries - only 1 needs active
 
 			// Anything else?
 			if (result.Contains("Alert"))
@@ -330,6 +333,9 @@ namespace SPP_Config_Generator
 
 		public async void SaveConfig()
 		{
+			// Use temp collections to export in case something changes during process
+			BindableCollection<ConfigEntry> tempBnetCollection = BnetCollection;
+			BindableCollection<ConfigEntry> tempWorldCollection = WorldCollection;
 			string worldConfigFile = string.Empty;
 			string bnetConfigFile = string.Empty;
 			string tmpstr = string.Empty;
@@ -377,10 +383,10 @@ namespace SPP_Config_Generator
 				tmpstr += "################################################\n";
 				tmpstr += "[bnetserver]\n\n";
 
-				foreach (var item in BnetCollection)
+				foreach (var item in tempBnetCollection)
 				{
 					count++;
-					StatusBox = $"Updating BNET row {count} of {BnetCollection.Count}";
+					StatusBox = $"Updating BNET row {count} of {tempBnetCollection.Count}";
 
 					// Let our UI update
 					await Task.Delay(1);
@@ -409,10 +415,10 @@ namespace SPP_Config_Generator
 				tmpstr += "################################################\n";
 				tmpstr += "[worldserver]\n\n";
 
-				foreach (var item in WorldCollection)
+				foreach (var item in tempWorldCollection)
 				{
 					count++;
-					StatusBox = $"Updating WORLD row {count} of {WorldCollection.Count}";
+					StatusBox = $"Updating WORLD row {count} of {tempWorldCollection.Count}";
 
 					// Let our UI update
 					await Task.Delay(1);
