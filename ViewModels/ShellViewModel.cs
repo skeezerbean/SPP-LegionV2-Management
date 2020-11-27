@@ -144,9 +144,10 @@ namespace SPP_Config_Generator
 			string result = string.Empty;
 
 			// Populate from Bnet collection
-			foreach (var item in collection)
-				if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase))
-					result = item.Value;
+			if (collection != null)
+				foreach (var item in collection)
+					if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase))
+						result = item.Value;
 
 			return NormalizeString(result);
 		}
@@ -155,9 +156,10 @@ namespace SPP_Config_Generator
 		{
 			bool result = false;
 
-			foreach (var item in collection)
-				if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase) && item.Value == "1")
-					result = true;
+			if (collection != null)
+				foreach (var item in collection)
+					if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase) && item.Value == "1")
+						result = true;
 
 			return result;
 		}
@@ -193,6 +195,18 @@ namespace SPP_Config_Generator
 
 		public void CheckSPPConfig()
 		{
+			// Prep our collections in case there's nothing in current settings
+			if (BnetCollection == null || BnetCollection.Count == 0)
+			{
+				BnetCollection = BnetCollectionTemplate;
+				Log("Current Bnet settings were empty, applying defaults");
+			}
+			if (WorldCollection == null || WorldCollection.Count == 0)
+			{
+				WorldCollection = WorldCollectionTemplate;
+				Log("Current World settings were empty, applying defaults");
+			}
+
 			string buildFromDB = MySqlManager.MySQLQuery(@"SELECT gamebuild FROM realmlist WHERE id = 1");
 			string buildFromWorld = GetValueFromCollection(WorldCollection, "Game.Build.Version");
 			string buildFromBnet = GetValueFromCollection(BnetCollection, "Game.Build.Version");
@@ -214,20 +228,9 @@ namespace SPP_Config_Generator
 			bool battleCoinVendor = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Enable");
 			bool battleCoinVendorCustom = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Custom.Enable");
 
-			if (BnetCollection == null || BnetCollection.Count == 0)
-			{
-				BnetCollection = BnetCollectionTemplate;
-				Log("Current Bnet settings were empty, applying defaults");
-			}
-			if (WorldCollection == null || WorldCollection.Count == 0)
-			{
-				WorldCollection = WorldCollectionTemplate;
-				Log("Current World settings were empty, applying defaults");
-			}
-
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if ((BnetCollection == null || BnetCollection.Count == 0) || (WorldCollection == null || WorldCollection.Count == 0))
-				Log("Alert - There's an issue with collection(s) bring empty.. possibly missing template files");
+				Log("Alert - There's an issue with collection(s) being empty.. possibly missing template files");
 			else
 			{
 				// Compare bnet to default - any missing/extra items?
@@ -442,16 +445,27 @@ namespace SPP_Config_Generator
 			if (bnetConfigFile == string.Empty)
 				Log("BNET Export -> Config File cannot be found");
 			else
-				ExportToConfFile(BnetCollection, bnetConfigFile);
+			{
+				if (BnetCollection == null || BnetCollection.Count == 0)
+					Log("BNET Export -> Current settings are empty");
+				else
+				{
+					// Wow config relies on bnet external address
+					UpdateWowConfig();
+					ExportToConfFile(BnetCollection, bnetConfigFile);
+				}
+			}
 
 			// Export to World - config starts with [worldserver]
 			if (worldConfigFile == string.Empty)
 				Log("WORLD Export -> Config File cannot be found");
 			else
-				ExportToConfFile(WorldCollection, worldConfigFile);
-
-			UpdateWowConfig();
-			StatusBox = "Export Complete";
+			{
+				if (WorldCollection == null || WorldCollection.Count == 0)
+					Log("WORLD Export -> Current settings are empty");
+				else
+					ExportToConfFile(WorldCollection, worldConfigFile);
+			}
 		}
 
 		public string GetWowConfigFile()
