@@ -32,8 +32,8 @@ namespace SPP_Config_Generator
 		public string StatusBox { get; set; }
 		public string LogText { get; set; }
 
-		// To Do -
-		// Fix crash during check (and save/export) if no saved files loaded - refresh from template first?
+		// To-Do 
+		// Check bnet/world collections for duplicate entries
 
 		public ShellViewModel()
 		{
@@ -168,6 +168,29 @@ namespace SPP_Config_Generator
 			return Regex.Replace(incoming, @"\s", "");
 		}
 
+		public string CheckCollectionForDuplicates(BindableCollection<ConfigEntry> collection)
+		{
+			string results = string.Empty;
+
+			foreach (var item in collection)
+			{
+				int matches = 0;
+				foreach (var item2 in collection)
+				{
+					if (item.Name == item2.Name)
+						matches++;
+				}
+
+				// There will naturally be 1 match as an entry matches itself. Anything more is a problem
+				// only add if the match has been added (will trigger twice for duplicate, we only want one notification)
+				if (matches > 1)
+					if (!results.Contains(item.Name))
+						results += $"{item.Name}&";
+			}
+
+			return results;
+		}
+
 		public void CheckSPPConfig()
 		{
 			string buildFromDB = MySqlManager.MySQLQuery(@"SELECT gamebuild FROM realmlist WHERE id = 1");
@@ -191,114 +214,141 @@ namespace SPP_Config_Generator
 			bool battleCoinVendor = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Enable");
 			bool battleCoinVendorCustom = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Custom.Enable");
 
-			// Compare bnet to default - any missing/extra items?
-			result += "\nChecking Bnet config compared to template...\n";
-
-			foreach (var item in BnetCollectionTemplate)
+			if (BnetCollection == null || BnetCollection.Count == 0)
 			{
-				if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
-				{
-					result += $"Alert - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
-					BnetCollection.Add(item);
-				}
+				BnetCollection = BnetCollectionTemplate;
+				Log("Current Bnet settings were empty, applying defaults");
+			}
+			if (WorldCollection == null || WorldCollection.Count == 0)
+			{
+				WorldCollection = WorldCollectionTemplate;
+				Log("Current World settings were empty, applying defaults");
 			}
 
-			foreach (var item in BnetCollection)
-				if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
-					result += $"Alert - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
-
-
-			// Compare world to default - any missing/extra items?
-			result += "\nChecking World config compared to template...\n";
-
-			foreach (var item in WorldCollectionTemplate)
-			{
-				if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
-				{
-					result += $"Alert - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
-					WorldCollection.Add(item);
-				}
-			}
-
-			foreach (var item in WorldCollection)
-				if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
-					result += $"Alert - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
-
-			// Compare build# between bnet/world/realm
-			result += $"\nBuild from DB Realm - {buildFromDB}\n";
-			result += $"Build from WorldConfig - {buildFromWorld}\n";
-			result += $"Build from BnetConfig - {buildFromBnet}\n";
-			if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
-				result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n";
-
-
-			// Compare IP bindings
-			result += $"\nWorld BindIP - {worldBindIP}\n";
-			result += $"Bnet BindIP - {bnetBindIP}\n";
-			if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
-				result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n";
-
-
-			// Compare listening IPs between bnet/world/realm/wow config
-			result += $"\nLoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
-			result += $"Address from DB Realm - {addressFromDB}\n";
-
-			// Gather WoW portal IP from config.wtf
-
-			if (wowConfigFile == string.Empty)
-				Log("WOW Config File cannot be found - cannot parse SET portal entry");
+			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
+			if ((BnetCollection == null || BnetCollection.Count == 0) || (WorldCollection == null || WorldCollection.Count == 0))
+				Log("Alert - There's an issue with collection(s) bring empty.. possibly missing template files");
 			else
 			{
-				// Pull in our WOW config
-				List<string> allLinesText = File.ReadAllLines(wowConfigFile).ToList();
+				// Compare bnet to default - any missing/extra items?
+				result += "\nChecking Bnet config compared to template...\n";
 
-				foreach (var item in allLinesText)
+				foreach (var item in BnetCollectionTemplate)
 				{
-					// If it's the portal entry, process further
-					// split by " and 2nd item will be IP
-					if (item.Contains("SET portal"))
+					if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
 					{
-						string[] phrase = item.Split('"');
-						wowConfigPortal = phrase[1];
-						result += $"WoW config.wtf Set Portal IP - {wowConfigPortal}\n";
+						result += $"Alert - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
+						BnetCollection.Add(item);
 					}
 				}
+
+				foreach (var item in BnetCollection)
+					if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
+						result += $"Alert - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
+
+
+				// Compare world to default - any missing/extra items?
+				result += "\nChecking World config compared to template...\n";
+
+				foreach (var item in WorldCollectionTemplate)
+				{
+					if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
+					{
+						result += $"Alert - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
+						WorldCollection.Add(item);
+					}
+				}
+
+				foreach (var item in WorldCollection)
+					if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
+						result += $"Alert - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
+
+				// Compare build# between bnet/world/realm
+				result += $"\nBuild from DB Realm - {buildFromDB}\n";
+				result += $"Build from WorldConfig - {buildFromWorld}\n";
+				result += $"Build from BnetConfig - {buildFromBnet}\n";
+				if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
+					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n";
+
+
+				// Compare IP bindings
+				result += $"\nWorld BindIP - {worldBindIP}\n";
+				result += $"Bnet BindIP - {bnetBindIP}\n";
+				if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
+					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n";
+
+
+				// Compare listening IPs between bnet/world/realm/wow config
+				result += $"\nLoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
+				result += $"Address from DB Realm - {addressFromDB}\n";
+
+				// Gather WoW portal IP from config.wtf
+
+				if (wowConfigFile == string.Empty)
+					Log("WOW Config File cannot be found - cannot parse SET portal entry");
+				else
+				{
+					// Pull in our WOW config
+					List<string> allLinesText = File.ReadAllLines(wowConfigFile).ToList();
+
+					foreach (var item in allLinesText)
+					{
+						// If it's the portal entry, process further
+						// split by " and 2nd item will be IP
+						if (item.Contains("SET portal"))
+						{
+							string[] phrase = item.Split('"');
+							wowConfigPortal = phrase[1];
+							result += $"WoW config.wtf Set Portal IP - {wowConfigPortal}\n";
+						}
+					}
+				}
+
+				if (loginRESTExternalAddress != addressFromDB || loginRESTExternalAddress != wowConfigPortal)
+					result += "Alert - All of these addresses should match. Set these to the Local/LAN/WAN IP depending on hosting goals.\n";
+
+				result += $"\nLoginREST.LocalAddress - {loginRESTLocalAddress}\n";
+				result += $"local Address from DB - {localAddressFromDB}\n";
+				if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))
+					result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n";
+
+				if (solocraft)
+				{
+					if (flexcraftHealth)
+						result += "\nAlert - Solocraft and HealthCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
+
+					if (flexcraftUnitMod)
+						result += "\nAlert - Solocraft and UnitModCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
+
+					if (flexcraftCombatRating)
+						result += "\nAlert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
+				}
+
+				// Check for battle shop entries
+				if (bpay != purchaseShop)
+					result += $"\nAlert - Bpay.Enabled is {bpay}, and Purchase.Shop.Enabled is {purchaseShop} - both should either be disabled or enabled together.\n";
+
+				// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
+				if (battleCoinVendor && battleCoinVendorCustom)
+					result += $"\nAlert - Battle.Coin.Vendor.Enable is {battleCoinVendor}, and Battle.Coin.Vendor.CUSTOM.Enable is {battleCoinVendorCustom} - only one needs enabled.\n";
+
+				// Check collections for duplicate entries
+				result += "\nChecking for duplicates in world/bnet config\n";
+				string tmp1 = CheckCollectionForDuplicates(BnetCollection).TrimEnd('&');
+				string tmp2 = CheckCollectionForDuplicates(WorldCollection).TrimEnd('&');
+
+				if (tmp1 != string.Empty)
+					result += $"\nAlert - Duplicate entries found in [BnetConfig] for [{tmp1}]";
+				if (tmp2 != string.Empty)
+					result += $"\nAlert - Duplicate entries found in [WorldConfig] for [{tmp2}]";
+
+				// Anything else?
+				if (result.Contains("Alert"))
+					result += "\n\nAlert - Issues were found!";
+				else
+					result += "\n\nNo known problems were found!";
+				MessageBox.Show(result);
 			}
-
-			if (loginRESTExternalAddress != addressFromDB || loginRESTExternalAddress != wowConfigPortal)
-				result += "Alert - All of these addresses should match. Set these to the Local/LAN/WAN IP depending on hosting goals.\n";
-
-			result += $"\nLoginREST.LocalAddress - {loginRESTLocalAddress}\n";
-			result += $"local Address from DB - {localAddressFromDB}\n";
-			if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))
-				result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n";
-
-			if (solocraft)
-			{
-				if (flexcraftHealth)
-					result += "\nAlert - Solocraft and HealthCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
-
-				if (flexcraftUnitMod)
-					result += "\nAlert - Solocraft and UnitModCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
-
-				if (flexcraftCombatRating)
-					result += "\nAlert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
-			}
-
-			// Check for battle shop entries
-			if (bpay != purchaseShop)
-				result += $"\nAlert - Bpay.Enabled is {bpay}, and Purchase.Shop.Enabled is {purchaseShop} - both should either be disabled or enabled together.\n";
-
-			// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
-			if (battleCoinVendor && battleCoinVendorCustom)
-				result += $"\nAlert - Battle.Coin.Vendor.Enable is {battleCoinVendor}, and Battle.Coin.Vendor.CUSTOM.Enable is {battleCoinVendorCustom} - only one needs enabled.\n";
-
-			// Anything else?
-			if (result.Contains("Alert"))
-				result += "\nAlert - Issues were found!";
-			else
-				result += "\nNo known problems were found!";
-			MessageBox.Show(result);
 		}
 
 		public void SPPFolderBrowse()
