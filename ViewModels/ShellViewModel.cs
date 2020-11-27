@@ -332,15 +332,33 @@ namespace SPP_Config_Generator
 			return result;
 		}
 
-		public async void SaveConfig()
+		public async void ExportToConfFile(BindableCollection<ConfigEntry> collection, string path)
 		{
-			// Use temp collections to export in case something changes during process
-			BindableCollection<ConfigEntry> tempBnetCollection = BnetCollection;
-			BindableCollection<ConfigEntry> tempWorldCollection = WorldCollection;
+			int count = 0;
+			string tmpstr = string.Empty;
+
+			foreach (var item in collection)
+			{
+				count++;
+				StatusBox = $"Updating BNET row {count} of {collection.Count}";
+
+				// Let our UI update
+				await Task.Delay(1);
+
+				if (item.Description.Length > 1)
+					tmpstr += item.Description;
+				if (item.Name.Length > 1 && item.Value.Length > 0)
+					tmpstr += $"{item.Name} = {item.Value}\n";
+			}
+
+			// flush to file
+			ExportToConfig(path, tmpstr, false);
+		}
+
+		public void SaveConfig()
+		{
 			string worldConfigFile = string.Empty;
 			string bnetConfigFile = string.Empty;
-			string tmpstr = string.Empty;
-			int count = 0;
 
 			// This should save general settings, and also current configs for world/bnet
 			if (GeneralSettingsManager.GeneralSettings == null)
@@ -377,53 +395,13 @@ namespace SPP_Config_Generator
 			if (bnetConfigFile == string.Empty)
 				Log("BNET Export -> Config File cannot be found");
 			else
-			{
-				count = 0;
-				tmpstr = string.Empty;
-
-				foreach (var item in tempBnetCollection)
-				{
-					count++;
-					StatusBox = $"Updating BNET row {count} of {tempBnetCollection.Count}";
-
-					// Let our UI update
-					await Task.Delay(1);
-
-					if (item.Description.Length > 1)
-						tmpstr += item.Description;
-					if (item.Name.Length > 1 && item.Value.Length > 0)
-						tmpstr += $"{item.Name} = {item.Value}\n";
-				}
-
-				// flush to file
-				ExportToConfig(bnetConfigFile, tmpstr, false);
-			}
+				ExportToConfFile(BnetCollection, bnetConfigFile);
 
 			// Export to World - config starts with [worldserver]
 			if (worldConfigFile == string.Empty)
 				Log("WORLD Export -> Config File cannot be found");
 			else
-			{
-				count = 0;
-				tmpstr = string.Empty;
-
-				foreach (var item in tempWorldCollection)
-				{
-					count++;
-					StatusBox = $"Updating WORLD row {count} of {tempWorldCollection.Count}";
-
-					// Let our UI update
-					await Task.Delay(1);
-
-					if (item.Description.Length > 1)
-						tmpstr += item.Description;
-					if (item.Name.Length > 1 && item.Value.Length > 0)
-						tmpstr += $"{item.Name} = {item.Value}\n";
-				}
-
-				// flush to file
-				ExportToConfig(worldConfigFile, tmpstr, false);
-			}
+				ExportToConfFile(WorldCollection, worldConfigFile);
 
 			UpdateWowConfig();
 			StatusBox = "Export Complete";
@@ -446,20 +424,15 @@ namespace SPP_Config_Generator
 		public async void UpdateWowConfig()
 		{
 			string tmpstr = string.Empty;
-			string wowConfigFile = string.Empty;
+			string wowConfigFile = GetWowConfigFile();
 			int count = 0;
-
-			// Update config.wtf for WoW installation			
-			wowConfigFile = GetWowConfigFile();
 
 			if (wowConfigFile == string.Empty)
 				Log("WOW Config File cannot be found - cannot update SET portal entry");
 			else
 			{
-				count = 0;
 				// Pull in our WOW config
 				List<string> allLinesText = File.ReadAllLines(wowConfigFile).ToList();
-				tmpstr = string.Empty;
 
 				foreach (var item in allLinesText)
 				{
@@ -509,7 +482,7 @@ namespace SPP_Config_Generator
 			Log("Loading World/Bnet default templates from .conf files");
 			BnetCollectionTemplate = GeneralSettingsManager.CreateDefaultTemplateFromFile("bnetserver.conf");
 			WorldCollectionTemplate = GeneralSettingsManager.CreateDefaultTemplateFromFile("worldserver.conf");
-						
+
 			Log("Loading World/Bnet saved settings");
 			WorldCollection = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.WorldConfigPath);
 			BnetCollection = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.BNetConfigPath);
