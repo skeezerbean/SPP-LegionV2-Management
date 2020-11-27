@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -33,8 +34,6 @@ namespace SPP_Config_Generator
 
 		// To Do -
 		// Fix crash during check (and save/export) if no saved files loaded - refresh from template first?
-		// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
-		// If Bpay.Enabled & Purchase.Shop.Enabled - if either enabled, both should be enabled
 
 		public ShellViewModel()
 		{
@@ -51,7 +50,7 @@ namespace SPP_Config_Generator
 		{
 			foreach (var item in collection)
 			{
-				if (item.Name.Contains(entry))
+				if (string.Equals(item.Name, entry, StringComparison.OrdinalIgnoreCase))
 				{
 					item.Value = value;
 					break;
@@ -123,13 +122,13 @@ namespace SPP_Config_Generator
 				BnetCollection = BnetCollectionTemplate;
 		}
 
-		public bool CheckCollectionForMatch(BindableCollection<ConfigEntry> collection, string searchItem)
+		public bool CheckCollectionForMatch(BindableCollection<ConfigEntry> collection, string searchValue)
 		{
 			bool match = false;
 
 			foreach (var item in collection)
 			{
-				if (item.Name == searchItem)
+				if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase))
 				{
 					// Found a match, can stop checking this round
 					match = true;
@@ -140,64 +139,71 @@ namespace SPP_Config_Generator
 			return match;
 		}
 
+		public string GetValueFromCollection(BindableCollection<ConfigEntry> collection, string searchValue)
+		{
+			string result = string.Empty;
+
+			// Populate from Bnet collection
+			foreach (var item in collection)
+				if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase))
+					result = item.Value;
+
+			return NormalizeString(result);
+		}
+
+		public bool IsOptionEnabled(BindableCollection<ConfigEntry> collection, string searchValue)
+		{
+			bool result = false;
+
+			foreach (var item in collection)
+				if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase) && item.Value == "1")
+					result = true;
+
+			return result;
+		}
+
+		// strip out white space
+		public string NormalizeString(string incoming)
+		{
+			return Regex.Replace(incoming, @"\s", "");
+		}
+
 		public void CheckSPPConfig()
 		{
-			// We don't care about actual SPP config files, only our active collections
-			// since we export to overwrite those with settings from this app
-			BindableCollection<ConfigEntry> tempBnetCollection = BnetCollection;
-			BindableCollection<ConfigEntry> tempWorldCollection = WorldCollection;
 			string buildFromDB = MySqlManager.MySQLQuery(@"SELECT gamebuild FROM realmlist WHERE id = 1");
-			string buildFromWorld = string.Empty;
-			string buildFromBnet = string.Empty;
-			string loginRESTExternalAddress = string.Empty;
-			string loginRESTLocalAddress = string.Empty;
+			string buildFromWorld = GetValueFromCollection(WorldCollection, "Game.Build.Version");
+			string buildFromBnet = GetValueFromCollection(BnetCollection, "Game.Build.Version");
+			string loginRESTExternalAddress = GetValueFromCollection(BnetCollection, "LoginREST.ExternalAddress");
+			string loginRESTLocalAddress = GetValueFromCollection(BnetCollection, "LoginREST.LocalAddress");
 			string addressFromDB = MySqlManager.MySQLQuery(@"SELECT address FROM realmlist WHERE id = 1");
 			string localAddressFromDB = MySqlManager.MySQLQuery(@"SELECT localAddress FROM realmlist WHERE id = 1");
 			string wowConfigPortal = string.Empty;
-			string wowConfigFile = string.Empty;
-			string bnetBindIP = string.Empty;
-			string worldBindIP = string.Empty;
+			string wowConfigFile = GetWowConfigFile();
+			string bnetBindIP = GetValueFromCollection(BnetCollection, "BindIP");
+			string worldBindIP = GetValueFromCollection(WorldCollection, "BindIP");
 			string result = string.Empty;
-			bool solocraft = false;
-			bool flexcraftHealth = false;
-			bool flexcraftUnitMod = false;
-			bool flexcraftCombatRating = false;
-
-			// Populate from world collection
-			foreach (var item in tempWorldCollection)
-			{
-				if (item.Name.Contains("Game.Build.Version"))
-					buildFromWorld = item.Value;
-				if (item.Name.Contains("BindIP"))
-					worldBindIP = item.Value;
-			}
-
-			// Populate from Bnet collection
-			foreach (var item in tempBnetCollection)
-			{
-				if (item.Name.Contains("Game.Build.Version"))
-					buildFromBnet = item.Value;
-				if (item.Name.Contains("BindIP"))
-					bnetBindIP = item.Value;
-				if (item.Name.Contains("LoginREST.LocalAddress"))
-					loginRESTLocalAddress = item.Value;
-				if (item.Name.Contains("LoginREST.ExternalAddress"))
-					loginRESTExternalAddress = item.Value;
-			}
+			bool solocraft = IsOptionEnabled(WorldCollection, "Solocraft.Enable");
+			bool flexcraftHealth = IsOptionEnabled(WorldCollection, "HealthCraft.Enable");
+			bool flexcraftUnitMod = IsOptionEnabled(WorldCollection, "UnitModCraft.Enable");
+			bool flexcraftCombatRating = IsOptionEnabled(WorldCollection, "Combat.Rating.Craft.Enable");
+			bool bpay = IsOptionEnabled(WorldCollection, "Bpay.Enabled");
+			bool purchaseShop = IsOptionEnabled(WorldCollection, "Purchase.Shop.Enabled");
+			bool battleCoinVendor = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Enable");
+			bool battleCoinVendorCustom = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Custom.Enable");
 
 			// Compare bnet to default - any missing/extra items?
 			result += "\nChecking Bnet config compared to template...\n";
 
 			foreach (var item in BnetCollectionTemplate)
 			{
-				if (CheckCollectionForMatch(tempBnetCollection, item.Name) == false)
+				if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
 				{
 					result += $"Alert - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
 					BnetCollection.Add(item);
 				}
 			}
 
-			foreach (var item in tempBnetCollection)
+			foreach (var item in BnetCollection)
 				if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
 					result += $"Alert - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
 
@@ -207,14 +213,14 @@ namespace SPP_Config_Generator
 
 			foreach (var item in WorldCollectionTemplate)
 			{
-				if (CheckCollectionForMatch(tempWorldCollection, item.Name) == false)
+				if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
 				{
 					result += $"Alert - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
 					WorldCollection.Add(item);
 				}
 			}
 
-			foreach (var item in tempWorldCollection)
+			foreach (var item in WorldCollection)
 				if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
 					result += $"Alert - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
 
@@ -238,7 +244,6 @@ namespace SPP_Config_Generator
 			result += $"Address from DB Realm - {addressFromDB}\n";
 
 			// Gather WoW portal IP from config.wtf
-			wowConfigFile = GetWowConfigFile();
 
 			if (wowConfigFile == string.Empty)
 				Log("WOW Config File cannot be found - cannot parse SET portal entry");
@@ -268,20 +273,6 @@ namespace SPP_Config_Generator
 			if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))
 				result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n";
 
-
-			// Check if solo/flexcraft both enabled
-			foreach (var item in tempWorldCollection)
-			{
-				if (item.Name == "Solocraft.Enable" && item.Value == "1")
-					solocraft = true;
-				if (item.Name == "HealthCraft.Enable" && item.Value == "1")
-					flexcraftHealth = true;
-				if (item.Name == "UnitModCraft.Enable" && item.Value == "1")
-					flexcraftUnitMod = true;
-				if (item.Name == "Combat.Rating.Craft.Enable" && item.Value == "1")
-					flexcraftCombatRating = true;
-			}
-
 			if (solocraft)
 			{
 				if (flexcraftHealth)
@@ -294,7 +285,13 @@ namespace SPP_Config_Generator
 					result += "\nAlert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
 			}
 
-			// Check for both battleshop entries - only 1 needs active
+			// Check for battle shop entries
+			if (bpay != purchaseShop)
+				result += $"\nAlert - Bpay.Enabled is {bpay}, and Purchase.Shop.Enabled is {purchaseShop} - both should either be disabled or enabled together.\n";
+
+			// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
+			if (battleCoinVendor && battleCoinVendorCustom)
+				result += $"\nAlert - Battle.Coin.Vendor.Enable is {battleCoinVendor}, and Battle.Coin.Vendor.CUSTOM.Enable is {battleCoinVendorCustom} - only one needs enabled.\n";
 
 			// Anything else?
 			if (result.Contains("Alert"))

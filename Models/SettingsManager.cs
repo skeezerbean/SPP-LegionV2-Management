@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 
 namespace SPP_Config_Generator
@@ -92,10 +93,11 @@ namespace SPP_Config_Generator
 						string[] strArray = item.Split('=');
 
 						// Now we should have 2 parts, the entry[0] and the value[1]
+						// and strip janky whitespace from the start/end
 						ConfigEntry entry = new ConfigEntry();
-						entry.Name = strArray[0];
-						entry.Value = strArray[1];
-						entry.Description = tmpDescription;
+						entry.Name = strArray[0].TrimStart(' ').TrimEnd(' ');
+						entry.Value = strArray[1].TrimStart(' ').TrimEnd(' ');
+						entry.Description = tmpDescription.TrimStart('\n').TrimStart(' ').TrimEnd(' ');
 						tempCollection.Add(entry);
 						tmpDescription = string.Empty; // reset our description
 					}
