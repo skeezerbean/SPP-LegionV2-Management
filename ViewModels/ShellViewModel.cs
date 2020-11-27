@@ -33,7 +33,7 @@ namespace SPP_Config_Generator
 		public string LogText { get; set; }
 
 		// To-Do 
-		// Check bnet/world collections for duplicate entries
+		// During config check, alert if wow config file not found. The alert doesn't make sense currently
 
 		public ShellViewModel()
 		{
@@ -288,7 +288,10 @@ namespace SPP_Config_Generator
 				// Gather WoW portal IP from config.wtf
 
 				if (wowConfigFile == string.Empty)
+				{
 					Log("WOW Config File cannot be found - cannot parse SET portal entry");
+					result += "Alert - WOW Config file not found, cannot check [SET portal] entry to compare.\n";
+				}
 				else
 				{
 					// Pull in our WOW config
@@ -390,7 +393,7 @@ namespace SPP_Config_Generator
 			foreach (var item in collection)
 			{
 				count++;
-				StatusBox = $"Updating BNET row {count} of {collection.Count}";
+				StatusBox = $"Updating {path} row {count} of {collection.Count}";
 
 				// Let our UI update
 				await Task.Delay(1);
@@ -428,8 +431,6 @@ namespace SPP_Config_Generator
 			else
 				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.BNetConfigPath, BnetCollection))
 				Log($"Exception saving file {GeneralSettingsManager.BNetConfigPath}");
-
-			// Run config checks function (will report non-matching build, IPs, etc)
 
 			// Find our actual config folder for SPP
 			if (File.Exists($"{SPPFolderLocation}\\Servers\\bnetserver.conf"))
