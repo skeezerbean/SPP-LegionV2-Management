@@ -28,6 +28,9 @@ namespace SPP_Config_Generator
 		public BindableCollection<ConfigEntry> BnetCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
+		public string WowConfigFile { get; set; } = string.Empty;
+		public string BnetConfFile { get; set; } = string.Empty;
+		public string WorldConfFile { get; set; } = string.Empty;
 		public string HelpAbout { get; set; } = string.Empty;
 		public string StatusBox { get; set; }
 		public string LogText { get; set; }
@@ -41,9 +44,10 @@ namespace SPP_Config_Generator
 			// Pull in saved settings, adjust window position if needed
 			Log("Loading settings");
 			LoadSettings();
-			PopulateHelp();
 			Log("Set Window position/width/height, moving into view");
 			GeneralSettingsManager.MoveIntoView();
+			if (SPPFolderLocation == string.Empty)
+				StatusBox = "Please set SPP Location in the General Settings tab";
 		}
 
 		public BindableCollection<ConfigEntry> UpdateConfigCollection(BindableCollection<ConfigEntry> collection, string entry, string value)
@@ -183,8 +187,8 @@ namespace SPP_Config_Generator
 						matches++;
 				}
 
-				// There will naturally be 1 match as an entry matches itself. Anything more is a problem
-				// only add if the match has been added (will trigger twice for duplicate, we only want one notification)
+				// There will naturally be 1 match as an entry matches itself. Anything more is a problem...
+				// Only add to results if the match hasn't been added yet (will trigger twice for duplicate, we only want one notification)
 				if (matches > 1)
 					if (!results.Contains(item.Name))
 						results += $"{item.Name}&";
@@ -196,6 +200,7 @@ namespace SPP_Config_Generator
 		public void CheckSPPConfig()
 		{
 			// Prep our collections in case there's nothing in current settings
+			FindConfigPaths();
 			if (BnetCollection == null || BnetCollection.Count == 0)
 			{
 				BnetCollection = BnetCollectionTemplate;
@@ -215,7 +220,6 @@ namespace SPP_Config_Generator
 			string addressFromDB = MySqlManager.MySQLQuery(@"SELECT address FROM realmlist WHERE id = 1");
 			string localAddressFromDB = MySqlManager.MySQLQuery(@"SELECT localAddress FROM realmlist WHERE id = 1");
 			string wowConfigPortal = string.Empty;
-			string wowConfigFile = GetWowConfigFile();
 			string bnetBindIP = GetValueFromCollection(BnetCollection, "BindIP");
 			string worldBindIP = GetValueFromCollection(WorldCollection, "BindIP");
 			string result = string.Empty;
@@ -229,7 +233,7 @@ namespace SPP_Config_Generator
 			bool battleCoinVendorCustom = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Custom.Enable");
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
-			if ((BnetCollection == null || BnetCollection.Count == 0) || (WorldCollection == null || WorldCollection.Count == 0))
+			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
 				Log("Alert - There's an issue with collection(s) being empty.. possibly missing template files");
 			else
 			{
@@ -287,7 +291,7 @@ namespace SPP_Config_Generator
 
 				// Gather WoW portal IP from config.wtf
 
-				if (wowConfigFile == string.Empty)
+				if (File.Exists(WowConfigFile) == false)
 				{
 					Log("WOW Config File cannot be found - cannot parse SET portal entry");
 					result += "Alert - WOW Config file not found, cannot check [SET portal] entry to compare.\n";
@@ -295,7 +299,10 @@ namespace SPP_Config_Generator
 				else
 				{
 					// Pull in our WOW config
-					List<string> allLinesText = File.ReadAllLines(wowConfigFile).ToList();
+					List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
+
+					if (allLinesText.Count < 2)
+						Log($"Alert - WoW Client config file [{WowConfigFile}] may be empty.");
 
 					foreach (var item in allLinesText)
 					{
@@ -359,12 +366,16 @@ namespace SPP_Config_Generator
 
 		public void SPPFolderBrowse()
 		{
-			SPPFolderLocation = BrowseFolder();
+			string tmp = BrowseFolder();
+			if (tmp != string.Empty)
+				SPPFolderLocation = tmp;
 		}
 
 		public void WowConfigBrowse()
 		{
-			WOWConfigLocation = BrowseFolder();
+			string tmp = BrowseFolder();
+			if (tmp != string.Empty)
+				WOWConfigLocation = BrowseFolder();
 		}
 
 		public string BrowseFolder()
@@ -379,9 +390,9 @@ namespace SPP_Config_Generator
 				dialog.SelectedPath = baseFolder; // place to start search				
 				if ((bool)dialog.ShowDialog())
 					result = dialog.SelectedPath;
-
 			}
 			catch { return string.Empty; }
+
 			return result;
 		}
 
@@ -410,8 +421,8 @@ namespace SPP_Config_Generator
 
 		public void SaveConfig()
 		{
-			string worldConfigFile = string.Empty;
-			string bnetConfigFile = string.Empty;
+			// Make sure our conf file locations are up to date in case folder changed in settings
+			FindConfigPaths();
 
 			// This should save general settings, and also current configs for world/bnet
 			if (GeneralSettingsManager.GeneralSettings == null)
@@ -432,18 +443,8 @@ namespace SPP_Config_Generator
 				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.BNetConfigPath, BnetCollection))
 				Log($"Exception saving file {GeneralSettingsManager.BNetConfigPath}");
 
-			// Find our actual config folder for SPP
-			if (File.Exists($"{SPPFolderLocation}\\Servers\\bnetserver.conf"))
-				bnetConfigFile = $"{SPPFolderLocation}\\Servers\\bnetserver.conf";
-			if (File.Exists($"{SPPFolderLocation}\\bnetserver.conf"))
-				bnetConfigFile = $"{SPPFolderLocation}\\bnetserver.conf";
-			if (File.Exists($"{SPPFolderLocation}\\Servers\\worldserver.conf"))
-				worldConfigFile = $"{SPPFolderLocation}\\Servers\\worldserver.conf";
-			if (File.Exists($"{SPPFolderLocation}\\worldserver.conf"))
-				worldConfigFile = $"{SPPFolderLocation}\\worldserver.conf";
-
 			// Export to BNET
-			if (bnetConfigFile == string.Empty)
+			if (BnetConfFile == string.Empty)
 				Log("BNET Export -> Config File cannot be found");
 			else
 			{
@@ -453,48 +454,34 @@ namespace SPP_Config_Generator
 				{
 					// Wow config relies on bnet external address
 					UpdateWowConfig();
-					ExportToConfFile(BnetCollection, bnetConfigFile);
+					ExportToConfFile(BnetCollection, BnetConfFile);
 				}
 			}
 
 			// Export to World - config starts with [worldserver]
-			if (worldConfigFile == string.Empty)
+			if (WorldConfFile == string.Empty)
 				Log("WORLD Export -> Config File cannot be found");
 			else
 			{
 				if (WorldCollection == null || WorldCollection.Count == 0)
 					Log("WORLD Export -> Current settings are empty");
 				else
-					ExportToConfFile(WorldCollection, worldConfigFile);
+					ExportToConfFile(WorldCollection, WorldConfFile);
 			}
-		}
-
-		public string GetWowConfigFile()
-		{
-			string wowConfigFile = string.Empty;
-
-			// Find the exact file we need
-			if (File.Exists($"{WOWConfigLocation}\\WTF\\config.wtf"))
-				wowConfigFile = $"{WOWConfigLocation}\\WTF\\config.wtf";
-
-			if (File.Exists($"{WOWConfigLocation}\\config.wtf"))
-				wowConfigFile = $"{WOWConfigLocation}\\config.wtf";
-
-			return wowConfigFile;
 		}
 
 		public async void UpdateWowConfig()
 		{
 			string tmpstr = string.Empty;
-			string wowConfigFile = GetWowConfigFile();
+			//string wowConfigFile = GetWowConfigFile();
 			int count = 0;
 
-			if (wowConfigFile == string.Empty)
+			if (WowConfigFile == string.Empty)
 				Log("WOW Config File cannot be found - cannot update SET portal entry");
 			else
 			{
 				// Pull in our WOW config
-				List<string> allLinesText = File.ReadAllLines(wowConfigFile).ToList();
+				List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
 
 				foreach (var item in allLinesText)
 				{
@@ -518,7 +505,7 @@ namespace SPP_Config_Generator
 				}
 
 				// flush the temp string to file, overwrite
-				ExportToConfig(wowConfigFile, tmpstr, false);
+				ExportToConfig(WowConfigFile, tmpstr, false);
 			}
 		}
 
@@ -541,50 +528,62 @@ namespace SPP_Config_Generator
 			Log("Loading general settings");
 			GeneralSettingsManager.LoadGeneralSettings();
 
-			Log("Loading World/Bnet default templates from .conf files");
-			BnetCollectionTemplate = GeneralSettingsManager.CreateDefaultTemplateFromFile("bnetserver.conf");
-			WorldCollectionTemplate = GeneralSettingsManager.CreateDefaultTemplateFromFile("worldserver.conf");
+			FindConfigPaths();
 
-			Log("Loading World/Bnet saved settings");
-			WorldCollection = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.WorldConfigPath);
-			BnetCollection = GeneralSettingsManager.LoadSettings(GeneralSettingsManager.BNetConfigPath);
+			Log("Loading World/Bnet default templates");
+			BnetCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\bnetserver.conf");
+			WorldCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\worldserver.conf");
 
-			if (WorldCollectionTemplate == null)
-				Log("WorldCollectionTemplate is null, error loading file worldserver.conf");
-			if (BnetCollectionTemplate == null)
-				Log("BnetCollectionTemplate is null, error loading file bnetserver.conf");
-			if (WorldCollection == null)
-				Log($"WorldConfig is null, error loading file {GeneralSettingsManager.WorldConfigPath} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
-			if (BnetCollection == null)
-				Log($"BnetConfig is null, error loading file {GeneralSettingsManager.BNetConfigPath} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+			Log("Loading current World/Bnet config files");
+			WorldCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile);
+			BnetCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(BnetConfFile);
+
+			if (WorldCollectionTemplate.Count == 0)
+				Log("WorldCollectionTemplate is empty, error loading file worldserver.conf");
+			if (BnetCollectionTemplate.Count == 0)
+				Log("BnetCollectionTemplate is empty, error loading file bnetserver.conf");
+			if (WorldCollection.Count == 0)
+				Log($"WorldConfig is empty, error loading file {GeneralSettingsManager.WorldConfigPath} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+			if (BnetCollection.Count == 0)
+				Log($"BnetConfig is empty, error loading file {GeneralSettingsManager.BNetConfigPath} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+		}
+
+		// Take the folder locations in settings, and try to determine the path for each config file
+		public void FindConfigPaths()
+		{
+			// Find our world/bnet configs
+			if (SPPFolderLocation == string.Empty)
+				Log("SPP Folder Location is empty, cannot find existing settings to parse.");
+			else
+			{
+				if (File.Exists($"{SPPFolderLocation}\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\bnetserver.conf"))
+				{
+					WorldConfFile = $"{SPPFolderLocation}\\worldserver.conf";
+					BnetConfFile = $"{SPPFolderLocation}\\bnetserver.conf";
+				}
+				else if (File.Exists($"{SPPFolderLocation}\\Servers\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\Servers\\bnetserver.conf") || (Directory.Exists($"{SPPFolderLocation}\\Servers")))
+				{
+					// Either we find the files themselves, or we found the Servers folder and we'll generate them here on saving
+					// since this is the best guess given our saved path info
+					WorldConfFile = $"{SPPFolderLocation}\\Servers\\worldserver.conf";
+					BnetConfFile = $"{SPPFolderLocation}\\Servers\\bnetserver.conf";
+				}
+			}
+
+			// Find our wow client config
+			if (WOWConfigLocation == string.Empty)
+				Log("WOW Client Folder Location is empty, cannot find existing settings to parse.");
+			else
+			{
+				if (File.Exists($"{WOWConfigLocation}\\config.wtf"))
+					WowConfigFile = $"{WOWConfigLocation}\\config.wtf";
+				else if (File.Exists($"{WOWConfigLocation}\\WTF\\config.wtf") || (Directory.Exists($"{WOWConfigLocation}\\WTF")))
+					// Either we find the file, or we found the WTF folder and we'll assume this is it
+					// since this is the best guess given our saved path info. Won't be anything to parse, though
+					WowConfigFile = $"{WOWConfigLocation}\\WTF\\config.wtf";
+			}
 		}
 
 		public void Log(string log) { LogText = ":> " + log + "\n" + LogText; }
-
-		public void PopulateHelp()
-		{
-			HelpAbout += "This tool helps build working World and Bnet server config files without duplicate entries. This can also be used to check your configuration ";
-			HelpAbout += "for any known issues. There are some things to be aware of -\n";
-			HelpAbout += "The MySQL server will probably error connecting unless you're running this on the same server. You should keep the MySQL server set to 127.0.0.1 and user/password ";
-			HelpAbout += "should be left to defaults. Delete the settings.json file to reset them.\n";
-			HelpAbout += "This tool can also update the config.wtf file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that ";
-			HelpAbout += "this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the [LoginREST.ExternalAddress] ";
-			HelpAbout += "from the Bnet Config, otherwise you may have trouble with your WOW client contacting the server. You can find this entry in your Bnet Config.\n";
-			HelpAbout += "This tool can also set and check the [Game.Build.Version] between both configs and the database realm entry, and warn of any issues. Use the [Set Build] button ";
-			HelpAbout += "to set this entry if there is a discrepancy between them and your WOW client version. You can find the WOW client version by launching it and checking at the ";
-			HelpAbout += "bottom-left of the client at the login screen.\n";
-			HelpAbout += "Use the [Set IP] button to setup the external/lan/wan IP address in the Database entry for the realm, the Bnet config, and the WOW client (as much as it can ";
-			HelpAbout += "access from the computer the tool is running from). This will update the Database Realm entry and WOW config immediately. The rest won't update until Save/Export.\n";
-			HelpAbout += "Use the [Set Build] button to set the [Game.Build.Version] in both configs, and the realm database entry.\n";
-			HelpAbout += "If there is a problem, you can use the [Set Defaults] button to pull the wow config fresh from the local template files. This will overwrite all ";
-			HelpAbout += "previous settings for the Bnet and World config files. You'd need to set the [Game.Build.Version] again, and possibly the IP if hosting outside ";
-			HelpAbout += "of the local server.\n";
-			HelpAbout += "Use the [Check Config] button to run through some quick problem checks for common issues. Note - this may give errors connecting to MySQL ";
-			HelpAbout += "if this is running from another PC than the one the SPP Database Server runs on, and also make sure that the Database Server itself is running first. ";
-			HelpAbout += "Otherwise this tool cannot connect to the Database to check/update any settings there. If the error says similar to [not allowed to connect to this MySQL server] ";
-			HelpAbout += "then you're probably running this on a different computer. Run it from the SPP server (while the database server is running).\n";
-			HelpAbout += "Once you've finished making any changes, hit the [Save/Export] button to export the current settings to the bnetserver.conf and worldserver.conf files.\n";
-			HelpAbout += "Make sure to set the folders for your SPP LegionV2 folder, and your WOW Client folder in the [General App Settings] tab.";
-		}
 	}
 }

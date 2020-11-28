@@ -42,6 +42,12 @@
 					ToolTip="This will check the current SPP config for some potential issues."/>
 				<Button x:Name="SaveConfig" Content="Save/Export" Padding="5" Margin="5" Background="AliceBlue"
 					ToolTip="Save settings and generate configs to SPP installation."/>
+				<TextBlock Padding="5" Margin="6" Background="AliceBlue">
+					<Hyperlink NavigateUri="https://github.com/skeezerbean/SPPConfigGenerator/blob/main/README.md" 
+							   RequestNavigate="Hyperlink_RequestNavigate">
+						Help / About
+					</Hyperlink>
+				</TextBlock>
 			<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="StatusBox" Margin="5" />
 			</StackPanel>
 		
@@ -56,51 +62,41 @@
 					</Grid.ColumnDefinitions>
 					
 					<!-- Main Window -->
-					<Grid Grid.Column="0">
-						
+					<Grid Grid.Column="0">						
 						<TabControl Background="LightGray" Margin="2">
+							<TabItem Header="World Config" Margin="1">
+								<DataGrid ItemsSource="{Binding WorldCollection}"
+										ScrollViewer.HorizontalScrollBarVisibility="Auto"
+										ScrollViewer.VerticalScrollBarVisibility="Auto" />
 
-						<TabItem Header="World Config" Margin="1">
-							<DataGrid ItemsSource="{Binding WorldCollection}"
-									ScrollViewer.HorizontalScrollBarVisibility="Auto"
-									ScrollViewer.VerticalScrollBarVisibility="Auto" />
-
-						</TabItem>
+							</TabItem>
 							
-						<TabItem Header="Bnet Config" Margin="1">
-							<DataGrid ItemsSource="{Binding BnetCollection}"
-									ScrollViewer.HorizontalScrollBarVisibility="Auto"
-									ScrollViewer.VerticalScrollBarVisibility="Auto" />
-						</TabItem>
-							
-						<TabItem Header="General App Settings" Margin="1">
-							<StackPanel Orientation="Horizontal">
-								<StackPanel Margin="2">
-									<Button x:Name="SPPFolderBrowse" Content="SPP Folder Location"  />
-									<Button x:Name="WowConfigBrowse" Content="Wow Config Location"  />
-									<TextBlock Text="MySQL Server" />
-									<TextBlock Text="MySQL Port" />
-									<TextBlock Text="MySQL User" />
-									<TextBlock Text="MySQL Pass" />
-								</StackPanel>
-								<StackPanel Margin="2" >
-									<TextBlock x:Name="SPPFolderLocation" />
-									<TextBlock x:Name="WOWConfigLocation" />
-									<TextBox x:Name="MySQLServer" />
-									<TextBox x:Name="MySQLPort" />
-									<TextBox x:Name="MySQLUser" />
-									<TextBox x:Name="MySQLPass" />
-								</StackPanel>
-							</StackPanel>
-						</TabItem>
+							<TabItem Header="Bnet Config" Margin="1">
+								<DataGrid ItemsSource="{Binding BnetCollection}"
+										ScrollViewer.HorizontalScrollBarVisibility="Auto"
+										ScrollViewer.VerticalScrollBarVisibility="Auto" />
+							</TabItem>
 
-						<TabItem Header="Help/About" Margin="1" FontSize="14" >
-								<TextBox x:Name="HelpAbout" Margin="2" TextWrapping="Wrap"
-										 VerticalScrollBarVisibility="Auto"
-										 HorizontalScrollBarVisibility="Auto"
-										 IsReadOnly="True"/>							
-						</TabItem>
-
+							<TabItem Header="General App Settings" Margin="1">
+								<StackPanel Orientation="Horizontal">
+									<StackPanel Margin="2">
+										<Button x:Name="SPPFolderBrowse" Content="SPP Folder Location"  />
+										<Button x:Name="WowConfigBrowse" Content="Wow Config Location"  />
+										<TextBlock Text="MySQL Server" />
+										<TextBlock Text="MySQL Port" />
+										<TextBlock Text="MySQL User" />
+										<TextBlock Text="MySQL Pass" />
+									</StackPanel>
+									<StackPanel Margin="2" >
+										<TextBlock x:Name="SPPFolderLocation" />
+										<TextBlock x:Name="WOWConfigLocation" />
+										<TextBox x:Name="MySQLServer" />
+										<TextBox x:Name="MySQLPort" />
+										<TextBox x:Name="MySQLUser" />
+										<TextBox x:Name="MySQLPass" />
+									</StackPanel>
+								</StackPanel>
+							</TabItem>
 						</TabControl>
 						
 					</Grid>

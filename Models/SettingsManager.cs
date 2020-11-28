@@ -54,25 +54,23 @@ namespace SPP_Config_Generator
 
 		// This is for reading in the world/bnet template/saved files
 		// Look into dumping this and general load into a generic
-		public static BindableCollection<ConfigEntry> LoadSettings(string path)
-		{
-			BindableCollection<ConfigEntry> loadresult = new BindableCollection<ConfigEntry>();
+		//public static BindableCollection<ConfigEntry> LoadSettings(string path)
+		//{
+		//	BindableCollection<ConfigEntry> loadresult = new BindableCollection<ConfigEntry>();
 
-			try
-			{
-				var json = JToken.Parse(File.ReadAllText(path));
-				loadresult = JsonConvert.DeserializeObject<BindableCollection<ConfigEntry>>(json.ToString());
-			}
-			catch { return null; } // failed to load the file
+		//	try
+		//	{
+		//		var json = JToken.Parse(File.ReadAllText(path));
+		//		loadresult = JsonConvert.DeserializeObject<BindableCollection<ConfigEntry>>(json.ToString());
+		//	}
+		//	catch { return null; } // failed to load the file
 
-			return loadresult;
-		}
+		//	return loadresult;
+		//}
 
-		public static BindableCollection<ConfigEntry> CreateDefaultTemplateFromFile(string inFile)
+		public static BindableCollection<ConfigEntry> CreateCollectionFromConfigFile(string inFile)
 		{
 			string tmpDescription = string.Empty;
-			string tmpName = string.Empty;
-			string tmpValue = string.Empty;
 			BindableCollection<ConfigEntry> tempCollection = new BindableCollection<ConfigEntry>();
 			int count = 0;
 
@@ -108,7 +106,7 @@ namespace SPP_Config_Generator
 					}
 				}
 			}
-			catch { return null; }
+			catch { return new BindableCollection<ConfigEntry>(); }
 
 			return tempCollection;
 		}
