@@ -11,9 +11,9 @@ Set the general settings with the location of your **WOW Legion client** (base d
 
 Load up the tool, run a check on the config, and save/export as needed to build/rebuild your SPP LegionV2 config files.
 
-You can use the **"Set Build"** button to set the build # for the client you're using to match in both config files, and database realm entry.
+You can use the **[Set Build]** button to set the build # for the client you're using to match in both config files, and database realm entry.
 
-You can use the **"Set IP"** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same.
+You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same.
 
 
 ### Current To-Do -
