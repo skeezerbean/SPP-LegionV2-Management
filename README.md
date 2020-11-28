@@ -2,6 +2,7 @@
 Build/Update config for SPP LegionV2
 
 Usage -
+
 Make sure the SPP Database engine is running.
 Set the general settings with the location of your SPP directory (base directory OR the server folder with config, either works)
 Set the general settings with the location of your WOW Legion client (base directory OR the WTF folder containing the config)
@@ -10,9 +11,11 @@ You can use the "Set Build" button to set the build # for the client you're usin
 You can use the "Set IP" button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same.
 
 Current To-Do -
+
 Look into making a search/filter box to search for specific entries in the config
 
 Changes -
+
 0.0.1.2 - introduced backups of existing configs to a backup folder (within app folder), pulls in existing bnet/worldserver.conf to check
 0.0.1.1 - introduced pulling/parsing template configs from worldserver.conf and bnetserver.conf default files, added/fixed some checks
 0.0.1.0 - base release, more proof of concept than anything
