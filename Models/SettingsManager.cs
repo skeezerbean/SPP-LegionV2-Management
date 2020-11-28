@@ -15,15 +15,7 @@ namespace SPP_Config_Generator
 	{
 		public static GeneralSettings GeneralSettings { get; set; } = new GeneralSettings();
 		public static JObject SettingsJSON { get; set; }
-		public static JObject WorldTemplateJSON { get; set; }
-		public static JObject BnetTemplateJSON { get; set; }
-		public static JObject WorldConfigJSON { get; set; }
-		public static JObject BnetConfigJSON { get; set; }
 		public static string SettingsPath = "Settings.json";
-		public static string WorldTemplatePath = "default-config-world.json";
-		public static string BNetTemplatePath = "default-config-bnet.json";
-		public static string WorldConfigPath = "saved-config-world.json";
-		public static string BNetConfigPath = "saved-config-bnet.json";
 		public static string LogText { get; set; }
 
 		public static void LoadGeneralSettings()
@@ -51,22 +43,6 @@ namespace SPP_Config_Generator
 			catch { return false; }
 			return true;
 		}
-
-		// This is for reading in the world/bnet template/saved files
-		// Look into dumping this and general load into a generic
-		//public static BindableCollection<ConfigEntry> LoadSettings(string path)
-		//{
-		//	BindableCollection<ConfigEntry> loadresult = new BindableCollection<ConfigEntry>();
-
-		//	try
-		//	{
-		//		var json = JToken.Parse(File.ReadAllText(path));
-		//		loadresult = JsonConvert.DeserializeObject<BindableCollection<ConfigEntry>>(json.ToString());
-		//	}
-		//	catch { return null; } // failed to load the file
-
-		//	return loadresult;
-		//}
 
 		public static BindableCollection<ConfigEntry> CreateCollectionFromConfigFile(string inFile)
 		{

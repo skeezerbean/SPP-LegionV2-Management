@@ -31,12 +31,8 @@ namespace SPP_Config_Generator
 		public string WowConfigFile { get; set; } = string.Empty;
 		public string BnetConfFile { get; set; } = string.Empty;
 		public string WorldConfFile { get; set; } = string.Empty;
-		public string HelpAbout { get; set; } = string.Empty;
 		public string StatusBox { get; set; }
 		public string LogText { get; set; }
-
-		// To-Do 
-		// During config check, alert if wow config file not found. The alert doesn't make sense currently
 
 		public ShellViewModel()
 		{
@@ -56,6 +52,8 @@ namespace SPP_Config_Generator
 			{
 				if (string.Equals(item.Name, entry, StringComparison.OrdinalIgnoreCase))
 				{
+					// Update the value, then stop processing in case there's a duplicate.
+					// We'll update the first, it's most likely the original/valid one
 					item.Value = value;
 					break;
 				}
@@ -72,8 +70,8 @@ namespace SPP_Config_Generator
 			input = Microsoft.VisualBasic.Interaction.InputBox("Enter the Listening/Hosted IP Address to set. If this is to be hosted for local network then use the LAN ipv4 address. If external hosting, use the WAN address. Note this entry will not be validated to accuracy.", "Set IP", "127.0.0.1");
 
 			// If user hit didn't cancel or enter something stupid...
-			// length > 7 is 4 at least 4 numbers for an IP, and 3 . within an IP
-			if (input.Length > 7)
+			// length > 6 is at least 4 numbers for an IP, and 3 . within an IP
+			if (input.Length > 6)
 			{
 				// Update Bnet entry
 				BnetCollection = UpdateConfigCollection(BnetCollection, "LoginREST.ExternalAddress", input);
@@ -290,7 +288,6 @@ namespace SPP_Config_Generator
 				result += $"Address from DB Realm - {addressFromDB}\n";
 
 				// Gather WoW portal IP from config.wtf
-
 				if (File.Exists(WowConfigFile) == false)
 				{
 					Log("WOW Config File cannot be found - cannot parse SET portal entry");
@@ -366,6 +363,7 @@ namespace SPP_Config_Generator
 
 		public void SPPFolderBrowse()
 		{
+			// If it's empty, then it was cancelled and we keep the old setting
 			string tmp = BrowseFolder();
 			if (tmp != string.Empty)
 				SPPFolderLocation = tmp;
@@ -373,6 +371,7 @@ namespace SPP_Config_Generator
 
 		public void WowConfigBrowse()
 		{
+			// If it's empty, then it was cancelled and we keep the old setting
 			string tmp = BrowseFolder();
 			if (tmp != string.Empty)
 				WOWConfigLocation = BrowseFolder();
@@ -396,7 +395,7 @@ namespace SPP_Config_Generator
 			return result;
 		}
 
-		public async void ExportToConfFile(BindableCollection<ConfigEntry> collection, string path)
+		public async void BuildConfFile(BindableCollection<ConfigEntry> collection, string path)
 		{
 			int count = 0;
 			string tmpstr = string.Empty;
@@ -416,7 +415,7 @@ namespace SPP_Config_Generator
 			}
 
 			// flush to file
-			ExportToConfig(path, tmpstr, false);
+			ExportToFile(path, tmpstr, false);
 		}
 
 		public void SaveConfig()
@@ -431,18 +430,6 @@ namespace SPP_Config_Generator
 				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.SettingsPath, GeneralSettingsManager.GeneralSettings))
 				Log($"Exception saving file {GeneralSettingsManager.SettingsPath}");
 
-			if (WorldCollection == null || WorldCollection.Count == 0)
-				Log("Cannot save WorldConfig, current settings are empty");
-			else
-				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.WorldConfigPath, WorldCollection))
-				Log($"Exception saving file {GeneralSettingsManager.WorldConfigPath}");
-
-			if (BnetCollection == null || BnetCollection.Count == 0)
-				Log("Cannot save BnetConfig, current settings are empty");
-			else
-				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.BNetConfigPath, BnetCollection))
-				Log($"Exception saving file {GeneralSettingsManager.BNetConfigPath}");
-
 			// Export to BNET
 			if (BnetConfFile == string.Empty)
 				Log("BNET Export -> Config File cannot be found");
@@ -454,7 +441,7 @@ namespace SPP_Config_Generator
 				{
 					// Wow config relies on bnet external address
 					UpdateWowConfig();
-					ExportToConfFile(BnetCollection, BnetConfFile);
+					BuildConfFile(BnetCollection, BnetConfFile);
 				}
 			}
 
@@ -466,7 +453,7 @@ namespace SPP_Config_Generator
 				if (WorldCollection == null || WorldCollection.Count == 0)
 					Log("WORLD Export -> Current settings are empty");
 				else
-					ExportToConfFile(WorldCollection, WorldConfFile);
+					BuildConfFile(WorldCollection, WorldConfFile);
 			}
 		}
 
@@ -505,12 +492,22 @@ namespace SPP_Config_Generator
 				}
 
 				// flush the temp string to file, overwrite
-				ExportToConfig(WowConfigFile, tmpstr, false);
+				ExportToFile(WowConfigFile, tmpstr, false);
 			}
 		}
 
-		public void ExportToConfig(string path, string entry, bool append = true)
+		public void ExportToFile(string path, string entry, bool append = true)
 		{
+			try
+			{
+				// Determine filename and backup existing before overwrite
+				string[] pathArray = path.Split('\\');
+				string backupFile = $"Backup Configs\\{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.{pathArray[pathArray.Length - 1]}";
+				Log($"Backing up {path} to {backupFile}");
+				File.Copy(path, backupFile);
+			}
+			catch (Exception e) { Log($"Error backing up to {path}, exception {e.ToString()}"); }
+
 			using (StreamWriter stream = new StreamWriter(path, append))
 			{
 				try
@@ -543,9 +540,9 @@ namespace SPP_Config_Generator
 			if (BnetCollectionTemplate.Count == 0)
 				Log("BnetCollectionTemplate is empty, error loading file bnetserver.conf");
 			if (WorldCollection.Count == 0)
-				Log($"WorldConfig is empty, error loading file {GeneralSettingsManager.WorldConfigPath} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+				Log($"WorldConfig is empty, error loading file {WorldConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
 			if (BnetCollection.Count == 0)
-				Log($"BnetConfig is empty, error loading file {GeneralSettingsManager.BNetConfigPath} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
 		}
 
 		// Take the folder locations in settings, and try to determine the path for each config file
