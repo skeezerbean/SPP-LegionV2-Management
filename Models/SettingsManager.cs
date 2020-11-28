@@ -3,7 +3,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -135,6 +134,9 @@ namespace SPP_Config_Generator
 		public ConfigEntry() { }
 	}
 
+	// These are the classes to handle attacged properties for the datagrid, which allows
+	// the search box to highlight matching entries, as well as auto-scroll to the first
+	// match that it finds
 	public class SearchValueConverter : IMultiValueConverter
 	{
 		public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)

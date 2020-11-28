@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Data;
 
 namespace SPP_Config_Generator
 {

@@ -45,7 +45,8 @@
 					   Name="StatusBox" Margin="5" />
 			</StackPanel>
 			<TextBlock Text="Search:" FontSize="14" />
-			<TextBox x:Name="SearchBox" Width="200" HorizontalAlignment="Left" Margin="2" />
+			<TextBox x:Name="SearchBox" Width="200" HorizontalAlignment="Left" Margin="10,2" 
+				ToolTip="As you type this will highlight/scroll to the first matching row. Note - switching tabs may require you to manually scroll or update the search text" />
 		</StackPanel>
 		
 
@@ -61,15 +62,31 @@
 					
 					<!-- Main Window -->
 					<Grid Grid.Column="0">						
-						<TabControl Background="LightGray" Margin="2">
+						<TabControl Background="White" Margin="2">
 							<TabItem Header="World Config" Margin="1">
-							<DataGrid ItemsSource="{Binding WorldCollection}"
-									ScrollViewer.HorizontalScrollBarVisibility="Auto"
-									ScrollViewer.VerticalScrollBarVisibility="Auto"
-									local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
-									  local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								<!-- Datagrid for World settings -->
+							<DataGrid 
+								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}" 
+								ItemsSource="{Binding WorldCollection}"
+									  local:DataGridTextSearch.AutoScrollToSelectedRow="True" >
 								<DataGrid.Resources>
 									<local:SearchValueConverter x:Key="SearchValueConverter" />
+									<Style TargetType="{x:Type DataGridRow}">
+										<Setter Property="local:DataGridTextSearch.IsTextMatch">
+											<Setter.Value>
+												<MultiBinding Converter="{StaticResource SearchValueConverter}">
+													<Binding RelativeSource="{RelativeSource Self}" Path="DataContext.Name" />
+													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
+												</MultiBinding>
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
+												<Setter Property="IsSelected" Value="True" />
+												<Setter Property="FontWeight" Value="Bold" />
+											</Trigger>
+										</Style.Triggers>
+									</Style>
 									<Style TargetType="{x:Type DataGridCell}">
 										<Setter Property="local:DataGridTextSearch.IsTextMatch">
 											<Setter.Value>
@@ -87,17 +104,32 @@
 									</Style>
 								</DataGrid.Resources>
 							</DataGrid>
-
 							</TabItem>
 							
 							<TabItem Header="Bnet Config" Margin="1">
-							<DataGrid ItemsSource="{Binding BnetCollection}"
-									ScrollViewer.HorizontalScrollBarVisibility="Auto"
-									ScrollViewer.VerticalScrollBarVisibility="Auto" 
-									local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
-									local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								<!-- Datagrid for Bnet settings -->
+							<DataGrid 
+								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}" 
+								ItemsSource="{Binding BnetCollection}"
+									  local:DataGridTextSearch.AutoScrollToSelectedRow="True" >
 								<DataGrid.Resources>
 									<local:SearchValueConverter x:Key="SearchValueConverter" />
+									<Style TargetType="{x:Type DataGridRow}">
+										<Setter Property="local:DataGridTextSearch.IsTextMatch">
+											<Setter.Value>
+												<MultiBinding Converter="{StaticResource SearchValueConverter}">
+													<Binding RelativeSource="{RelativeSource Self}" Path="DataContext.Name" />
+													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
+												</MultiBinding>
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
+												<Setter Property="IsSelected" Value="True" />
+												<Setter Property="FontWeight" Value="Bold" />
+											</Trigger>
+										</Style.Triggers>
+									</Style>
 									<Style TargetType="{x:Type DataGridCell}">
 										<Setter Property="local:DataGridTextSearch.IsTextMatch">
 											<Setter.Value>
