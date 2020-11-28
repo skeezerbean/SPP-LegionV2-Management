@@ -23,14 +23,7 @@
 			<RowDefinition Height="auto" />			
 			<RowDefinition Height="*" />
 		</Grid.RowDefinitions>
-
-		<!-- Setup Sidebar buttons...
-			Settings
-			Set repack IP (update config, SQL, config.wtf if available)
-			Set client build (update config, realm, prompt if multiple realms)
-			Set default config
-			Check Config -->
-		
+		<StackPanel>
 			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
 				<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue"
 					ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the config, DB and client config if able."/>
@@ -48,8 +41,12 @@
 						Help / About
 					</Hyperlink>
 				</TextBlock>
-			<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="StatusBox" Margin="5" />
+				<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
+					   Name="StatusBox" Margin="5" />
 			</StackPanel>
+			<TextBlock Text="Search:" FontSize="14" />
+			<TextBox x:Name="SearchBox" Width="200" HorizontalAlignment="Left" Margin="2" />
+		</StackPanel>
 		
 
 		<!-- Main window area -->
@@ -66,17 +63,59 @@
 					<Grid Grid.Column="0">						
 						<TabControl Background="LightGray" Margin="2">
 							<TabItem Header="World Config" Margin="1">
-								<DataGrid ItemsSource="{Binding WorldCollection}"
-										ScrollViewer.HorizontalScrollBarVisibility="Auto"
-										ScrollViewer.VerticalScrollBarVisibility="Auto" />
+							<DataGrid ItemsSource="{Binding WorldCollection}"
+									ScrollViewer.HorizontalScrollBarVisibility="Auto"
+									ScrollViewer.VerticalScrollBarVisibility="Auto"
+									local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
+									  local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								<DataGrid.Resources>
+									<local:SearchValueConverter x:Key="SearchValueConverter" />
+									<Style TargetType="{x:Type DataGridCell}">
+										<Setter Property="local:DataGridTextSearch.IsTextMatch">
+											<Setter.Value>
+												<MultiBinding Converter="{StaticResource SearchValueConverter}">
+													<Binding RelativeSource="{RelativeSource Self}" Path="Content.Text" />
+													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
+												</MultiBinding>
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
+												<Setter Property="Background" Value="Orange" />
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</DataGrid.Resources>
+							</DataGrid>
 
 							</TabItem>
 							
 							<TabItem Header="Bnet Config" Margin="1">
-								<DataGrid ItemsSource="{Binding BnetCollection}"
-										ScrollViewer.HorizontalScrollBarVisibility="Auto"
-										ScrollViewer.VerticalScrollBarVisibility="Auto" />
-							</TabItem>
+							<DataGrid ItemsSource="{Binding BnetCollection}"
+									ScrollViewer.HorizontalScrollBarVisibility="Auto"
+									ScrollViewer.VerticalScrollBarVisibility="Auto" 
+									local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
+									local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								<DataGrid.Resources>
+									<local:SearchValueConverter x:Key="SearchValueConverter" />
+									<Style TargetType="{x:Type DataGridCell}">
+										<Setter Property="local:DataGridTextSearch.IsTextMatch">
+											<Setter.Value>
+												<MultiBinding Converter="{StaticResource SearchValueConverter}">
+													<Binding RelativeSource="{RelativeSource Self}" Path="Content.Text" />
+													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
+												</MultiBinding>
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
+												<Setter Property="Background" Value="Orange" />
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</DataGrid.Resources>
+							</DataGrid>
+						</TabItem>
 
 							<TabItem Header="General App Settings" Margin="1">
 								<StackPanel Orientation="Horizontal">
@@ -98,8 +137,7 @@
 									</StackPanel>
 								</StackPanel>
 							</TabItem>
-						</TabControl>
-						
+						</TabControl>						
 					</Grid>
 					<GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
 				<!-- Log -->

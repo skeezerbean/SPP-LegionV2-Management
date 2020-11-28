@@ -1,10 +1,14 @@
 ﻿using Caliburn.Micro;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 
 namespace SPP_Config_Generator
 {
@@ -129,5 +133,89 @@ namespace SPP_Config_Generator
 		public string Description { get; set; } = string.Empty;
 
 		public ConfigEntry() { }
+	}
+
+	public class SearchValueConverter : IMultiValueConverter
+	{
+		public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
+		{
+			string cellText = values[0] == null ? string.Empty : values[0].ToString();
+			string searchText = values[1] as string;
+
+			if (!string.IsNullOrEmpty(searchText) && !string.IsNullOrEmpty(cellText))
+			{
+				return cellText.ToLower().Contains(searchText.ToLower());
+			}
+			return false;
+		}
+
+		public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture)
+		{
+			return null;
+		}
+	}
+
+	public static class DataGridTextSearch
+	{
+		// Using a DependencyProperty as the backing store for SearchValue.  This enables animation, styling, binding, etc...
+		public static readonly DependencyProperty SearchValueProperty =
+			DependencyProperty.RegisterAttached("SearchValue", typeof(string), typeof(DataGridTextSearch),
+				new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.Inherits));
+
+		public static string GetSearchValue(DependencyObject obj)
+		{
+			return (string)obj.GetValue(SearchValueProperty);
+		}
+
+		public static void SetSearchValue(DependencyObject obj, string value)
+		{
+			obj.SetValue(SearchValueProperty, value);
+		}
+
+		// Using a DependencyProperty as the backing store for IsTextMatch.  This enables animation, styling, binding, etc...
+		public static readonly DependencyProperty IsTextMatchProperty =
+			DependencyProperty.RegisterAttached("IsTextMatch", typeof(bool), typeof(DataGridTextSearch), new UIPropertyMetadata(false));
+
+		public static bool GetIsTextMatch(DependencyObject obj)
+		{
+			return (bool)obj.GetValue(IsTextMatchProperty);
+		}
+
+		public static void SetIsTextMatch(DependencyObject obj, bool value)
+		{
+			obj.SetValue(IsTextMatchProperty, value);
+		}
+
+		// Using a DependencyProperty as the backing store for AutoScrollToSelectedRow.  This enables animation, styling, binding, etc...
+		public static readonly DependencyProperty AutoScrollToSelectedRowProperty =
+			DependencyProperty.RegisterAttached("AutoScrollToSelectedRow", typeof(bool), typeof(DataGridTextSearch)
+			, new UIPropertyMetadata(false, OnAutoScrollToSelectedRowChanged));
+
+		public static bool GetAutoScrollToSelectedRow(DependencyObject obj)
+		{
+			return (bool)obj.GetValue(AutoScrollToSelectedRowProperty);
+		}
+
+		public static void SetAutoScrollToSelectedRow(DependencyObject obj, bool value)
+		{
+			obj.SetValue(AutoScrollToSelectedRowProperty, value);
+		}
+
+		public static void OnAutoScrollToSelectedRowChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
+		{
+			var datagrid = s as DataGrid;
+			if (datagrid != null)
+			{
+				datagrid.IsSynchronizedWithCurrentItem = true;
+				datagrid.EnableRowVirtualization = !((bool)e.NewValue);
+				datagrid.SelectionChanged += (g, a) =>
+				{
+					if (datagrid.SelectedItem != null)
+					{
+						datagrid.ScrollIntoView(datagrid.SelectedItem);
+					}
+				};
+			}
+		}
 	}
 }
