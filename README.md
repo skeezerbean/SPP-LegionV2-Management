@@ -1,11 +1,33 @@
 # SPPConfigGenerator
 Build/Update config for SPP LegionV2
 
+Usage -
+Make sure the SPP Database engine is running.
+Set the general settings with the location of your SPP directory (base directory OR the server folder with config, either works)
+Set the general settings with the location of your WOW Legion client (base directory OR the WTF folder containing the config)
+Load up the tool, run a check on the config, and save/export as needed to build/rebuild your SPP LegionV2 config files.
+You can use the "Set Build" button to set the build # for the client you're using to match in both config files, and database realm entry.
+You can use the "Set IP" button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same.
+
+Current To-Do -
+Parse existing worldserver/bnetserver config files instead of a saved json file (to use existing config to check rather than forcing from default templates)
+Alert if the SPP folder in general settings is blank
+Update the About/Help page to pull from this file, or have a link to it
+Move templates to their own folder
+Create a backup folder (in the app's folder) and store backups of existing config files before making changes
+Look into making a search/filter box for search for specific entries in the config
+
+Changes -
+0.0.1.1 - introduced pulling/parsing template configs from worldserver.conf and bnetserver.conf default files, added/fixed some checks
+0.0.1.0 - base release, more proof of concept than anything
+
 This tool helps build working World and Bnet server config files without duplicate entries. This can also be used to check your configuration for any known issues. There are some things to be aware of -
 
 The MySQL server will probably error connecting unless you're running this on the same server. You should keep the MySQL server set to 127.0.0.1 and user/password should be left to defaults. Delete the settings.json file to reset them.
 
 This tool can also update the config.wtf file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the [LoginREST.ExternalAddress] from the Bnet Config, otherwise you may have trouble with your WOW client contacting the server. You can find this entry in your Bnet Config.
+
+This will also check for some common issues, such as having both battle.coin.vendor entries active (creates double speech in the vendor interaction). It also checks for having Solocraft and Flexcraft both enabled (can be a problem), and makes sure both entries for the bshop are both enabled/disabled together. It will also search for any duplicate entries in the config, which would cause an instant crash in the server startup if they were there.
 
 This tool can also set and check the [Game.Build.Version] between both configs and the database realm entry, and warn of any issues. Use the [Set Build] button to set this entry if there is a discrepancy between them and your WOW client version. You can find the WOW client version by launching it and checking at the bottom-left of the client at the login screen.
 
