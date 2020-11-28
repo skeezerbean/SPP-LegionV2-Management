@@ -62,7 +62,7 @@
 					
 					<!-- Main Window -->
 					<Grid Grid.Column="0">						
-						<TabControl Background="White" Margin="2">
+						<TabControl Background="DarkGray" Margin="2">
 							<TabItem Header="World Config" Margin="1">
 								<!-- Datagrid for World settings -->
 							<DataGrid 
