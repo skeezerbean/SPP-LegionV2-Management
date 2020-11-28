@@ -57,8 +57,9 @@
 			<Border Grid.Column="0" Grid.Row="1" BorderThickness="5" BorderBrush="Black">
 				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="200" /> <!-- Log -->
+						<ColumnDefinition Width="3*" />
+					<ColumnDefinition Width="5" />
+					<ColumnDefinition Width="*" /> <!-- Log -->
 					</Grid.ColumnDefinitions>
 					
 					<!-- Main Window -->
@@ -100,9 +101,9 @@
 						</TabControl>
 						
 					</Grid>
-					
-					<!-- Log -->
-					<Border Grid.Column="1" BorderThickness="2" BorderBrush="AliceBlue">
+					<GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+				<!-- Log -->
+					<Border Grid.Column="2" BorderThickness="2" BorderBrush="AliceBlue">
 						<TextBlock Text="{Binding LogText}" Margin="5" TextWrapping="Wrap" />
 					</Border>					
 				</Grid>
