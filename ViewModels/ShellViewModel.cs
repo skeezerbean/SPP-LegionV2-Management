@@ -559,7 +559,7 @@ namespace SPP_Config_Generator
 				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
 
 			if (SPPFolderLocation == string.Empty || WowConfigFile == string.Empty)
-				MessageBox.Show("Hello! The location for either SPP folder or WOW config doesn't seem to exist, so if this is your first time running this app then please go to the General App Settings tab and set the folder locations, then save/export.");
+				MessageBox.Show("Hello! The location for either SPP folder or WOW config doesn't seem to exist, so if this is your first time running this app then please go to the General App Settings tab and set the folder locations, then save/export.", "Settings Need Attention!");
 		}
 
 		// Take the folder locations in settings, and try to determine the path for each config file
