@@ -233,6 +233,9 @@ namespace SPP_Config_Generator
 			bool purchaseShop = IsOptionEnabled(WorldCollection, "Purchase.Shop.Enabled");
 			bool battleCoinVendor = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Enable");
 			bool battleCoinVendorCustom = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Custom.Enable");
+			bool gridUnload = IsOptionEnabled(WorldCollection, "GridUnload");
+			bool baseMapLoadAllGrids = IsOptionEnabled(WorldCollection, "BaseMapLoadAllGrids");
+			bool instanceMapLoadAllGrids = IsOptionEnabled(WorldCollection, "InstanceMapLoadAllGrids");
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
@@ -342,6 +345,12 @@ namespace SPP_Config_Generator
 				// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
 				if (battleCoinVendor && battleCoinVendorCustom)
 					result += $"\nAlert - Battle.Coin.Vendor.Enable is {battleCoinVendor}, and Battle.Coin.Vendor.CUSTOM.Enable is {battleCoinVendorCustom} - only one needs enabled.\n";
+
+				// Warn about grid related settings
+				if (baseMapLoadAllGrids || instanceMapLoadAllGrids)
+					result += "\nAlert - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0, or the server will likely run out of memory and crash.\n";
+				if (gridUnload == false)
+					result += $"\nAlert - GridUnload should be set to 1 to unload unused map grids and release memory, otherwise the server could crash out of memory.\n";
 
 				// Check collections for duplicate entries
 				result += "\nChecking for duplicates in world/bnet config\n";
