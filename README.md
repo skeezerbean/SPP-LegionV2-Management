@@ -15,13 +15,9 @@ You can use the **[Set Build]** button to set the build # for the client you're 
 
 You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same.
 
-
-### Current To-Do -
-
-Look into making a search/filter box to search for specific entries in the config
-
-
 ### Changes -
+
+**0.0.1.3** - search box added, enabled highlight of matching rows, and semi-working auto-scroll to first matches
 
 **0.0.1.2** - introduced backups of existing configs to a backup folder (within app folder), pulls in existing bnet/worldserver.conf to check
 
