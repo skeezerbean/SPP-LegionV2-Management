@@ -69,8 +69,12 @@
 							<!-- Datagrid for World settings -->
 							<DataGrid
 								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
-								ItemsSource="{Binding WorldCollection}"
+								ItemsSource="{Binding WorldCollection}" AutoGenerateColumns="False"
 									  local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								<DataGrid.Columns>
+									<DataGridTextColumn Header="Setting" Binding="{Binding Name}" />
+									<DataGridTextColumn Header="Value" Binding="{Binding Value}" />
+								</DataGrid.Columns>
 								<DataGrid.Resources>
 									<local:SearchValueConverter x:Key="SearchValueConverter" />
 									<Style TargetType="{x:Type DataGridRow}">
@@ -82,6 +86,7 @@
 												</MultiBinding>
 											</Setter.Value>
 										</Setter>
+										<Setter Property="ToolTip" Value="{Binding Description}"/>
 										<Style.Triggers>
 											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
 												<Setter Property="IsSelected" Value="True" />
