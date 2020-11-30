@@ -7,12 +7,12 @@ namespace SPP_Config_Generator
 	{
 		// https://stackoverflow.com/questions/21618015/how-to-connect-to-mysql-database
 
-		static string server;
-		static string database = "legion_auth";
-		static string user;
-		static string password;
-		static int port;
-		static string connectionString;
+		private static string server;
+		private static string database = "legion_auth";
+		private static string user;
+		private static string password;
+		private static int port;
+		private static string connectionString;
 
 		private static void UpdateConnectionInfo()
 		{

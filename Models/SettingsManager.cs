@@ -19,7 +19,6 @@ namespace SPP_Config_Generator
 		public static GeneralSettings GeneralSettings { get; set; } = new GeneralSettings();
 		public static JObject SettingsJSON { get; set; }
 		public static string SettingsPath = "Settings.json";
-		public static string LogText { get; set; }
 
 		public static void LoadGeneralSettings()
 		{
@@ -51,7 +50,6 @@ namespace SPP_Config_Generator
 		{
 			string tmpDescription = string.Empty;
 			BindableCollection<ConfigEntry> tempCollection = new BindableCollection<ConfigEntry>();
-			int count = 0;
 
 			try
 			{
@@ -60,8 +58,6 @@ namespace SPP_Config_Generator
 
 				foreach (var item in allLinesText)
 				{
-					count++;
-
 					// Check if comment or not
 					if (item.Contains("=") && item.Contains("#") == false)
 					{
@@ -103,7 +99,6 @@ namespace SPP_Config_Generator
 		}
 	}
 
-
 	/// <summary>
 	/// This class stores the overall general settings for the app
 	/// </summary>
@@ -120,7 +115,9 @@ namespace SPP_Config_Generator
 		public double WindowHeight { get; set; } = 500;
 		public double WindowWidth { get; set; } = 800;
 
-		public GeneralSettings() { }
+		public GeneralSettings()
+		{
+		}
 	}
 
 	// This is the class for representing any single configuration entry for the WoW config
@@ -131,12 +128,16 @@ namespace SPP_Config_Generator
 		public string Value { get; set; } = string.Empty;
 		public string Description { get; set; } = string.Empty;
 
-		public ConfigEntry() { }
+		public ConfigEntry()
+		{
+		}
 	}
 
-	// These are the classes to handle attacged properties for the datagrid, which allows
+	// These are the classes to handle attached properties for the datagrid, which allows
 	// the search box to highlight matching entries, as well as auto-scroll to the first
 	// match that it finds
+	// Credit to sa_ddam213 @ Stackoverflow, without that I'd have never gotten this
+	// to work -- https://stackoverflow.com/questions/15467553/proper-datagrid-search-from-textbox-in-wpf-using-mvvm
 	public class SearchValueConverter : IMultiValueConverter
 	{
 		public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)

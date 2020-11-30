@@ -8,110 +8,69 @@
 		BorderThickness="0" Icon="/Resources/spp.jpg"
 		xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
 		mc:Ignorable="d" FontSize="12" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
-        Title="{Binding AppTitle}" 
-		Height="{Binding WindowHeight, Mode=TwoWay}" 
+        Title="{Binding AppTitle}"
+		Height="{Binding WindowHeight, Mode=TwoWay}"
 		Width="{Binding WindowWidth, Mode=TwoWay}"
-		Top="{Binding WindowTop, Mode=TwoWay}" 
-		Left="{Binding WindowLeft, Mode=TwoWay}" >
-    <Grid>
+		Top="{Binding WindowTop, Mode=TwoWay}"
+		Left="{Binding WindowLeft, Mode=TwoWay}">
+	<Grid>
 		<Grid.ColumnDefinitions>
 			<!-- Sidebar -->
 			<ColumnDefinition Width="*" />
 		</Grid.ColumnDefinitions>
 		<Grid.RowDefinitions>
 			<!-- Header -->
-			<RowDefinition Height="auto" />			
+			<RowDefinition Height="auto" />
 			<RowDefinition Height="*" />
 		</Grid.RowDefinitions>
 		<StackPanel>
 			<StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
 				<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue"
-					ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the config, DB and client config if able."/>
+					ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the config, DB and client config if able." />
 				<Button x:Name="SetBuild" Content="Set Build" Padding="5" Margin="5" Background="AliceBlue"
-					ToolTip="Set the CLIENT BUILD in the config/database"/>
+					ToolTip="Set the CLIENT BUILD in the config/database" />
 				<Button x:Name="SetDefaults" Content="Set Defaults" Padding="5" Margin="5" Background="AliceBlue"
-					ToolTip="Set defaults in the SPP config. This will overwrite current settings."/>
+					ToolTip="Set defaults in the SPP config. This will overwrite current settings." />
+				<Button x:Name="LoadSettings" Content="Reload Configs" Padding="5" Margin="5" Background="AliceBlue"
+					ToolTip="This reloads the Settings file, default templates and SPP world/bnet files from disk. This is helpful to undo any changes in the current session instead of restarting the app." />
 				<Button x:Name="CheckSPPConfig" Content="Check Config" Padding="5" Margin="5" Background="AliceBlue"
-					ToolTip="This will check the current SPP config for some potential issues."/>
+					ToolTip="This will check the current SPP config for some potential issues." />
 				<Button x:Name="SaveConfig" Content="Save/Export" Padding="5" Margin="5" Background="AliceBlue"
-					ToolTip="Save settings and generate configs to SPP installation."/>
+					ToolTip="Save settings and generate configs to SPP installation." />
 				<TextBlock Padding="5" Margin="6" Background="AliceBlue">
-					<Hyperlink NavigateUri="https://github.com/skeezerbean/SPPConfigGenerator/blob/main/README.md" 
+					<Hyperlink NavigateUri="https://github.com/skeezerbean/SPPConfigGenerator/blob/main/README.md"
 							   RequestNavigate="Hyperlink_RequestNavigate">
 						Help / About
 					</Hyperlink>
 				</TextBlock>
-				<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" 
-					   Name="StatusBox" Margin="5" />
+				<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+					   Name="StatusBox" Margin="5" FontWeight="Bold" />
 			</StackPanel>
 			<TextBlock Text="Search:" FontSize="14" />
-			<TextBox x:Name="SearchBox" Width="200" HorizontalAlignment="Left" Margin="10,2" 
+			<TextBox x:Name="SearchBox" Width="200" HorizontalAlignment="Left" Margin="10,2"
 				ToolTip="As you type this will highlight/scroll to the first matching row. Note - switching tabs may require you to manually scroll or update the search text" />
 		</StackPanel>
-		
 
 		<!-- Main window area -->
-		
-			<Border Grid.Column="0" Grid.Row="1" BorderThickness="5" BorderBrush="Black">
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="3*" />
+
+		<Border Grid.Column="0" Grid.Row="1" BorderThickness="5" BorderBrush="Black">
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="3*" />
 					<ColumnDefinition Width="5" />
-					<ColumnDefinition Width="*" /> <!-- Log -->
-					</Grid.ColumnDefinitions>
-					
-					<!-- Main Window -->
-					<Grid Grid.Column="0">						
-						<TabControl Background="DarkGray" Margin="2">
-							<TabItem Header="World Config" Margin="1">
-								<!-- Datagrid for World settings -->
-							<DataGrid 
-								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}" 
+					<ColumnDefinition Width="*" />
+					<!-- Log -->
+				</Grid.ColumnDefinitions>
+
+				<!-- Main Window -->
+				<Grid Grid.Column="0">
+					<TabControl Background="DarkGray" Margin="2">
+						<TabItem Header="World Config" Margin="1">
+							<!-- Datagrid for World settings -->
+							<DataGrid
+								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
 								ItemsSource="{Binding WorldCollection}"
-									  local:DataGridTextSearch.AutoScrollToSelectedRow="True" >
-								<DataGrid.Resources>
-									<local:SearchValueConverter x:Key="SearchValueConverter" />
-									<Style TargetType="{x:Type DataGridRow}">
-										<Setter Property="local:DataGridTextSearch.IsTextMatch">
-											<Setter.Value>
-												<MultiBinding Converter="{StaticResource SearchValueConverter}">
-													<Binding RelativeSource="{RelativeSource Self}" Path="DataContext.Name" />
-													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
-												</MultiBinding>
-											</Setter.Value>
-										</Setter>
-										<Style.Triggers>
-											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
-												<Setter Property="IsSelected" Value="True" />
-												<Setter Property="FontWeight" Value="Bold" />
-											</Trigger>
-										</Style.Triggers>
-									</Style>
-									<Style TargetType="{x:Type DataGridCell}">
-										<Setter Property="local:DataGridTextSearch.IsTextMatch">
-											<Setter.Value>
-												<MultiBinding Converter="{StaticResource SearchValueConverter}">
-													<Binding RelativeSource="{RelativeSource Self}" Path="Content.Text" />
-													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
-												</MultiBinding>
-											</Setter.Value>
-										</Setter>
-										<Style.Triggers>
-											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
-												<Setter Property="Background" Value="Orange" />
-											</Trigger>
-										</Style.Triggers>
-									</Style>
-								</DataGrid.Resources>
-							</DataGrid>
-							</TabItem>
-							
-							<TabItem Header="Bnet Config" Margin="1">
-								<!-- Datagrid for Bnet settings -->
-							<DataGrid 
-								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}" 
-								ItemsSource="{Binding BnetCollection}"
-									  local:DataGridTextSearch.AutoScrollToSelectedRow="True" >
+									  local:DataGridTextSearch.AutoScrollToSelectedRow="True">
 								<DataGrid.Resources>
 									<local:SearchValueConverter x:Key="SearchValueConverter" />
 									<Style TargetType="{x:Type DataGridRow}">
@@ -149,35 +108,77 @@
 							</DataGrid>
 						</TabItem>
 
-							<TabItem Header="General App Settings" Margin="1">
-								<StackPanel Orientation="Horizontal">
-									<StackPanel Margin="2">
-										<Button x:Name="SPPFolderBrowse" Content="SPP Folder Location"  />
-										<Button x:Name="WowConfigBrowse" Content="Wow Config Location"  />
-										<TextBlock Text="MySQL Server" />
-										<TextBlock Text="MySQL Port" />
-										<TextBlock Text="MySQL User" />
-										<TextBlock Text="MySQL Pass" />
-									</StackPanel>
-									<StackPanel Margin="2" >
-										<TextBlock x:Name="SPPFolderLocation" />
-										<TextBlock x:Name="WOWConfigLocation" />
-										<TextBox x:Name="MySQLServer" />
-										<TextBox x:Name="MySQLPort" />
-										<TextBox x:Name="MySQLUser" />
-										<TextBox x:Name="MySQLPass" />
-									</StackPanel>
+						<TabItem Header="Bnet Config" Margin="1">
+							<!-- Datagrid for Bnet settings -->
+							<DataGrid
+								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
+								ItemsSource="{Binding BnetCollection}"
+									  local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								<DataGrid.Resources>
+									<local:SearchValueConverter x:Key="SearchValueConverter" />
+									<Style TargetType="{x:Type DataGridRow}">
+										<Setter Property="local:DataGridTextSearch.IsTextMatch">
+											<Setter.Value>
+												<MultiBinding Converter="{StaticResource SearchValueConverter}">
+													<Binding RelativeSource="{RelativeSource Self}" Path="DataContext.Name" />
+													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
+												</MultiBinding>
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
+												<Setter Property="IsSelected" Value="True" />
+												<Setter Property="FontWeight" Value="Bold" />
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+									<Style TargetType="{x:Type DataGridCell}">
+										<Setter Property="local:DataGridTextSearch.IsTextMatch">
+											<Setter.Value>
+												<MultiBinding Converter="{StaticResource SearchValueConverter}">
+													<Binding RelativeSource="{RelativeSource Self}" Path="Content.Text" />
+													<Binding RelativeSource="{RelativeSource Self}" Path="(local:DataGridTextSearch.SearchValue)" />
+												</MultiBinding>
+											</Setter.Value>
+										</Setter>
+										<Style.Triggers>
+											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
+												<Setter Property="Background" Value="Orange" />
+											</Trigger>
+										</Style.Triggers>
+									</Style>
+								</DataGrid.Resources>
+							</DataGrid>
+						</TabItem>
+
+						<TabItem Header="General App Settings" Margin="1">
+							<StackPanel Orientation="Horizontal">
+								<StackPanel Margin="2">
+									<Button x:Name="SPPFolderBrowse" Content="SPP Folder Location" />
+									<Button x:Name="WowConfigBrowse" Content="Wow Config Location" />
+									<TextBlock Text="MySQL Server" />
+									<TextBlock Text="MySQL Port" />
+									<TextBlock Text="MySQL User" />
+									<TextBlock Text="MySQL Pass" />
 								</StackPanel>
-							</TabItem>
-						</TabControl>						
-					</Grid>
-					<GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
-				<!-- Log -->
-					<Border Grid.Column="2" BorderThickness="2" BorderBrush="AliceBlue">
-						<TextBlock Text="{Binding LogText}" Margin="5" TextWrapping="Wrap" />
-					</Border>					
+								<StackPanel Margin="2">
+									<TextBlock x:Name="SPPFolderLocation" />
+									<TextBlock x:Name="WOWConfigLocation" />
+									<TextBox x:Name="MySQLServer" />
+									<TextBox x:Name="MySQLPort" />
+									<TextBox x:Name="MySQLUser" />
+									<TextBox x:Name="MySQLPass" />
+								</StackPanel>
+							</StackPanel>
+						</TabItem>
+					</TabControl>
 				</Grid>
-			</Border>
-		
+				<GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
+				<!-- Log -->
+				<Border Grid.Column="2" BorderThickness="2" BorderBrush="AliceBlue">
+					<TextBlock Text="{Binding LogText}" Margin="5" TextWrapping="Wrap" />
+				</Border>
+			</Grid>
+		</Border>
 	</Grid>
 </Window>

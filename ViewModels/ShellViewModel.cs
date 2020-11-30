@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -37,13 +38,16 @@ namespace SPP_Config_Generator
 		public ShellViewModel()
 		{
 			Log("App Initializing...");
+			
 			// Pull in saved settings, adjust window position if needed
 			Log("Loading settings");
 			LoadSettings();
-			Log("Set Window position/width/height, moving into view");
-			GeneralSettingsManager.MoveIntoView();
+			
 			if (SPPFolderLocation == string.Empty)
 				StatusBox = "Please set SPP Location in the General Settings tab";
+
+			Log("Set Window position/width/height, moving into view");
+			GeneralSettingsManager.MoveIntoView();
 		}
 
 		public BindableCollection<ConfigEntry> UpdateConfigCollection(BindableCollection<ConfigEntry> collection, string entry, string value)
@@ -251,7 +255,6 @@ namespace SPP_Config_Generator
 					if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
 						result += $"Alert - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
 
-
 				// Compare world to default - any missing/extra items?
 				result += "\nChecking World config compared to template...\n";
 
@@ -275,13 +278,11 @@ namespace SPP_Config_Generator
 				if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
 					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n";
 
-
 				// Compare IP bindings
 				result += $"\nWorld BindIP - {worldBindIP}\n";
 				result += $"Bnet BindIP - {bnetBindIP}\n";
 				if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
 					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n";
-
 
 				// Compare listening IPs between bnet/world/realm/wow config
 				result += $"\nLoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
@@ -374,7 +375,7 @@ namespace SPP_Config_Generator
 			// If it's empty, then it was cancelled and we keep the old setting
 			string tmp = BrowseFolder();
 			if (tmp != string.Empty)
-				WOWConfigLocation = BrowseFolder();
+				WOWConfigLocation = tmp;
 		}
 
 		public string BrowseFolder()
@@ -386,7 +387,7 @@ namespace SPP_Config_Generator
 				VistaFolderBrowserDialog dialog = new VistaFolderBrowserDialog();
 				dialog.Description = "Please select a folder.";
 				dialog.UseDescriptionForTitle = true; // This applies to the Vista style dialog only, not the old dialog.
-				dialog.SelectedPath = baseFolder; // place to start search				
+				dialog.SelectedPath = baseFolder; // place to start search
 				if ((bool)dialog.ShowDialog())
 					result = dialog.SelectedPath;
 			}
@@ -403,10 +404,15 @@ namespace SPP_Config_Generator
 			foreach (var item in collection)
 			{
 				count++;
-				StatusBox = $"Updating {path} row {count} of {collection.Count}";
 
-				// Let our UI update
-				await Task.Delay(1);
+				// Update status every x entries
+				if (count % 5 == 0)
+				{
+					StatusBox = $"Updating {path} row {count} of {collection.Count}";
+
+					// Let our UI update
+					await Task.Delay(1);
+				}
 
 				if (item.Description.Length > 1)
 					tmpstr += item.Description;
@@ -416,6 +422,7 @@ namespace SPP_Config_Generator
 
 			// flush to file
 			ExportToFile(path, tmpstr, false);
+			StatusBox = "";
 		}
 
 		public void SaveConfig()
@@ -457,11 +464,9 @@ namespace SPP_Config_Generator
 			}
 		}
 
-		public async void UpdateWowConfig()
+		public void UpdateWowConfig()
 		{
 			string tmpstr = string.Empty;
-			//string wowConfigFile = GetWowConfigFile();
-			int count = 0;
 
 			if (WowConfigFile == string.Empty)
 				Log("WOW Config File cannot be found - cannot update SET portal entry");
@@ -472,12 +477,6 @@ namespace SPP_Config_Generator
 
 				foreach (var item in allLinesText)
 				{
-					count++;
-					StatusBox = $"Updating WOWCONFIG row {count} of {allLinesText.Count}";
-
-					// Let our UI update
-					await Task.Delay(1);
-
 					// If it's the portal entry, set it to the external address
 					if (item.Contains("SET portal"))
 						foreach (var entry in BnetCollection)
@@ -493,6 +492,7 @@ namespace SPP_Config_Generator
 
 				// flush the temp string to file, overwrite
 				ExportToFile(WowConfigFile, tmpstr, false);
+				StatusBox = "";
 			}
 		}
 
@@ -519,22 +519,36 @@ namespace SPP_Config_Generator
 			}
 		}
 
-		public void LoadSettings()
+		public async void LoadSettings()
 		{
+			StatusBox = "Please wait, loading general settings...";
 			// Pull in the saved settings, if any
 			Log("Loading general settings");
 			GeneralSettingsManager.LoadGeneralSettings();
 
+			// This await should let the GUI size/position settings apply before moving forward
+			await Task.Delay(1);
 			FindConfigPaths();
 
 			Log("Loading World/Bnet default templates");
+			StatusBox = "Please wait, loading bnet template...";
+			await Task.Delay(1);
 			BnetCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\bnetserver.conf");
+
+			StatusBox = "Please wait, loading world template...";
+			await Task.Delay(1);
 			WorldCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\worldserver.conf");
 
 			Log("Loading current World/Bnet config files");
-			WorldCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile);
+			StatusBox = "Please wait, loading current bnetserver.conf...";
+			await Task.Delay(1);
 			BnetCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(BnetConfFile);
 
+			StatusBox = "Please wait, loading current worldserver.conf...";
+			await Task.Delay(1);
+			WorldCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile);
+
+			StatusBox = "";
 			if (WorldCollectionTemplate.Count == 0)
 				Log("WorldCollectionTemplate is empty, error loading file worldserver.conf");
 			if (BnetCollectionTemplate.Count == 0)
@@ -543,6 +557,9 @@ namespace SPP_Config_Generator
 				Log($"WorldConfig is empty, error loading file {WorldConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
 			if (BnetCollection.Count == 0)
 				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+
+			if (SPPFolderLocation == string.Empty || WowConfigFile == string.Empty)
+				MessageBox.Show("Hello! The location for either SPP folder or WOW config doesn't seem to exist, so if this is your first time running this app then please go to the General App Settings tab and set the folder locations, then save/export.");
 		}
 
 		// Take the folder locations in settings, and try to determine the path for each config file
@@ -581,6 +598,9 @@ namespace SPP_Config_Generator
 			}
 		}
 
-		public void Log(string log) { LogText = ":> " + log + "\n" + LogText; }
+		public void Log(string log)
+		{
+			LogText = ":> " + log + "\n" + LogText;
+		}
 	}
 }
