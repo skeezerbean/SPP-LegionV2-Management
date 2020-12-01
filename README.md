@@ -17,6 +17,8 @@ You can use the **[Set IP]** button to set the hosting IP in the bnet config and
 
 ### Changes -
 
+**0.0.1.4** - Extra checks, moved description to tooltips for each row (shorter launch/import time), general cleanup, added button to reload config so that you don't have to close and open the app again to reload if any mistakes were made.
+
 **0.0.1.3** - search box added, enabled highlight of matching rows, and semi-working auto-scroll to first matches
 
 **0.0.1.2** - introduced backups of existing configs to a backup folder (within app folder), pulls in existing bnet/worldserver.conf to check
