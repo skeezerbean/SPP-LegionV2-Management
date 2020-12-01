@@ -12,7 +12,7 @@ using System.Windows.Data;
 namespace SPP_Config_Generator
 {
 	/// <summary>
-	/// This class handles the general settings, save/load XML
+	/// This class handles the general settings, save/load with files
 	/// </summary>
 	public static class GeneralSettingsManager
 	{
@@ -20,6 +20,7 @@ namespace SPP_Config_Generator
 		public static JObject SettingsJSON { get; set; }
 		public static string SettingsPath = "Settings.json";
 
+		// If the file doesn't exist, it will resort to defaults listed in the class itself
 		public static void LoadGeneralSettings()
 		{
 			// Let's try to pull in settings, keep default if fails
@@ -39,6 +40,7 @@ namespace SPP_Config_Generator
 		}
 
 		// Take an incoming class and convert to json to save to disk
+		// as well as implementing indentation for human-reading
 		public static bool SaveSettings(string path, object item)
 		{
 			try { File.WriteAllText(path, JsonConvert.SerializeObject(item, Formatting.Indented)); }
@@ -46,6 +48,8 @@ namespace SPP_Config_Generator
 			return true;
 		}
 
+		// This takes in a file path to a bnet or worldserver.conf file, then parses it to store
+		// into a collection of <ConfigEntry> objects to return back to the caller
 		public static BindableCollection<ConfigEntry> CreateCollectionFromConfigFile(string inFile)
 		{
 			string tmpDescription = string.Empty;
@@ -56,6 +60,7 @@ namespace SPP_Config_Generator
 				// Pull in our config
 				List<string> allLinesText = File.ReadAllLines(inFile).ToList();
 
+				// Process every text line in the file
 				foreach (var item in allLinesText)
 				{
 					// Check if comment or not
@@ -64,30 +69,40 @@ namespace SPP_Config_Generator
 						// Split based on = sign
 						string[] strArray = item.Split('=');
 
-						// Now we should have 2 parts, the entry[0] and the value[1]
-						// and strip janky whitespace from the start/end
+						// Now we should have 2 parts, the setting[0] and the value[1]
+						// and strip janky whitespace from the start/end so that we're
+						// left with a value and setting without extra space. This helps
+						// both comparing strings later, as well as the export of this
+						// collection back to disk
 						ConfigEntry entry = new ConfigEntry();
+						// Set our name (setting) without the whitespace
 						entry.Name = strArray[0].TrimStart(' ').TrimEnd(' ');
+						// Set our value of the name/setting without whitespace
 						entry.Value = strArray[1].TrimStart(' ').TrimEnd(' ');
+						// Remove any newline at the beginning of the description, and any
+						// trailing whitespace
 						entry.Description = tmpDescription.TrimStart('\n').TrimStart(' ').TrimEnd(' ');
+						// Squirt our new entry into our temp collection
 						tempCollection.Add(entry);
 						tmpDescription = string.Empty; // reset our description
 					}
 					else
 					{
-						// If we're here, then the line doesn't have =, so it's description or other
+						// If we're here, then the line doesn't have '=', so it's part of the description or other line
 						// so we'll keep adding to the tmpDescription until it's used/flushed to the collection
+						// when it matches a line with '=' in it. Since each time this happens, add a \n at the end
+						// so it will maintain visual continuity with the original .conf file when it exports
 						tmpDescription += item + "\n";
 					}
 				}
 			}
-			catch { return new BindableCollection<ConfigEntry>(); }
+			catch { return new BindableCollection<ConfigEntry>(); } // if something failed, then return a default blank collection
 
 			return tempCollection;
 		}
 
 		// If the saved window settings are out of bounds (resolution change, multiple monitors change)
-		// then we move into view
+		// then we move into view so that it isn't off screen somewhere
 		public static void MoveIntoView()
 		{
 			GeneralSettingsManager.GeneralSettings.WindowWidth = System.Math.Min(GeneralSettingsManager.GeneralSettings.WindowWidth, SystemParameters.VirtualScreenWidth);
