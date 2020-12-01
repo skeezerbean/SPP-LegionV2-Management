@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -185,14 +184,14 @@ namespace SPP_Config_Generator
 				int matches = 0;
 				foreach (var item2 in collection)
 				{
-					if (item.Name == item2.Name)
+					if (string.Equals(item.Name, item2.Name, StringComparison.OrdinalIgnoreCase))
 						matches++;
 				}
 
 				// There will naturally be 1 match as an entry matches itself. Anything more is a problem...
 				// Only add to results if the match hasn't been added yet (will trigger twice for duplicate, we only want one notification)
 				if (matches > 1)
-					if (!results.Contains(item.Name))
+					if (!results.ToLower().Contains(item.Name.ToLower()))
 						results += $"{item.Name}&";
 			}
 
@@ -249,14 +248,14 @@ namespace SPP_Config_Generator
 				{
 					if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
 					{
-						result += $"Alert - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
+						result += $"Warning - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
 						BnetCollection.Add(item);
 					}
 				}
 
 				foreach (var item in BnetCollection)
 					if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
-						result += $"Alert - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
+						result += $"Warning - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
 
 				// Compare world to default - any missing/extra items?
 				result += "\nChecking World config compared to template...\n";
@@ -265,14 +264,14 @@ namespace SPP_Config_Generator
 				{
 					if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
 					{
-						result += $"Alert - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
+						result += $"Warning - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
 						WorldCollection.Add(item);
 					}
 				}
 
 				foreach (var item in WorldCollection)
 					if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
-						result += $"Alert - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
+						result += $"Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
 
 				// Compare build# between bnet/world/realm
 				result += $"\nBuild from DB Realm - {buildFromDB}\n";
@@ -280,12 +279,16 @@ namespace SPP_Config_Generator
 				result += $"Build from BnetConfig - {buildFromBnet}\n";
 				if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
 					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n";
+				else
+					result += "Build numbers match, this is good!\n";
 
 				// Compare IP bindings
 				result += $"\nWorld BindIP - {worldBindIP}\n";
 				result += $"Bnet BindIP - {bnetBindIP}\n";
 				if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
 					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n";
+				else
+					result += "BindIP settings match and are set properly.\n";
 
 				// Compare listening IPs between bnet/world/realm/wow config
 				result += $"\nLoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
@@ -320,11 +323,15 @@ namespace SPP_Config_Generator
 
 				if (loginRESTExternalAddress != addressFromDB || loginRESTExternalAddress != wowConfigPortal)
 					result += "Alert - All of these addresses should match. Set these to the Local/LAN/WAN IP depending on hosting goals.\n";
+				else
+					result += "IP settings for hosting all match, this is good!\n";
 
 				result += $"\nLoginREST.LocalAddress - {loginRESTLocalAddress}\n";
 				result += $"local Address from DB - {localAddressFromDB}\n";
 				if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))
 					result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n";
+				else
+					result += "Local address entries are set properly.\n";
 
 				if (solocraft)
 				{
@@ -348,25 +355,28 @@ namespace SPP_Config_Generator
 
 				// Warn about grid related settings
 				if (baseMapLoadAllGrids || instanceMapLoadAllGrids)
-					result += "\nAlert - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0, or the server will likely run out of memory and crash.\n";
+					result += "\nWarning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n";
 				if (gridUnload == false)
-					result += $"\nAlert - GridUnload should be set to 1 to unload unused map grids and release memory, otherwise the server could crash out of memory.\n";
+					result += $"\nWarning - GridUnload should be set to 1 to unload unused map grids and release memory. If the server runs out of memory, or crashes with high usage, this may be why.\n";
 
 				// Check collections for duplicate entries
-				result += "\nChecking for duplicates in world/bnet config\n";
+				result += "\n\nChecking for duplicates in world/bnet config\n";
 				string tmp1 = CheckCollectionForDuplicates(BnetCollection).TrimEnd('&');
 				string tmp2 = CheckCollectionForDuplicates(WorldCollection).TrimEnd('&');
 
 				if (tmp1 != string.Empty)
-					result += $"\nAlert - Duplicate entries found in [BnetConfig] for [{tmp1}]";
+					result += $"\nAlert - Duplicate entries found in [BnetConfig] for [{tmp1}]\n";
 				if (tmp2 != string.Empty)
-					result += $"\nAlert - Duplicate entries found in [WorldConfig] for [{tmp2}]";
+					result += $"\nAlert - Duplicate entries found in [WorldConfig] for [{tmp2}]\n";
 
 				// Anything else?
 				if (result.Contains("Alert"))
 					result += "\n\nAlert - Issues were found!";
+				else if (result.Contains("Warning"))
+					result += "\n\nWarnings were found, this could impact server stability or performance and those settings may need changed.\n\n";
 				else
 					result += "\n\nNo known problems were found!";
+
 				MessageBox.Show(result);
 			}
 		}
@@ -568,7 +578,12 @@ namespace SPP_Config_Generator
 				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
 
 			if (SPPFolderLocation == string.Empty || WowConfigFile == string.Empty)
-				MessageBox.Show("Hello! The location for either SPP folder or WOW config doesn't seem to exist, so if this is your first time running this app then please go to the General App Settings tab and set the folder locations, then save/export.", "Settings Need Attention!");
+			{
+				string tmp = "Hello! The location for either SPP folder or WOW config doesn't seem to be set, so if this is your first time running this app ";
+				tmp += "then please go to the General App Settings tab and browse to the folder locations, then reload configs. From there you can ";
+				tmp += "check the config and make any adjustments, then save/export when ready. Click the [Help/About] button for more details.";
+				MessageBox.Show(tmp, "Settings Need Attention!");
+			}
 		}
 
 		// Take the folder locations in settings, and try to determine the path for each config file
