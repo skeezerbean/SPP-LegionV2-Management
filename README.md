@@ -13,7 +13,7 @@ Load up the tool, run a check on the config, and save/export as needed to build/
 
 You can use the **[Set Build]** button to set the build # for the client you're using to match in both config files, and database realm entry.
 
-You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same.
+You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
 
 ### Changes -
 
@@ -34,7 +34,7 @@ This tool helps build working World and Bnet server config files without duplica
 The MySQL server will probably error connecting unless you're running this on the same server. You should **keep the MySQL server set to 127.0.0.1** and user/password should be left to defaults. Delete the settings.json file to reset them.
 
 
-This tool can also update the **config.wtf** file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server.
+This tool can also update the **config.wtf** file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server. These addresses can be changed by using the **[Set IP]** button, and it can update the entries automatically
 
 
 This will also check for some common issues, such as having both **battle.coin.vendor** entries active (creates double speech in the vendor interaction). It also checks for having **Solocraft** and **Flexcraft** both enabled (can be a problem), and makes sure both entries for the bshop are both enabled/disabled together. It will also search for any duplicate entries in the config, which would cause an instant crash in the server startup if they were there.
@@ -43,7 +43,7 @@ This will also check for some common issues, such as having both **battle.coin.v
 This tool can also set and check the **[Game.Build.Version]** between both configs and the database realm entry, and warn of any issues. Use the **[Set Build]** button to set this entry if there is a discrepancy between them and your WOW client version. You can find the WOW client version by launching it and checking at the bottom-left of the client at the login screen.
 
 
-Use the **[Set IP]** button to setup the external/lan/wan IP address in the Database entry for the realm, the Bnet config, and the WOW client (as much as it can access from the computer the tool is running from). This will update the Database Realm entry and WOW config immediately. The rest won't update until Save/Export. Use the **[Set Build]** button to set the **[Game.Build.Version]** in both configs, and the realm database entry.
+Use the **[Set Build]** button to set the **[Game.Build.Version]** in both configs, and the realm database entry.
 
 
 If there is a problem, you can use the **[Set Defaults]** button to pull the wow config fresh from the local template files. **This will overwrite all previous settings** for the Bnet and World config files. You'd need to set the **[Game.Build.Version]** again, and possibly the IP if hosting outside of the local server.
