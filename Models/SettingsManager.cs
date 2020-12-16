@@ -64,7 +64,7 @@ namespace SPP_Config_Generator
 				foreach (var item in allLinesText)
 				{
 					// Check if comment or not
-					if (item.Contains("=") && item.Contains("#") == false)
+					if (item.Contains("=") && item.StartsWith("#") == false)
 					{
 						// Split based on = sign
 						string[] strArray = item.Split('=');

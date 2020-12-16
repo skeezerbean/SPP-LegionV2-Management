@@ -413,6 +413,16 @@ namespace SPP_Config_Generator
 				if (tmp2 != string.Empty)
 					result += $"\nAlert - Duplicate entries found in [WorldConfig] for [{tmp2}]\n";
 
+				// Check if any settings have a value field containing comments. It won't break anything
+				// but can definitely make it harder to parse through and is not a good practice
+				tmp1 = CheckCommentsInValueField(BnetCollection);
+				tmp2 = CheckCommentsInValueField(WorldCollection);
+
+				if (tmp1 != string.Empty)
+					result += tmp1;
+				if (tmp2 != string.Empty)
+					result += tmp2;
+
 				// Build our final response based on any alert/warnings found
 				if (result.Contains("Alert"))
 					result += "\n\nAlert - Issues were found!";
@@ -424,6 +434,19 @@ namespace SPP_Config_Generator
 				// Take our final list of results and send to the user
 				MessageBox.Show(result);
 			}
+		}
+
+		public string CheckCommentsInValueField(BindableCollection<ConfigEntry> collection)
+		{
+			string result = string.Empty;
+
+			foreach (var item in collection)
+			{
+				if (item.Value.Contains("#"))
+					result += $"\nWarning - Entry [{item.Name}] has a \"#\" character in the value field. Best practices are to keep comments in their own line, separate from values.\n";
+			}
+
+			return result;
 		}
 
 		// From hitting the SPP Browse button in settings tab
