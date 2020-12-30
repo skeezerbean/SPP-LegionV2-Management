@@ -3,8 +3,7 @@
 
 ### Usage
 
-(screenshots for setup and usage at the bottom)
-Make sure the **SPP Database** engine is running.
+(screenshots for setup and usage at the bottom) - Make sure the **SPP Database** engine is running.
 
 You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
 
@@ -32,14 +31,12 @@ The MySQL server will probably error connecting unless you're running this on th
 This tool can also update the **config.wtf** file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server. These addresses can be changed by using the **[Set IP]** button, and it can update the entries automatically
 
 
-If there is a problem, you can use the **[Set Defaults]** button to pull the wow config fresh from the local template files. **This will overwrite all previous settings** for the Bnet and World config files. You'd need to set the **[Game.Build.Version]** again, and possibly the IP if hosting outside of the local server.
+If there is a problem, you can use the **[Set Defaults]** button to pull the wow config fresh from the local template files. **This will overwrite all previous settings** for the Bnet and World config files. 
 
 
-Otherwise this tool cannot connect to the Database to check/update any settings there. If the error says similar to **[not allowed to connect to this MySQL server]** then you're probably running this on a different computer or the database isn't running. Run it from the SPP server (while the database server is running).
+If you see an error similar to **[not allowed to connect to this MySQL server]** then you're probably running this on a different computer or the database isn't running. Run it from the SPP server (while the database server is running).
 
-
-Once you've finished making any changes, hit the **[Save/Export]** button to export the current settings to the bnetserver.conf and worldserver.conf files. Make sure to set the folders for your SPP LegionV2 folder, and your WOW Client folder in the **[General App Settings]** tab.
-
+---
 
 To begin - Make sure the SPP Database is running
 
