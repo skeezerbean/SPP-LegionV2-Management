@@ -3,19 +3,14 @@
 
 ### Usage
 
+(screenshots for setup and usage at the bottom)
 Make sure the **SPP Database** engine is running.
-
-Set the general settings with the location of your **SPP directory** (base directory OR the server folder with config, either works)
-
-Set the general settings with the location of your **WOW Legion client** (base directory OR the WTF folder containing the config)
-
-Load up the tool, run a check on the config, and save/export as needed to build/rebuild your SPP LegionV2 config files.
-
-You can use the **[Set Build]** button to set the build # for the client you're using to match in both config files, and database realm entry.
 
 You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
 
 ### Changes -
+
+**0.0.1.5** - Changed some parsing to better check for issues, including values with comments on the same line as a configuration entry (and give a warning)
 
 **0.0.1.4** - Extra checks, moved description to tooltips for each row (shorter launch/import time), general cleanup, added button to reload config so that you don't have to close and open the app again to reload if any mistakes were made.
 
@@ -37,22 +32,97 @@ The MySQL server will probably error connecting unless you're running this on th
 This tool can also update the **config.wtf** file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server. These addresses can be changed by using the **[Set IP]** button, and it can update the entries automatically
 
 
-This will also check for some common issues, such as having both **battle.coin.vendor** entries active (creates double speech in the vendor interaction). It also checks for having **Solocraft** and **Flexcraft** both enabled (can be a problem), and makes sure both entries for the bshop are both enabled/disabled together. It will also search for any duplicate entries in the config, which would cause an instant crash in the server startup if they were there.
-
-
-This tool can also set and check the **[Game.Build.Version]** between both configs and the database realm entry, and warn of any issues. Use the **[Set Build]** button to set this entry if there is a discrepancy between them and your WOW client version. You can find the WOW client version by launching it and checking at the bottom-left of the client at the login screen.
-
-
-Use the **[Set Build]** button to set the **[Game.Build.Version]** in both configs, and the realm database entry.
-
-
 If there is a problem, you can use the **[Set Defaults]** button to pull the wow config fresh from the local template files. **This will overwrite all previous settings** for the Bnet and World config files. You'd need to set the **[Game.Build.Version]** again, and possibly the IP if hosting outside of the local server.
-
-
-Use the **[Check Config]** button to run through some quick problem checks for common issues. Note - this may give errors connecting to MySQL if this is running from another PC than the one the SPP Database Server runs on, and also make sure that the Database Server itself is running first. 
 
 
 Otherwise this tool cannot connect to the Database to check/update any settings there. If the error says similar to **[not allowed to connect to this MySQL server]** then you're probably running this on a different computer or the database isn't running. Run it from the SPP server (while the database server is running).
 
 
 Once you've finished making any changes, hit the **[Save/Export]** button to export the current settings to the bnetserver.conf and worldserver.conf files. Make sure to set the folders for your SPP LegionV2 folder, and your WOW Client folder in the **[General App Settings]** tab.
+
+
+To begin - Make sure the SPP Database is running
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/database-started.PNG)
+
+
+Launch the App - The 1st time will show this. Hit OK
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/1st-run.PNG)
+
+
+Go to the General Settings tab
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Settings-Tab.PNG)
+
+
+When browsing for the SPP folder, it will be the one that has these items
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/SPP-server-folder.PNG)
+
+
+Browsing for the Wow Config Location will be your WoW Legion Client folder, which will look more or less like this
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/wow-client-folder.PNG)
+
+
+Once you've set the folder locations, click this button
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Reload-Configs-Button.PNG)
+
+
+This will pull in data from your current config and populate the World/Bnet tabs. Click on the World tab to see the config
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/World-Config-Loaded.PNG)
+
+
+Click the "Check Config" button
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Button.PNG)
+
+
+This will show any potential issues with your setup. The picture below shows an issue with duplicate entry, as well as a warning for the value having a comment in the line
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Errors-Duplicates.PNG)
+
+
+Use the search tool to find the entry
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Search-entry-duplicate.PNG)
+
+
+Click the entry, and you'll see that it's highlighted in blue in that row
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Select-Line-To-Delete.PNG)
+
+
+Press Delete on your keyboard, and the line will be gone
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/After-Delete.PNG)
+
+
+You can now Check Config again, and you can see that the alert is now gone
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Success.PNG)
+
+
+If you are missing some entries, such as new lines added from one of the updates, this will alert you when you **Check Config** (and automatically add them and their default values to your config)
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Missing-Entries.PNG)
+
+
+The **[Game.Build.Version]** must be the same as whatever client you're using. You can find this by launching the Legion client, and checking the build # at the bottom-left
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Legion-Client-Build.PNG)
+
+
+If this is different than what your config has set, then use the **Set Build** button to update. You'll enter the build number from your legion client, which may be different than the example above
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Set-Build.PNG)
+
+
+Once you're ready, click on **Save/Export** to save your updated configs to disk. This will auto-backup existing configs into the SPP Config Generator's backup folder before saving new ones
+
+![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Save-Export-Backup.PNG)
+
+
