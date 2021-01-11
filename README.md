@@ -9,6 +9,8 @@ You can use the **[Set IP]** button to set the hosting IP in the bnet config and
 
 ### Changes -
 
+**0.0.1.6** - Added few more config checks, fixed an sql issue and some code cleanup
+
 **0.0.1.5** - Changed some parsing to better check for issues, including values with comments on the same line as a configuration entry (and give a warning)
 
 **0.0.1.4** - Extra checks, moved description to tooltips for each row (shorter launch/import time), general cleanup, added button to reload config so that you don't have to close and open the app again to reload if any mistakes were made.
