@@ -222,7 +222,7 @@ namespace SPP_Config_Generator
 				// There will naturally be 1 match as an entry matches itself. Anything more is a problem...
 				// Only add to results if the match hasn't been added yet (will trigger twice for duplicate, we only want one notification)
 				if (matches > 1)
-					if (!results.ToLower().Contains(item.Name.ToLower()))
+					if (!(results.IndexOf(item.Name, StringComparison.OrdinalIgnoreCase) >= 0))
 						results += $"{item.Name}&";
 			}
 
@@ -269,6 +269,7 @@ namespace SPP_Config_Generator
 			bool gridUnload = IsOptionEnabled(WorldCollection, "GridUnload");
 			bool baseMapLoadAllGrids = IsOptionEnabled(WorldCollection, "BaseMapLoadAllGrids");
 			bool instanceMapLoadAllGrids = IsOptionEnabled(WorldCollection, "InstanceMapLoadAllGrids");
+			bool disallowMultipleClients = IsOptionEnabled(WorldCollection, "Disallow.Multiple.Client");
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
@@ -399,6 +400,14 @@ namespace SPP_Config_Generator
 					result += "\nWarning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n";
 				if (gridUnload == false)
 					result += $"\nWarning - GridUnload should be set to 1 to unload unused map grids and release memory. If the server runs out of memory, or crashes with high usage, this may be why.\n";
+
+				// Notify if Disallow.Multiple.Client is enabled
+				if (disallowMultipleClients)
+				{
+					result += "\nNote - You have Disallow.Multiple.Client set to 1. This will disable multiple client connections from your local network, so if you plan on ";
+					result += "playing multiple client sessions at once, or multiple users on the same network, then this needs set to 0.\n";
+				}
+
 
 				// Check collections for duplicate entries, and strip out the &
 				// at the end of the string. This will leave the final as listing
