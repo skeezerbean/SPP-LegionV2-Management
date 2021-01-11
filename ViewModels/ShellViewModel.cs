@@ -81,51 +81,40 @@ namespace SPP_Config_Generator
 		// for the ExternalAddress setting in bnet, and in the WOW config portal entry
 		public void SetIP()
 		{
-			string input = string.Empty;
 			// Check if there are valid targets for spp/wow config, sql - report if any missing
 			// As long as we set Bnet REST IP first, then WoW config will be updated as well
-			input = Microsoft.VisualBasic.Interaction.InputBox("Enter the Listening/Hosted IP Address to set. If this is to be hosted for local network then use the LAN ipv4 address. If external hosting, use the WAN address. Note this entry will not be validated to accuracy.", "Set IP", "127.0.0.1");
+			string tmp = "Enter the Listening/Hosted IP Address to set. If this is to be hosted for local network then use the LAN ipv4 address.\n\n";
+			tmp += "If external hosting, use the WAN address. Note this entry will not be validated to accuracy.\n\n";
+			tmp += "Note - this will not update the database realm entry until clicking save/export";
+			string input = Microsoft.VisualBasic.Interaction.InputBox(tmp, "Set IP", "127.0.0.1");
 
 			// If user hit didn't cancel or enter something stupid...
 			// length > 6 is at least 4 numbers for an IP, and 3 . within an IP
 			if (input.Length > 6)
-			{
-				// Update Bnet entry
 				BnetCollection = UpdateConfigCollection(BnetCollection, "LoginREST.ExternalAddress", input);
 
-				// Update database realm entry
-				var result = MySqlManager.MySQLQuery($"UPDATE realmlist SET address = '{input}' WHERE id = 1");
-				if (!result.Contains("ordinal"))  // I don't understand SQL, it works if this error pops up...
-					Log(result);
-
-				// Update Wow config portal entry
-				UpdateWowConfig();
-			}
 		}
 
 		// We need the realm build entry, and both .conf build settings to be the same
 		public void SetBuild()
 		{
-			string input = string.Empty;
-
 			// Grab the input
-			input = Microsoft.VisualBasic.Interaction.InputBox("Enter the 7.3.5 (xxxxx) build from your client. Available builds: 26124, 26365, 26654, 26822, 26899, or 26972", "Set Build", "26972");
+			string tmp = "Enter the 7.3.5 (xxxxx) build from your client. Available builds: 26124, 26365, 26654, 26822, 26899, or 26972\n\n";
+			tmp += "Note - the build will not be updated in the database until clicking save/export";
+			string input = Microsoft.VisualBasic.Interaction.InputBox(tmp, "Set Build", "26972");
 
-			// If user hit didn't cancel or enter something stupid...
-			// all build numbers are 5 total chars so ignore everything else
-			if (input.Length == 5)
+			if (input == "26124" || input == "26365" || input == "26654" || input == "26822" || input == "26899" || input == "26972")
 			{
 				// Update Bnet entry
 				BnetCollection = UpdateConfigCollection(BnetCollection, "Game.Build.Version", input);
 
 				// Update World entry
 				WorldCollection = UpdateConfigCollection(WorldCollection, "Game.Build.Version", input);
-
-				// Update database realm entry
-				var result = MySqlManager.MySQLQuery($"UPDATE realmlist SET gamebuild = '{input}' WHERE id = 1");
-				if (!result.Contains("ordinal"))  // I don't understand SQL, it works if this error pops up...
-					Log(result);
 			}
+			else 
+				// If not cancelled input, then alert to invalid entry
+				if (input != "") 
+					MessageBox.Show("Build input invalid, ignoring");
 		}
 
 		// This takes current settings in the default templates, and 
@@ -233,17 +222,22 @@ namespace SPP_Config_Generator
 		// common issues, and see if there's a problem we can find
 		public void CheckSPPConfig()
 		{
+
+			string result = string.Empty;
+
 			// Prep our collections in case there's nothing in current settings
 			FindConfigPaths();
 			if (BnetCollection == null || BnetCollection.Count == 0)
 			{
 				BnetCollection = BnetCollectionTemplate;
 				Log("Current Bnet settings were empty, applying defaults");
+				result += "Current Bnet settings were empty, applying defaults\n";
 			}
 			if (WorldCollection == null || WorldCollection.Count == 0)
 			{
 				WorldCollection = WorldCollectionTemplate;
 				Log("Current World settings were empty, applying defaults");
+				result += "Current World settings were empty, applying defaults\n";
 			}
 
 			// Setup our values to test later
@@ -257,7 +251,6 @@ namespace SPP_Config_Generator
 			string wowConfigPortal = string.Empty;
 			string bnetBindIP = GetValueFromCollection(BnetCollection, "BindIP");
 			string worldBindIP = GetValueFromCollection(WorldCollection, "BindIP");
-			string result = string.Empty;
 			bool solocraft = IsOptionEnabled(WorldCollection, "Solocraft.Enable");
 			bool flexcraftHealth = IsOptionEnabled(WorldCollection, "HealthCraft.Enable");
 			bool flexcraftUnitMod = IsOptionEnabled(WorldCollection, "UnitModCraft.Enable");
@@ -558,11 +551,21 @@ namespace SPP_Config_Generator
 					Log("BNET Export -> Current settings are empty");
 				else
 				{
-					// Wow config relies on bnet external address, so we
-					// only want to process this if the bnet collection
-					// has something in it
+					// Wow config relies on bnet external address, so we only want to process 
+					//this if the bnet collection has something in it
+					Log("Updating WoW Client config portal entry");
 					UpdateWowConfig();
 					BuildConfFile(BnetCollection, BnetConfFile);
+
+					// Since we have a valid bnet collection, grab external address and 
+					// build, push to DB realm entry while we're here
+					string clientBuild = GetValueFromCollection(BnetCollection, "Game.Build.Version");
+					string realmAddress = GetValueFromCollection(BnetCollection, "LoginREST.ExternalAddress");
+
+					Log("Updating Database Realm entry with build/IP from BNet config");
+					var result = MySqlManager.MySQLQuery($"UPDATE realmlist SET address=\"{realmAddress}\",gamebuild={clientBuild} WHERE  id= 1", true);
+					if (!result.Contains("ordinal"))  // I don't understand SQL, it works if this error pops up...
+						Log(result);
 				}
 			}
 

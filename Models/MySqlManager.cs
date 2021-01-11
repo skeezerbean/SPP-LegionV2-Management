@@ -24,7 +24,7 @@ namespace SPP_Config_Generator
 			connectionString = String.Format("server={0};port={1};user id={2}; password={3}; database={4};", server, port, user, password, database);
 		}
 
-		public static string MySQLQuery(string query)
+		public static string MySQLQuery(string query, bool update = false)
 		{
 			UpdateConnectionInfo();
 			string response = string.Empty;
@@ -38,10 +38,19 @@ namespace SPP_Config_Generator
 					using (var cmd = connection.CreateCommand())
 					{
 						cmd.CommandText = query;
-						using (var reader = cmd.ExecuteReader())
+
+						// SQL update
+						if (update)
 						{
-							while (reader.Read()) { }
-							response = reader.GetString(0);
+							response = $"{cmd.ExecuteNonQuery().ToString()} rows affected.";
+						}
+						else // SQL Select
+						{
+							using (var reader = cmd.ExecuteReader())
+							{
+								while (reader.Read()) { }
+								response = reader.GetString(0);
+							}
 						}
 					}
 				}
