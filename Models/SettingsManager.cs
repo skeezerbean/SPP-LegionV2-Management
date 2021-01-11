@@ -75,22 +75,25 @@ namespace SPP_Config_Generator
 						// both comparing strings later, as well as the export of this
 						// collection back to disk
 						ConfigEntry entry = new ConfigEntry();
+
 						// Set our name (setting) without the whitespace
 						entry.Name = strArray[0].TrimStart(' ').TrimEnd(' ');
+
 						// Set our value of the name/setting without whitespace
 						entry.Value = strArray[1].TrimStart(' ').TrimEnd(' ');
-						// Remove any newline at the beginning of the description, and any
-						// trailing whitespace
-						entry.Description = tmpDescription.TrimStart('\n').TrimStart(' ').TrimEnd(' ');
+
+						// Remove any extra whitespace
+						entry.Description = tmpDescription.TrimStart(' ').TrimEnd(' ');
+
 						// Squirt our new entry into our temp collection
 						tempCollection.Add(entry);
 						tmpDescription = string.Empty; // reset our description
 					}
 					else
 					{
-						// If we're here, then the line doesn't have '=', so it's part of the description or other line
+						// If we're here, then the line is part of the description or other line
 						// so we'll keep adding to the tmpDescription until it's used/flushed to the collection
-						// when it matches a line with '=' in it. Since each time this happens, add a \n at the end
+						// when it matches a config entry. Since each time this happens, add a \n at the end
 						// so it will maintain visual continuity with the original .conf file when it exports
 						tmpDescription += item + "\n";
 					}
@@ -162,7 +165,7 @@ namespace SPP_Config_Generator
 
 			if (!string.IsNullOrEmpty(searchText) && !string.IsNullOrEmpty(cellText))
 			{
-				return cellText.ToLower().Contains(searchText.ToLower());
+				return cellText.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
 			}
 			return false;
 		}

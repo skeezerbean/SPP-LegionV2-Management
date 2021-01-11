@@ -1,12 +1,11 @@
 ﻿<Window x:Class="SPP_Config_Generator.ShellView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SPP_Config_Generator"
-		Background="DimGray"
+        Background="DimGray"
 		BorderThickness="0" Icon="/Resources/spp.jpg"
-		xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
 		mc:Ignorable="d" FontSize="12" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
         Title="{Binding AppTitle}"
 		Height="{Binding WindowHeight, Mode=TwoWay}"
@@ -58,7 +57,8 @@
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="3*" />
 					<ColumnDefinition Width="5" />
-					<ColumnDefinition Width="*" />	<!-- Log -->
+					<ColumnDefinition Width="*" />
+					<!-- Log -->
 				</Grid.ColumnDefinitions>
 
 				<!-- Main Window -->
@@ -69,8 +69,8 @@
 							<DataGrid
 								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
 								ItemsSource="{Binding WorldCollection}" AutoGenerateColumns="False"
-									  local:DataGridTextSearch.AutoScrollToSelectedRow="True">
-								<!-- This sets up columns with the names we want, 
+								local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								<!-- This sets up columns with the names we want,
 									without desccription column (which will become tooltip) -->
 								<DataGrid.Columns>
 									<DataGridTextColumn Header="Setting" Binding="{Binding Name}" />
@@ -81,7 +81,7 @@
 										we can add our property of whether or not there's a text
 										match from the search box. -->
 									<local:SearchValueConverter x:Key="SearchValueConverter" />
-									<!-- This allows the whole row to be selected/highlighted during a match 
+									<!-- This allows the whole row to be selected/highlighted during a match
 										and also plays a part in auto-scrolling to that location -->
 									<Style TargetType="{x:Type DataGridRow}">
 										<Setter Property="local:DataGridTextSearch.IsTextMatch">
@@ -94,7 +94,7 @@
 										</Setter>
 										<!-- Bind our description to the tooltip for whatever cell
 											is being hovered over -->
-										<Setter Property="ToolTip" Value="{Binding Description}"/>
+										<Setter Property="ToolTip" Value="{Binding Description}" />
 										<Style.Triggers>
 											<!-- Mark our row as selected if there's a match from the search
 												box, as well as make it bold in those cells -->
@@ -130,7 +130,7 @@
 							<DataGrid
 								local:DataGridTextSearch.SearchValue="{Binding ElementName=SearchBox, Path=Text, UpdateSourceTrigger=PropertyChanged}"
 								ItemsSource="{Binding BnetCollection}" AutoGenerateColumns="False"
-									  local:DataGridTextSearch.AutoScrollToSelectedRow="True">
+								local:DataGridTextSearch.AutoScrollToSelectedRow="True">
 								<DataGrid.Columns>
 									<DataGridTextColumn Header="Setting" Binding="{Binding Name}" />
 									<DataGridTextColumn Header="Value" Binding="{Binding Value}" />
@@ -146,7 +146,7 @@
 												</MultiBinding>
 											</Setter.Value>
 										</Setter>
-										<Setter Property="ToolTip" Value="{Binding Description}"/>
+										<Setter Property="ToolTip" Value="{Binding Description}" />
 										<Style.Triggers>
 											<Trigger Property="local:DataGridTextSearch.IsTextMatch" Value="True">
 												<Setter Property="IsSelected" Value="True" />
@@ -173,7 +173,7 @@
 							</DataGrid>
 						</TabItem>
 
-						<!-- Set up our general settings tab, bind our browse methods to the 
+						<!-- Set up our general settings tab, bind our browse methods to the
 							buttons, and data to the names of text boxes -->
 						<TabItem Header="General App Settings" Margin="1">
 							<StackPanel Orientation="Horizontal">

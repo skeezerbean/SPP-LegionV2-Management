@@ -15,6 +15,7 @@ namespace SPP_Config_Generator
 	{
 		// Setup our public variables and such, many are saved within the general settings class, so we'll get/set from those
 		public string AppTitle { get; set; } = $"SPP Config Generator v{Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
+
 		public double WindowTop { get { return GeneralSettingsManager.GeneralSettings.WindowTop; } set { GeneralSettingsManager.GeneralSettings.WindowTop = value; } }
 		public double WindowLeft { get { return GeneralSettingsManager.GeneralSettings.WindowLeft; } set { GeneralSettingsManager.GeneralSettings.WindowLeft = value; } }
 		public double WindowHeight { get { return GeneralSettingsManager.GeneralSettings.WindowHeight; } set { GeneralSettingsManager.GeneralSettings.WindowHeight = value; } }
@@ -25,29 +26,35 @@ namespace SPP_Config_Generator
 		public int MySQLPort { get { return GeneralSettingsManager.GeneralSettings.MySQLPort; } set { GeneralSettingsManager.GeneralSettings.MySQLPort = value; } }
 		public string MySQLUser { get { return GeneralSettingsManager.GeneralSettings.MySQLUser; } set { GeneralSettingsManager.GeneralSettings.MySQLUser = value; } }
 		public string MySQLPass { get { return GeneralSettingsManager.GeneralSettings.MySQLPass; } set { GeneralSettingsManager.GeneralSettings.MySQLPass = value; } }
+
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
 		public BindableCollection<ConfigEntry> WorldCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
+
 		public BindableCollection<ConfigEntry> BnetCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
+
 		// stores the filesystem path to the files
 		public string WowConfigFile { get; set; } = string.Empty;
+
 		public string BnetConfFile { get; set; } = string.Empty;
 		public string WorldConfFile { get; set; } = string.Empty;
+
 		// The statusbox is the status line displayed next to buttons
 		public string StatusBox { get; set; }
+
 		// This is the text for the log pane on the right side
 		public string LogText { get; set; }
 
 		public ShellViewModel()
 		{
 			Log("App Initializing...");
-			
+
 			// Pull in saved settings
 			Log("Loading settings");
 			LoadSettings();
-			
+
 			// Alert if this variable is empty, it means we either have no saved settings
 			// Or the SPP folder location was never set
 			if (SPPFolderLocation == string.Empty)
@@ -92,7 +99,6 @@ namespace SPP_Config_Generator
 			// length > 6 is at least 4 numbers for an IP, and 3 . within an IP
 			if (input.Length > 6)
 				BnetCollection = UpdateConfigCollection(BnetCollection, "LoginREST.ExternalAddress", input);
-
 		}
 
 		// We need the realm build entry, and both .conf build settings to be the same
@@ -111,13 +117,13 @@ namespace SPP_Config_Generator
 				// Update World entry
 				WorldCollection = UpdateConfigCollection(WorldCollection, "Game.Build.Version", input);
 			}
-			else 
+			else
 				// If not cancelled input, then alert to invalid entry
-				if (input != "") 
-					MessageBox.Show("Build input invalid, ignoring");
+				if (input != "")
+				MessageBox.Show("Build input invalid, ignoring");
 		}
 
-		// This takes current settings in the default templates, and 
+		// This takes current settings in the default templates, and
 		// overwrites our current settings with those defaults
 		public void SetDefaults()
 		{
@@ -160,7 +166,7 @@ namespace SPP_Config_Generator
 		{
 			string result = string.Empty;
 
-			// Populate from collection and check each entry as long as the 
+			// Populate from collection and check each entry as long as the
 			// isn't empty. May no longer need to return a normalized string if the
 			// parsing was correct when reading from file. May remove later...
 			if (collection != null)
@@ -222,7 +228,6 @@ namespace SPP_Config_Generator
 		// common issues, and see if there's a problem we can find
 		public void CheckSPPConfig()
 		{
-
 			string result = string.Empty;
 
 			// Prep our collections in case there's nothing in current settings
@@ -263,6 +268,8 @@ namespace SPP_Config_Generator
 			bool baseMapLoadAllGrids = IsOptionEnabled(WorldCollection, "BaseMapLoadAllGrids");
 			bool instanceMapLoadAllGrids = IsOptionEnabled(WorldCollection, "InstanceMapLoadAllGrids");
 			bool disallowMultipleClients = IsOptionEnabled(WorldCollection, "Disallow.Multiple.Client");
+			bool customHurtRealTime = IsOptionEnabled(WorldCollection, "Custom.HurtInRealTime");
+			bool customNoCastTime = IsOptionEnabled(WorldCollection, "Custom.NoCastTime");
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
@@ -401,6 +408,11 @@ namespace SPP_Config_Generator
 					result += "playing multiple client sessions at once, or multiple users on the same network, then this needs set to 0.\n";
 				}
 
+				if (customHurtRealTime)
+					result += "\nNote - You have Custom.HurtInRealTime = 1 and means you click every time to swing a weapon. To change to auto-attack, set this entry to 0\n";
+
+				if (customNoCastTime)
+					result += "\nNote - you have Custom.NoCastTime = 1 and may cause unintended effects when casting. Set entry to 0 if you need that to change\n";
 
 				// Check collections for duplicate entries, and strip out the &
 				// at the end of the string. This will leave the final as listing
@@ -551,13 +563,13 @@ namespace SPP_Config_Generator
 					Log("BNET Export -> Current settings are empty");
 				else
 				{
-					// Wow config relies on bnet external address, so we only want to process 
+					// Wow config relies on bnet external address, so we only want to process
 					//this if the bnet collection has something in it
 					Log("Updating WoW Client config portal entry");
 					UpdateWowConfig();
 					BuildConfFile(BnetCollection, BnetConfFile);
 
-					// Since we have a valid bnet collection, grab external address and 
+					// Since we have a valid bnet collection, grab external address and
 					// build, push to DB realm entry while we're here
 					string clientBuild = GetValueFromCollection(BnetCollection, "Game.Build.Version");
 					string realmAddress = GetValueFromCollection(BnetCollection, "LoginREST.ExternalAddress");
@@ -629,7 +641,7 @@ namespace SPP_Config_Generator
 				string backupFile = $"Backup Configs\\{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.{pathArray[pathArray.Length - 1]}";
 				Log($"Backing up {path} to {backupFile}");
 
-				// Make a copy of the file we're overwriting, 
+				// Make a copy of the file we're overwriting,
 				// to the backup file name we just set
 				File.Copy(path, backupFile);
 			}
@@ -641,7 +653,9 @@ namespace SPP_Config_Generator
 			{
 				try
 				{
-					stream.WriteLine(entry);
+					// Clean up any double spaces to format a bit nicer
+					string tmp = entry.Replace("\n\n\n", "\n\n");
+					stream.WriteLine(tmp);
 					Log($"Wrote data to {path}");
 				}
 				catch (Exception e) { Log($"Error writing to {path}, exception {e.ToString()}"); }
