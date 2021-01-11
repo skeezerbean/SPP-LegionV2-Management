@@ -125,3 +125,4 @@ Once you're ready, click on **Save/Export** to save your updated configs to disk
 ![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Save-Export-Backup.PNG)
 
 
+Once the config has been exported then you can start/restart your bnet/world servers to use the updated configuration.
