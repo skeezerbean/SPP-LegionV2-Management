@@ -288,7 +288,7 @@ namespace SPP_Config_Generator
 
 				// Update status every x entries, otherwise it slows down
 				// too much if we update the status box every time
-				if (count % 5 == 0)
+				if (count % 20 == 0)
 				{
 					StatusBox = $"Updating {path} row {count} of {collection.Count}";
 
@@ -628,13 +628,11 @@ namespace SPP_Config_Generator
 			else
 			{
 				// Compare bnet to default - any missing/extra items?
-				result += "\nChecking Bnet config compared to template...\n";
-
 				foreach (var item in BnetCollectionTemplate)
 				{
 					if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
 					{
-						result += $"Warning - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
+						result += $"Warning - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n\n";
 						BnetCollection.Add(item);
 					}
 				}
@@ -642,16 +640,14 @@ namespace SPP_Config_Generator
 				// Check existing bnet entries, and see if the template has it. If not, could be an issue
 				foreach (var item in BnetCollection)
 					if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
-						result += $"Warning - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n";
+						result += $"Warning - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
 
 				// Compare world to default - any missing/extra items
-				result += "\nChecking World config compared to template...\n";
-
 				foreach (var item in WorldCollectionTemplate)
 				{
 					if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
 					{
-						result += $"Warning - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n";
+						result += $"Warning - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n\n";
 						WorldCollection.Add(item);
 					}
 				}
@@ -659,34 +655,34 @@ namespace SPP_Config_Generator
 				// Check existing world entries, see if anything exists that isn't in the template.
 				foreach (var item in WorldCollection)
 					if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
-						result += $"Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n";
+						result += $"Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
 
-				// Compare build# between bnet/world/realm
-				result += $"\nBuild from DB Realm - {buildFromDB}\n";
-				result += $"Build from WorldConfig - {buildFromWorld}\n";
-				result += $"Build from BnetConfig - {buildFromBnet}\n";
+				// Compare build# between bnet/world/realm				
 				if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
-					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n";
+				{
+					result += $"Build from DB Realm - {buildFromDB}\n";
+					result += $"Build from WorldConfig - {buildFromWorld}\n";
+					result += $"Build from BnetConfig - {buildFromBnet}\n";
+					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n\n";
+				}
 				else
-					result += "Build numbers match, this is good!\n";
+					result += "Game.Build.Version numbers match, this is good!\n\n";
 
 				// Compare IP bindings for listening - these really never need to change
-				result += $"\nWorld BindIP - {worldBindIP}\n";
-				result += $"Bnet BindIP - {bnetBindIP}\n";
 				if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
-					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n";
+				{
+					result += $"World BindIP - {worldBindIP}\n";
+					result += $"Bnet BindIP - {bnetBindIP}\n";
+					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n\n";
+				}
 				else
-					result += "BindIP settings match and are set properly.\n";
-
-				// List our external/hosting IP settings
-				result += $"\nLoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
-				result += $"Address from DB Realm - {addressFromDB}\n";
+					result += "BindIP settings match and are set properly.\n\n";
 
 				// Gather WoW portal IP from config.wtf
 				if (File.Exists(WowConfigFile) == false)
 				{
 					Log("WOW Config File cannot be found - cannot parse SET portal entry");
-					result += "Alert - WOW Config file not found, cannot check [SET portal] entry to compare.\n";
+					result += "Alert - WOW Config file not found, cannot check [SET portal] entry to compare.\n\n";
 				}
 				else
 				{
@@ -694,7 +690,7 @@ namespace SPP_Config_Generator
 					List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
 
 					if (allLinesText.Count < 2)
-						Log($"Alert - WoW Client config file [{WowConfigFile}] may be empty.");
+						Log($"Warning - WoW Client config file [{WowConfigFile}] may be empty.");
 
 					foreach (var item in allLinesText)
 					{
@@ -704,79 +700,81 @@ namespace SPP_Config_Generator
 						{
 							string[] phrase = item.Split('"');
 							wowConfigPortal = phrase[1];
-							result += $"WoW config.wtf Set Portal IP - {wowConfigPortal}\n";
 						}
 					}
 				}
 
-				// From above, the external/hosting address listed in each of these entries
-				// need to match. If not, there will be potential issues connecting to the realm
-				if (loginRESTExternalAddress != addressFromDB || loginRESTExternalAddress != wowConfigPortal)
-					result += "Alert - All of these addresses should match. Set these to the Local/LAN/WAN IP depending on hosting goals.\n";
+				// List our external/hosting IP settings
+				if ((loginRESTExternalAddress != addressFromDB) || (loginRESTExternalAddress != wowConfigPortal))
+				{
+					result += $"LoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
+					result += $"Address from DB Realm - {addressFromDB}\n";
+					result += $"Wow config PORTAL entry - {wowConfigPortal}\n";
+					result += "Alert - All of these addresses should match. Use the \"Set IP\" button to set.\n\n";
+				}
 				else
-					result += "IP settings for hosting all match, this is good!\n";
+					result += "IP settings for hosting all match, this is good!\n\n";
 
 				// Check the local (not external hosting) IP settings. These don't need to change from 127.0.0.1 (localhost)
-				result += $"\nLoginREST.LocalAddress - {loginRESTLocalAddress}\n";
-				result += $"local Address from DB - {localAddressFromDB}\n";
 				if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))
-					result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n";
-				else
-					result += "Local address entries are set properly.\n";
+				{
+					result += $"LoginREST.LocalAddress - {loginRESTLocalAddress}\n";
+					result += $"local Address from DB - {localAddressFromDB}\n";
+					result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n\n";
+				}
 
 				// Check our solocraft settings compared to FlexCraft entries
 				// If both are enabled, this is a problem
 				if (solocraft)
 				{
 					if (flexcraftHealth)
-						result += "\nAlert - Solocraft and HealthCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
+						result += "Alert - Solocraft and HealthCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
 
 					if (flexcraftUnitMod)
-						result += "\nAlert - Solocraft and UnitModCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
+						result += "Alert - Solocraft and UnitModCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
 
 					if (flexcraftCombatRating)
-						result += "\nAlert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n";
+						result += "Alert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
 				}
 
 				// Check for battle shop entries
 				if (bpay != purchaseShop)
-					result += $"\nAlert - Bpay.Enabled is {bpay}, and Purchase.Shop.Enabled is {purchaseShop} - both should either be disabled or enabled together.\n";
+					result += $"Alert - Bpay.Enabled and Purchase.Shop.Enabled should BOTH either be disabled or enabled together in the world config.\n\n";
 
 				// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
 				if (battleCoinVendor && battleCoinVendorCustom)
-					result += $"\nAlert - Battle.Coin.Vendor.Enable is {battleCoinVendor}, and Battle.Coin.Vendor.CUSTOM.Enable is {battleCoinVendorCustom} - only one needs enabled.\n";
+					result += $"Alert - Battle.Coin.Vendor.Enable and Battle.Coin.Vendor.CUSTOM.Enable are both enabled - only one needs enabled in the world config.\n\n";
 
 				// Warn about grid related settings
 				if (baseMapLoadAllGrids || instanceMapLoadAllGrids)
-					result += "\nWarning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n";
+					result += "Warning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n\n";
 				if (gridUnload == false)
-					result += $"\nWarning - GridUnload should be set to 1 to unload unused map grids and release memory. If the server runs out of memory, or crashes with high usage, this may be why.\n";
+					result += $"Warning - GridUnload may need set to 1 to unload unused map grids and release memory. If the server runs out of memory, or crashes with high usage, this may be why.\n\n";
 
 				// Notify if Disallow.Multiple.Client is enabled
 				if (disallowMultipleClients)
 				{
-					result += "\nNote - You have Disallow.Multiple.Client set to 1. This will disable multiple client connections from your local network, so if you plan on ";
-					result += "playing multiple client sessions at once, or multiple users on the same network, then this needs set to 0.\n";
+					result += "Warning - You have Disallow.Multiple.Client set to 1. This will disable multiple client connections from your local network, so if you plan on ";
+					result += "playing multiple client sessions at once, or multiple users on the same network, then this needs set to 0.\n\n";
 				}
 
 				if (customHurtRealTime)
-					result += "\nNote - You have Custom.HurtInRealTime = 1 and means you click every time to swing a weapon. To change to auto-attack, set this entry to 0\n";
+					result += "Note - You have Custom.HurtInRealTime = 1 and means you click every time to swing a weapon. To change to auto-attack, set this entry to 0\n\n";
 
 				if (customNoCastTime)
-					result += "\nNote - you have Custom.NoCastTime = 1 and may cause unintended effects when casting. Set entry to 0 if you need that to change\n";
+					result += "Note - you have Custom.NoCastTime = 1 and may cause unintended effects when casting. Set entry to 0 if you need that to change\n\n";
 
 				// Check collections for duplicate entries, and strip out the &
 				// at the end of the string. This will leave the final as listing
 				// [entry1&entry2&entry3] for the feedback
-				result += "\n\nChecking for duplicates in world/bnet config\n";
 				string tmp1 = CheckCollectionForDuplicates(BnetCollection).TrimEnd('&');
 				string tmp2 = CheckCollectionForDuplicates(WorldCollection).TrimEnd('&');
 
 				// If there were duplicates, list them
 				if (tmp1 != string.Empty)
-					result += $"\nAlert - Duplicate entries found in [BnetConfig] for [{tmp1}]\n";
+					result += $"Alert - Duplicate entries found in [BnetConfig] for [{tmp1}]\n\n";
 				if (tmp2 != string.Empty)
-					result += $"\nAlert - Duplicate entries found in [WorldConfig] for [{tmp2}]\n";
+					result += $"Alert - Duplicate entries found in [WorldConfig] for [{tmp2}]\n\n";
 
 				// Check if any settings have a value field containing comments. It won't break anything
 				// but can definitely make it harder to parse through and is not a good practice

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -225,17 +227,23 @@ namespace SPP_Config_Generator
 		public static void OnAutoScrollToSelectedRowChanged(DependencyObject s, DependencyPropertyChangedEventArgs e)
 		{
 			var datagrid = s as DataGrid;
+			var e1 = e.NewValue;
 			if (datagrid != null)
 			{
 				datagrid.IsSynchronizedWithCurrentItem = true;
 				datagrid.EnableRowVirtualization = !((bool)e.NewValue);
-				datagrid.SelectionChanged += (g, a) =>
+				datagrid.SelectionChanged += async (g, a) =>
 				{
 					if (datagrid.SelectedItem != null)
 					{
-						datagrid.ScrollIntoView(datagrid.SelectedItem);
+						try
+						{
+							datagrid.ScrollIntoView(datagrid.SelectedItem);
+						}
+						catch { }
 					}
 				};
+
 			}
 		}
 	}
