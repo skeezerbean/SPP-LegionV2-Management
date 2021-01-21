@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Security;
+using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -222,6 +224,355 @@ namespace SPP_Config_Generator
 			}
 
 			return results;
+		}
+
+		public string CheckCommentsInValueField(BindableCollection<ConfigEntry> collection)
+		{
+			string result = string.Empty;
+
+			foreach (var item in collection)
+			{
+				if (item.Value.Contains("#"))
+					result += $"\nWarning - Entry [{item.Name}] has a \"#\" character in the value field. Best practices are to keep comments in their own line, separate from values.\n";
+			}
+
+			return result;
+		}
+
+		// From hitting the SPP Browse button in settings tab
+		public void SPPFolderBrowse()
+		{
+			// If it's empty, then it was cancelled and we keep the old setting
+			string tmp = BrowseFolder();
+			if (tmp != string.Empty)
+				SPPFolderLocation = tmp;
+		}
+
+		// From hitting the Wow browse button in settings tab
+		public void WowConfigBrowse()
+		{
+			// If it's empty, then it was cancelled and we keep the old setting
+			string tmp = BrowseFolder();
+			if (tmp != string.Empty)
+				WOWConfigLocation = tmp;
+		}
+
+		// Method to browse to a folder
+		public string BrowseFolder()
+		{
+			const string baseFolder = @"C:\";
+			string result = string.Empty;
+			try
+			{
+				VistaFolderBrowserDialog dialog = new VistaFolderBrowserDialog();
+				dialog.Description = "Please select a folder.";
+				dialog.UseDescriptionForTitle = true; // This applies to the Vista style dialog only, not the old dialog.
+				dialog.SelectedPath = baseFolder; // place to start search
+				if ((bool)dialog.ShowDialog())
+					result = dialog.SelectedPath;
+			}
+			catch { return string.Empty; }
+
+			return result;
+		}
+
+		// Take a collection, parse it out and save to a file path
+		public async void BuildConfFile(BindableCollection<ConfigEntry> collection, string path)
+		{
+			int count = 0;
+			string tmpstr = string.Empty;
+
+			foreach (var item in collection)
+			{
+				count++;
+
+				// Update status every x entries, otherwise it slows down
+				// too much if we update the status box every time
+				if (count % 5 == 0)
+				{
+					StatusBox = $"Updating {path} row {count} of {collection.Count}";
+
+					// Let our UI update
+					await Task.Delay(1);
+				}
+
+				// Our description may be empty for this entry, so only process
+				// it if it has something in it and add to the temp string
+				if (item.Description.Length > 1)
+					tmpstr += item.Description;
+
+				// If we have data for a setting entry, then add it
+				// to the temp string. Every setting = value entry
+				// will end in a new line
+				if (item.Name.Length > 1 && item.Value.Length > 0)
+					tmpstr += $"{item.Name} = {item.Value}\n";
+			}
+
+			// flush to file, now that we've finished processing
+			ExportToFile(path, tmpstr, false);
+
+			// Clear our statusbox once we're done
+			StatusBox = "";
+		}
+
+		// We're going to take the WOW config file and save, as well as
+		// bnetserver.conf and worldserver.conf files based on our settings
+		// in the current collections
+		public void SaveConfig()
+		{
+			// Make sure our conf file locations are up to date in case folder changed in settings
+			FindConfigPaths();
+
+			// This should save general settings
+			if (GeneralSettingsManager.GeneralSettings == null)
+				Log("General Settings are empty, cannot save");
+			else
+				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.SettingsPath, GeneralSettingsManager.GeneralSettings))
+				Log($"Exception saving file {GeneralSettingsManager.SettingsPath}");
+
+			// Export to bnetserver.conf
+			if (BnetConfFile == string.Empty)
+				Log("BNET Export -> Config File cannot be found");
+			else
+			{
+				if (BnetCollection == null || BnetCollection.Count == 0)
+					Log("BNET Export -> Current settings are empty");
+				else
+				{
+					// Wow config relies on bnet external address, so we only want to process
+					//this if the bnet collection has something in it
+					Log("Updating WoW Client config portal entry");
+					UpdateWowConfig();
+					BuildConfFile(BnetCollection, BnetConfFile);
+
+					// Since we have a valid bnet collection, grab external address and
+					// build, push to DB realm entry while we're here
+					string clientBuild = GetValueFromCollection(BnetCollection, "Game.Build.Version");
+					string realmAddress = GetValueFromCollection(BnetCollection, "LoginREST.ExternalAddress");
+
+					Log("Updating Database Realm entry with build/IP from BNet config");
+					var result = MySqlManager.MySQLQuery($"UPDATE realmlist SET address=\"{realmAddress}\",gamebuild={clientBuild} WHERE  id= 1", true);
+					if (!result.Contains("ordinal"))  // I don't understand SQL, it works if this error pops up...
+						Log(result);
+				}
+			}
+
+			// Export to worldserver.conf
+			if (WorldConfFile == string.Empty)
+				Log("WORLD Export -> Config File cannot be found");
+			else
+			{
+				if (WorldCollection == null || WorldCollection.Count == 0)
+					Log("WORLD Export -> Current settings are empty");
+				else
+					BuildConfFile(WorldCollection, WorldConfFile);
+			}
+		}
+
+		// Take our wow config.wtf file and update the SET portal entry
+		public void UpdateWowConfig()
+		{
+			string tmpstr = string.Empty;
+
+			if (WowConfigFile == string.Empty)
+				Log("WOW Config File cannot be found - cannot update SET portal entry");
+			else
+			{
+				try 
+				{
+					// Pull in our WOW config
+					List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
+
+					foreach (var item in allLinesText)
+					{
+						// If it's the portal entry, set it to the external address
+						// and if there's something wrong with the file then nothing
+						// would change anyways
+						if (item.Contains("SET portal"))
+							foreach (var entry in BnetCollection)
+							{
+								if (entry.Name.Contains("LoginREST.ExternalAddress"))
+									tmpstr += $"SET portal \"{entry.Value}\"\n";
+							}
+						else
+							// otherwise pass it along, dump blank lines
+							if (item.Length > 2)
+							tmpstr += item + "\n";
+					}
+
+					// flush the temp string to file, overwrite
+					ExportToFile(WowConfigFile, tmpstr, false);
+					StatusBox = "";
+				}
+				catch (Exception e)
+				{
+					string msg = $"Error accessing file {WowConfigFile},\nthere is a permissions problem.\nThe detailed exception is -\n{e.ToString()}";
+					Log(msg);
+					Alert(msg);
+				}
+			}
+		}
+
+		// Take our incoming file path, and the full formatted string (config)
+		// that we want to save, and flush to the file
+		public void ExportToFile(string path, string entry, bool append = true)
+		{
+			var permissionSet = new PermissionSet(PermissionState.None);
+			var writePermission = new FileIOPermission(FileIOPermissionAccess.Write, path);
+			permissionSet.AddPermission(writePermission);
+
+			if (permissionSet.IsSubsetOf(AppDomain.CurrentDomain.PermissionSet))
+			{
+				try
+				{
+					// Determine filename and backup existing before overwrite
+					string[] pathArray = path.Split('\\');
+
+					// Format our backup file name with the date/time
+					string backupFile = $"Backup Configs\\{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.{pathArray[pathArray.Length - 1]}";
+					Log($"Backing up {path} to {backupFile}");
+
+					// Make a copy of the file we're overwriting,
+					// to the backup file name we just set
+					File.Copy(path, backupFile);
+				}
+				catch (Exception e)
+				{
+					string msg = $"Error backing up to {path}\n(permissions/attributes issue such as read-only)\nThe exception details are -\n{e.ToString()}";
+					Log(msg);
+					Alert(msg);
+					return;
+				}
+
+				// Now we should have a backup, and take the incoming string entry
+				// and flush it to the file path, overwriting
+				try
+				{
+					using (StreamWriter stream = new StreamWriter(path, append))
+					{
+						// Clean up any double spaces to format a bit nicer
+						string tmp = entry.Replace("\n\n\n", "\n\n");
+						stream.WriteLine(tmp);
+						Log($"Wrote data to {path}");
+					}
+				}
+				catch (Exception e)
+				{
+					string msg = $"Error writing to {path}\n(permissions or file attributes such as read-only)\nThe exception details -\n{e.ToString()}";
+					Log(msg);
+					Alert(msg);
+				}
+			}
+			else
+			{
+				string msg = $"Issue with file {path}, canceling this operation. Please fix file/permission issues on this file/folder";
+				Log(msg);
+				Alert(msg);
+			}
+		}
+
+		// Load in our saved settings (settings.json, SPP server config)
+		public async void LoadSettings()
+		{
+			StatusBox = "Please wait, loading general settings...";
+			// Pull in the saved settings, if any
+			Log("Loading general settings");
+			GeneralSettingsManager.LoadGeneralSettings();
+
+			// This await should let the GUI size/position settings apply before moving forward
+			await Task.Delay(1);
+			FindConfigPaths();
+
+			// Pull in the default templates if they exist
+			Log("Loading World/Bnet default templates");
+			StatusBox = "Please wait, loading bnet template...";
+			await Task.Delay(1);
+			BnetCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\bnetserver.conf");
+
+			StatusBox = "Please wait, loading world template...";
+			await Task.Delay(1);
+			WorldCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\worldserver.conf");
+
+			// Pull in the SPP server configs, if the location is set correctly
+			// in the general settings tab
+			Log("Loading current World/Bnet config files");
+			StatusBox = "Please wait, loading current bnetserver.conf...";
+			await Task.Delay(1);
+			BnetCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(BnetConfFile);
+
+			StatusBox = "Please wait, loading current worldserver.conf...";
+			await Task.Delay(1);
+			WorldCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile);
+
+			// Clear our status box, alert of any issues
+			StatusBox = "";
+			if (WorldCollectionTemplate.Count == 0)
+				Log("WorldCollectionTemplate is empty, error loading file worldserver.conf");
+			if (BnetCollectionTemplate.Count == 0)
+				Log("BnetCollectionTemplate is empty, error loading file bnetserver.conf");
+			if (WorldCollection.Count == 0)
+				Log($"WorldConfig is empty, error loading file {WorldConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+			if (BnetCollection.Count == 0)
+				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+
+			// If the SPP folder or wow client location was empty, assume this is the first time running or
+			// that something was deleted. Either way, user needs to know.
+			if (SPPFolderLocation == string.Empty || WowConfigFile == string.Empty)
+			{
+				string tmp = "Hello! The location for either SPP folder or WOW config doesn't seem to be set, so if this is your first time running this app ";
+				tmp += "then please go to the General App Settings tab and browse to the folder locations, then reload configs. From there you can ";
+				tmp += "check the config and make any adjustments, then save/export when ready. Click the [Help/About] button for more details.";
+				MessageBox.Show(tmp, "Settings Need Attention!");
+			}
+		}
+
+		// Take the folder locations in settings, and try to determine the path for each config file
+		public void FindConfigPaths()
+		{
+			// Find our world/bnet configs
+			if (SPPFolderLocation == string.Empty)
+				Log("SPP Folder Location is empty, cannot find existing settings to parse.");
+			else
+			{
+				if (File.Exists($"{SPPFolderLocation}\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\bnetserver.conf"))
+				{
+					WorldConfFile = $"{SPPFolderLocation}\\worldserver.conf";
+					BnetConfFile = $"{SPPFolderLocation}\\bnetserver.conf";
+				}
+				else if (File.Exists($"{SPPFolderLocation}\\Servers\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\Servers\\bnetserver.conf") || (Directory.Exists($"{SPPFolderLocation}\\Servers")))
+				{
+					// Either we find the files themselves, or we found the Servers folder and we'll generate them here on saving
+					// since this is the best guess given our saved path info
+					WorldConfFile = $"{SPPFolderLocation}\\Servers\\worldserver.conf";
+					BnetConfFile = $"{SPPFolderLocation}\\Servers\\bnetserver.conf";
+				}
+			}
+
+			// Find our wow client config
+			if (WOWConfigLocation == string.Empty)
+				Log("WOW Client Folder Location is empty, cannot find existing settings to parse.");
+			else
+			{
+				if (File.Exists($"{WOWConfigLocation}\\config.wtf"))
+					WowConfigFile = $"{WOWConfigLocation}\\config.wtf";
+				else if (File.Exists($"{WOWConfigLocation}\\WTF\\config.wtf") || (Directory.Exists($"{WOWConfigLocation}\\WTF")))
+					// Either we find the file, or we found the WTF folder and we'll assume this is it
+					// since this is the best guess given our saved path info. Won't be anything to parse, though
+					// if the file itself doesn't exist. Sad face...
+					WowConfigFile = $"{WOWConfigLocation}\\WTF\\config.wtf";
+			}
+		}
+
+		// take incoming string and append to the log. This will
+		// auto update the log on the right side through xaml binding
+		public void Log(string log)
+		{
+			LogText = ":> " + log + "\n" + LogText;
+		}
+
+		public void Alert(string message)
+		{
+			MessageBox.Show(message);
 		}
 
 		// If we're calling this, then we'll gather up info on settings that are related to
@@ -448,317 +799,6 @@ namespace SPP_Config_Generator
 				// Take our final list of results and send to the user
 				MessageBox.Show(result);
 			}
-		}
-
-		public string CheckCommentsInValueField(BindableCollection<ConfigEntry> collection)
-		{
-			string result = string.Empty;
-
-			foreach (var item in collection)
-			{
-				if (item.Value.Contains("#"))
-					result += $"\nWarning - Entry [{item.Name}] has a \"#\" character in the value field. Best practices are to keep comments in their own line, separate from values.\n";
-			}
-
-			return result;
-		}
-
-		// From hitting the SPP Browse button in settings tab
-		public void SPPFolderBrowse()
-		{
-			// If it's empty, then it was cancelled and we keep the old setting
-			string tmp = BrowseFolder();
-			if (tmp != string.Empty)
-				SPPFolderLocation = tmp;
-		}
-
-		// From hitting the Wow browse button in settings tab
-		public void WowConfigBrowse()
-		{
-			// If it's empty, then it was cancelled and we keep the old setting
-			string tmp = BrowseFolder();
-			if (tmp != string.Empty)
-				WOWConfigLocation = tmp;
-		}
-
-		// Method to browse to a folder
-		public string BrowseFolder()
-		{
-			const string baseFolder = @"C:\";
-			string result = string.Empty;
-			try
-			{
-				VistaFolderBrowserDialog dialog = new VistaFolderBrowserDialog();
-				dialog.Description = "Please select a folder.";
-				dialog.UseDescriptionForTitle = true; // This applies to the Vista style dialog only, not the old dialog.
-				dialog.SelectedPath = baseFolder; // place to start search
-				if ((bool)dialog.ShowDialog())
-					result = dialog.SelectedPath;
-			}
-			catch { return string.Empty; }
-
-			return result;
-		}
-
-		// Take a collection, parse it out and save to a file path
-		public async void BuildConfFile(BindableCollection<ConfigEntry> collection, string path)
-		{
-			int count = 0;
-			string tmpstr = string.Empty;
-
-			foreach (var item in collection)
-			{
-				count++;
-
-				// Update status every x entries, otherwise it slows down
-				// too much if we update the status box every time
-				if (count % 5 == 0)
-				{
-					StatusBox = $"Updating {path} row {count} of {collection.Count}";
-
-					// Let our UI update
-					await Task.Delay(1);
-				}
-
-				// Our description may be empty for this entry, so only process
-				// it if it has something in it and add to the temp string
-				if (item.Description.Length > 1)
-					tmpstr += item.Description;
-
-				// If we have data for a setting entry, then add it
-				// to the temp string. Every setting = value entry
-				// will end in a new line
-				if (item.Name.Length > 1 && item.Value.Length > 0)
-					tmpstr += $"{item.Name} = {item.Value}\n";
-			}
-
-			// flush to file, now that we've finished processing
-			ExportToFile(path, tmpstr, false);
-
-			// Clear our statusbox once we're done
-			StatusBox = "";
-		}
-
-		// We're going to take the WOW config file and save, as well as
-		// bnetserver.conf and worldserver.conf files based on our settings
-		// in the current collections
-		public void SaveConfig()
-		{
-			// Make sure our conf file locations are up to date in case folder changed in settings
-			FindConfigPaths();
-
-			// This should save general settings
-			if (GeneralSettingsManager.GeneralSettings == null)
-				Log("General Settings are empty, cannot save");
-			else
-				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.SettingsPath, GeneralSettingsManager.GeneralSettings))
-				Log($"Exception saving file {GeneralSettingsManager.SettingsPath}");
-
-			// Export to bnetserver.conf
-			if (BnetConfFile == string.Empty)
-				Log("BNET Export -> Config File cannot be found");
-			else
-			{
-				if (BnetCollection == null || BnetCollection.Count == 0)
-					Log("BNET Export -> Current settings are empty");
-				else
-				{
-					// Wow config relies on bnet external address, so we only want to process
-					//this if the bnet collection has something in it
-					Log("Updating WoW Client config portal entry");
-					UpdateWowConfig();
-					BuildConfFile(BnetCollection, BnetConfFile);
-
-					// Since we have a valid bnet collection, grab external address and
-					// build, push to DB realm entry while we're here
-					string clientBuild = GetValueFromCollection(BnetCollection, "Game.Build.Version");
-					string realmAddress = GetValueFromCollection(BnetCollection, "LoginREST.ExternalAddress");
-
-					Log("Updating Database Realm entry with build/IP from BNet config");
-					var result = MySqlManager.MySQLQuery($"UPDATE realmlist SET address=\"{realmAddress}\",gamebuild={clientBuild} WHERE  id= 1", true);
-					if (!result.Contains("ordinal"))  // I don't understand SQL, it works if this error pops up...
-						Log(result);
-				}
-			}
-
-			// Export to worldserver.conf
-			if (WorldConfFile == string.Empty)
-				Log("WORLD Export -> Config File cannot be found");
-			else
-			{
-				if (WorldCollection == null || WorldCollection.Count == 0)
-					Log("WORLD Export -> Current settings are empty");
-				else
-					BuildConfFile(WorldCollection, WorldConfFile);
-			}
-		}
-
-		// Take our wow config.wtf file and update the SET portal entry
-		public void UpdateWowConfig()
-		{
-			string tmpstr = string.Empty;
-
-			if (WowConfigFile == string.Empty)
-				Log("WOW Config File cannot be found - cannot update SET portal entry");
-			else
-			{
-				// Pull in our WOW config
-				List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
-
-				foreach (var item in allLinesText)
-				{
-					// If it's the portal entry, set it to the external address
-					// and if there's something wrong with the file then nothing
-					// would change anyways
-					if (item.Contains("SET portal"))
-						foreach (var entry in BnetCollection)
-						{
-							if (entry.Name.Contains("LoginREST.ExternalAddress"))
-								tmpstr += $"SET portal \"{entry.Value}\"\n";
-						}
-					else
-						// otherwise pass it along, dump blank lines
-						if (item.Length > 2)
-						tmpstr += item + "\n";
-				}
-
-				// flush the temp string to file, overwrite
-				ExportToFile(WowConfigFile, tmpstr, false);
-				StatusBox = "";
-			}
-		}
-
-		// Take our incoming file path, and the full formatted string (config)
-		// that we want to save, and flush to the file
-		public void ExportToFile(string path, string entry, bool append = true)
-		{
-			try
-			{
-				// Determine filename and backup existing before overwrite
-				string[] pathArray = path.Split('\\');
-
-				// Format our backup file name with the date/time
-				string backupFile = $"Backup Configs\\{DateTime.Now.ToString("yyyyMMdd_hhmmss")}.{pathArray[pathArray.Length - 1]}";
-				Log($"Backing up {path} to {backupFile}");
-
-				// Make a copy of the file we're overwriting,
-				// to the backup file name we just set
-				File.Copy(path, backupFile);
-			}
-			catch (Exception e) { Log($"Error backing up to {path}, exception {e.ToString()}"); }
-
-			// Now we should have a backup, and take the incoming string entry
-			// and flush it to the file path, overwriting
-			using (StreamWriter stream = new StreamWriter(path, append))
-			{
-				try
-				{
-					// Clean up any double spaces to format a bit nicer
-					string tmp = entry.Replace("\n\n\n", "\n\n");
-					stream.WriteLine(tmp);
-					Log($"Wrote data to {path}");
-				}
-				catch (Exception e) { Log($"Error writing to {path}, exception {e.ToString()}"); }
-			}
-		}
-
-		// Load in our saved settings (settings.json, SPP server config)
-		public async void LoadSettings()
-		{
-			StatusBox = "Please wait, loading general settings...";
-			// Pull in the saved settings, if any
-			Log("Loading general settings");
-			GeneralSettingsManager.LoadGeneralSettings();
-
-			// This await should let the GUI size/position settings apply before moving forward
-			await Task.Delay(1);
-			FindConfigPaths();
-
-			// Pull in the default templates if they exist
-			Log("Loading World/Bnet default templates");
-			StatusBox = "Please wait, loading bnet template...";
-			await Task.Delay(1);
-			BnetCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\bnetserver.conf");
-
-			StatusBox = "Please wait, loading world template...";
-			await Task.Delay(1);
-			WorldCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\worldserver.conf");
-
-			// Pull in the SPP server configs, if the location is set correctly
-			// in the general settings tab
-			Log("Loading current World/Bnet config files");
-			StatusBox = "Please wait, loading current bnetserver.conf...";
-			await Task.Delay(1);
-			BnetCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(BnetConfFile);
-
-			StatusBox = "Please wait, loading current worldserver.conf...";
-			await Task.Delay(1);
-			WorldCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile);
-
-			// Clear our status box, alert of any issues
-			StatusBox = "";
-			if (WorldCollectionTemplate.Count == 0)
-				Log("WorldCollectionTemplate is empty, error loading file worldserver.conf");
-			if (BnetCollectionTemplate.Count == 0)
-				Log("BnetCollectionTemplate is empty, error loading file bnetserver.conf");
-			if (WorldCollection.Count == 0)
-				Log($"WorldConfig is empty, error loading file {WorldConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
-			if (BnetCollection.Count == 0)
-				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
-
-			// If the SPP folder or wow client location was empty, assume this is the first time running or
-			// that something was deleted. Either way, user needs to know.
-			if (SPPFolderLocation == string.Empty || WowConfigFile == string.Empty)
-			{
-				string tmp = "Hello! The location for either SPP folder or WOW config doesn't seem to be set, so if this is your first time running this app ";
-				tmp += "then please go to the General App Settings tab and browse to the folder locations, then reload configs. From there you can ";
-				tmp += "check the config and make any adjustments, then save/export when ready. Click the [Help/About] button for more details.";
-				MessageBox.Show(tmp, "Settings Need Attention!");
-			}
-		}
-
-		// Take the folder locations in settings, and try to determine the path for each config file
-		public void FindConfigPaths()
-		{
-			// Find our world/bnet configs
-			if (SPPFolderLocation == string.Empty)
-				Log("SPP Folder Location is empty, cannot find existing settings to parse.");
-			else
-			{
-				if (File.Exists($"{SPPFolderLocation}\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\bnetserver.conf"))
-				{
-					WorldConfFile = $"{SPPFolderLocation}\\worldserver.conf";
-					BnetConfFile = $"{SPPFolderLocation}\\bnetserver.conf";
-				}
-				else if (File.Exists($"{SPPFolderLocation}\\Servers\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\Servers\\bnetserver.conf") || (Directory.Exists($"{SPPFolderLocation}\\Servers")))
-				{
-					// Either we find the files themselves, or we found the Servers folder and we'll generate them here on saving
-					// since this is the best guess given our saved path info
-					WorldConfFile = $"{SPPFolderLocation}\\Servers\\worldserver.conf";
-					BnetConfFile = $"{SPPFolderLocation}\\Servers\\bnetserver.conf";
-				}
-			}
-
-			// Find our wow client config
-			if (WOWConfigLocation == string.Empty)
-				Log("WOW Client Folder Location is empty, cannot find existing settings to parse.");
-			else
-			{
-				if (File.Exists($"{WOWConfigLocation}\\config.wtf"))
-					WowConfigFile = $"{WOWConfigLocation}\\config.wtf";
-				else if (File.Exists($"{WOWConfigLocation}\\WTF\\config.wtf") || (Directory.Exists($"{WOWConfigLocation}\\WTF")))
-					// Either we find the file, or we found the WTF folder and we'll assume this is it
-					// since this is the best guess given our saved path info. Won't be anything to parse, though
-					// if the file itself doesn't exist. Sad face...
-					WowConfigFile = $"{WOWConfigLocation}\\WTF\\config.wtf";
-			}
-		}
-
-		// take incoming string and append to the log. This will
-		// auto update the log on the right side through xaml binding
-		public void Log(string log)
-		{
-			LogText = ":> " + log + "\n" + LogText;
 		}
 	}
 }
