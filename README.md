@@ -9,6 +9,8 @@ You can use the **[Set IP]** button to set the hosting IP in the bnet config and
 
 ### Changes -
 
+**0.0.1.7** - building/exporting the .conf files will be quicker, cleane up the alert box for "Check Config"
+
 **0.0.1.6** - Added few more config checks, fixed an sql issue and some code cleanup
 
 **0.0.1.5** - Changed some parsing to better check for issues, including values with comments on the same line as a configuration entry (and give a warning)
