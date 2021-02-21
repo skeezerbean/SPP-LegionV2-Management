@@ -9,7 +9,7 @@ You can use the **[Set IP]** button to set the hosting IP in the bnet config and
 
 ### Changes -
 
-**0.0.1.7** - building/exporting the .conf files will be quicker, clean up the alert box for "Check Config", added check for WorldChat.Enable
+**0.0.1.7** - building/exporting the .conf files will be quicker, clean up the alert box for "Check Config", added check for WorldChat.Enable and also Character.Template when using client build 26972
 
 **0.0.1.6** - Added few more config checks, fixed an sql issue and some code cleanup
 
