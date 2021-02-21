@@ -622,6 +622,7 @@ namespace SPP_Config_Generator
 			bool customHurtRealTime = IsOptionEnabled(WorldCollection, "Custom.HurtInRealTime");
 			bool customNoCastTime = IsOptionEnabled(WorldCollection, "Custom.NoCastTime");
 			bool worldChat = IsOptionEnabled(WorldCollection, "WorldChat.Enable");
+			bool characterTemplate = IsOptionEnabled(WorldCollection, "Character.Template");
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
@@ -745,6 +746,10 @@ namespace SPP_Config_Generator
 				// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
 				if (battleCoinVendor && battleCoinVendorCustom)
 					result += $"Alert - Battle.Coin.Vendor.Enable and Battle.Coin.Vendor.CUSTOM.Enable are both enabled - only one needs enabled in the world config.\n\n";
+
+				// Character Template doesn't work with client build 26972
+				if (characterTemplate && buildFromWorld == "26972")
+					result += "Warning - Character Template does not work with client build 26972. Please set Character.Template to 0 if using this build for best results.\n\n";
 
 				// World Chat, can crash if disabled
 				if (!worldChat)
