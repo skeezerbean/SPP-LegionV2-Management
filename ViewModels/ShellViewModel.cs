@@ -621,6 +621,7 @@ namespace SPP_Config_Generator
 			bool disallowMultipleClients = IsOptionEnabled(WorldCollection, "Disallow.Multiple.Client");
 			bool customHurtRealTime = IsOptionEnabled(WorldCollection, "Custom.HurtInRealTime");
 			bool customNoCastTime = IsOptionEnabled(WorldCollection, "Custom.NoCastTime");
+			bool worldChat = IsOptionEnabled(WorldCollection, "WorldChat.Enable");
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
@@ -744,6 +745,10 @@ namespace SPP_Config_Generator
 				// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
 				if (battleCoinVendor && battleCoinVendorCustom)
 					result += $"Alert - Battle.Coin.Vendor.Enable and Battle.Coin.Vendor.CUSTOM.Enable are both enabled - only one needs enabled in the world config.\n\n";
+
+				// World Chat, can crash if disabled
+				if (!worldChat)
+					result += "Warning - WorldChat.Enable = 0. You may want to enable this option, or it could crash the server when using any commands. This will also disable all commands, including for GM.\n\n";
 
 				// Warn about grid related settings
 				if (baseMapLoadAllGrids || instanceMapLoadAllGrids)
