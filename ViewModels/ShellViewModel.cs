@@ -2,21 +2,25 @@
 using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security;
 using System.Security.Permissions;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Web.UI.WebControls;
 using System.Windows;
+using System.Windows.Data;
 
 namespace SPP_Config_Generator
 {
-	public class ShellViewModel : Screen
+	public class ShellViewModel : Screen, INotifyPropertyChanged
 	{
 		// Setup our public variables and such, many are saved within the general settings class, so we'll get/set from those
-		public string AppTitle { get; set; } = $"SPP Config Generator v{Assembly.GetExecutingAssembly().GetName().Version.ToString()}";
+		public string AppTitle { get; set; } = $"SPP Config Generator v{Assembly.GetExecutingAssembly().GetName().Version}";
 
 		public double WindowTop { get { return GeneralSettingsManager.GeneralSettings.WindowTop; } set { GeneralSettingsManager.GeneralSettings.WindowTop = value; } }
 		public double WindowLeft { get { return GeneralSettingsManager.GeneralSettings.WindowLeft; } set { GeneralSettingsManager.GeneralSettings.WindowLeft = value; } }
@@ -49,6 +53,34 @@ namespace SPP_Config_Generator
 		// This is the text for the log pane on the right side
 		public string LogText { get; set; }
 
+		// For search/filtering
+		public ICollectionView worldView { get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
+
+		public ICollectionView bnetView { get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
+		private string _SearchBox = "";
+
+		public string SearchBox
+		{
+			get { return _SearchBox; }
+			set
+			{
+				if (_SearchBox != value)
+				{
+					_SearchBox = value;
+				}
+				RefreshViews();
+			}
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		private void NotifyPropertyChanged(string propertyName)
+		{
+			PropertyChangedEventHandler handler = PropertyChanged;
+			if (handler != null)
+				PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+		}
+
 		public ShellViewModel()
 		{
 			Log("App Initializing...");
@@ -66,6 +98,24 @@ namespace SPP_Config_Generator
 			// in view, then move it
 			Log("Set Window position/width/height, moving into view");
 			GeneralSettingsManager.MoveIntoView();
+
+			worldView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
+			bnetView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
+		}
+
+		// Refresh the ICollectionView whenever anything changes, for all collections
+		private void RefreshViews()
+		{
+			NotifyPropertyChanged("SearchBox");
+			worldView.Refresh();
+			bnetView.Refresh();
+		}
+
+		private bool Filter(ConfigEntry entry)
+		{
+			return SearchBox == null
+				|| entry.Name.IndexOf(SearchBox, StringComparison.OrdinalIgnoreCase) != -1
+				|| entry.Value.IndexOf(SearchBox, StringComparison.OrdinalIgnoreCase) != -1;
 		}
 
 		// Pass in a collection, and which setting/value we want to change
@@ -101,6 +151,8 @@ namespace SPP_Config_Generator
 			// length > 6 is at least 4 numbers for an IP, and 3 . within an IP
 			if (input.Length > 6)
 				BnetCollection = UpdateConfigCollection(BnetCollection, "LoginREST.ExternalAddress", input);
+
+			RefreshViews();
 		}
 
 		// We need the realm build entry, and both .conf build settings to be the same
@@ -119,26 +171,44 @@ namespace SPP_Config_Generator
 				// Update World entry
 				WorldCollection = UpdateConfigCollection(WorldCollection, "Game.Build.Version", input);
 			}
-			else
-				// If not cancelled input, then alert to invalid entry
+			else // If not cancelled input, then alert to invalid entry
 				if (input != "")
 				MessageBox.Show("Build input invalid, ignoring");
+
+			RefreshViews();
 		}
 
 		// This takes current settings in the default templates, and
 		// overwrites our current settings with those defaults
 		public void SetDefaults()
 		{
-			// Do we do anything other than drop template collection onto world/bnet saved ones?
+			// Due to switching to CollectionView, we cannot simply replace the collection
+			// with the template, but need to clear and re-use the existing, adding items in
 			if (WorldCollectionTemplate == null)
 				Log("World Template is null, cannot set defaults.");
 			else
-				WorldCollection = WorldCollectionTemplate;
+			{
+				WorldCollection.Clear();
+				foreach (var item in WorldCollectionTemplate)
+				{
+					WorldCollection.Add(item);
+				}
+			}
 
 			if (BnetCollectionTemplate == null)
 				Log("Bnet Template is null, cannot set defaults.");
 			else
-				BnetCollection = BnetCollectionTemplate;
+			{
+				BnetCollection.Clear();
+				foreach (var item in BnetCollectionTemplate)
+				{
+					BnetCollection.Add(item);
+				}
+			}
+
+			// For whatever reason, this quick pause helps refresh visually as the collection changed
+			Thread.Sleep(1);
+			RefreshViews();
 		}
 
 		// We take the incoming collection, and search string, and go through each entry
@@ -218,9 +288,8 @@ namespace SPP_Config_Generator
 
 				// There will naturally be 1 match as an entry matches itself. Anything more is a problem...
 				// Only add to results if the match hasn't been added yet (will trigger twice for duplicate, we only want one notification)
-				if (matches > 1)
-					if (!(results.IndexOf(item.Name, StringComparison.OrdinalIgnoreCase) >= 0))
-						results += $"{item.Name}&";
+				if (matches > 1 && !(results.IndexOf(item.Name, StringComparison.OrdinalIgnoreCase) >= 0))
+					results += $"{item.Name}&";
 			}
 
 			return results;
@@ -358,7 +427,7 @@ namespace SPP_Config_Generator
 			}
 
 			// Export to worldserver.conf
-			if (WorldConfFile == string.Empty)
+			if (WorldConfFile?.Length == 0)
 				Log("WORLD Export -> Config File cannot be found");
 			else
 			{
@@ -378,12 +447,10 @@ namespace SPP_Config_Generator
 				Log("WOW Config File cannot be found - cannot update SET portal entry");
 			else
 			{
-				try 
+				try
 				{
 					// Pull in our WOW config
-					List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
-
-					foreach (var item in allLinesText)
+					foreach (var item in File.ReadAllLines(WowConfigFile).ToList())
 					{
 						// If it's the portal entry, set it to the external address
 						// and if there's something wrong with the file then nothing
@@ -450,8 +517,8 @@ namespace SPP_Config_Generator
 				{
 					using (StreamWriter stream = new StreamWriter(path, append))
 					{
-						// Clean up any double spaces to format a bit nicer
-						string tmp = entry.Replace("\n\n\n", "\n\n");
+						// Clean up any double spaces to format a bit nicer, remove extra junk at end
+						string tmp = entry.Replace("\n\n\n", "\n\n").TrimEnd('\n');
 						stream.WriteLine(tmp);
 						Log($"Wrote data to {path}");
 					}
@@ -472,40 +539,24 @@ namespace SPP_Config_Generator
 		}
 
 		// Load in our saved settings (settings.json, SPP server config)
-		public async void LoadSettings()
+		public void LoadSettings()
 		{
-			StatusBox = "Please wait, loading general settings...";
 			// Pull in the saved settings, if any
 			Log("Loading general settings");
 			GeneralSettingsManager.LoadGeneralSettings();
-
-			// This await should let the GUI size/position settings apply before moving forward
-			await Task.Delay(1);
 			FindConfigPaths();
 
 			// Pull in the default templates if they exist
 			Log("Loading World/Bnet default templates");
-			StatusBox = "Please wait, loading bnet template...";
-			await Task.Delay(1);
 			BnetCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\bnetserver.conf");
-
-			StatusBox = "Please wait, loading world template...";
-			await Task.Delay(1);
 			WorldCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\worldserver.conf");
 
 			// Pull in the SPP server configs, if the location is set correctly
 			// in the general settings tab
 			Log("Loading current World/Bnet config files");
-			StatusBox = "Please wait, loading current bnetserver.conf...";
-			await Task.Delay(1);
 			BnetCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(BnetConfFile);
-
-			StatusBox = "Please wait, loading current worldserver.conf...";
-			await Task.Delay(1);
 			WorldCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile);
 
-			// Clear our status box, alert of any issues
-			StatusBox = "";
 			if (WorldCollectionTemplate.Count == 0)
 				Log("WorldCollectionTemplate is empty, error loading file worldserver.conf");
 			if (BnetCollectionTemplate.Count == 0)
@@ -530,7 +581,7 @@ namespace SPP_Config_Generator
 		public void FindConfigPaths()
 		{
 			// Find our world/bnet configs
-			if (SPPFolderLocation == string.Empty)
+			if (SPPFolderLocation?.Length == 0)
 				Log("SPP Folder Location is empty, cannot find existing settings to parse.");
 			else
 			{
@@ -549,7 +600,7 @@ namespace SPP_Config_Generator
 			}
 
 			// Find our wow client config
-			if (WOWConfigLocation == string.Empty)
+			if (WOWConfigLocation?.Length == 0)
 				Log("WOW Client Folder Location is empty, cannot find existing settings to parse.");
 			else
 			{
@@ -659,7 +710,7 @@ namespace SPP_Config_Generator
 					if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
 						result += $"Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
 
-				// Compare build# between bnet/world/realm				
+				// Compare build# between bnet/world/realm
 				if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
 				{
 					result += $"Build from DB Realm - {buildFromDB}\n";
