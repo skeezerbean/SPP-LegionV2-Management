@@ -15,6 +15,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.0** - Prep work for adding additional modules for management, renaming project
+
 **0.0.1.8** - Massive internal changes to virtualize datagrid -> loading/filtering should be MUCH faster, code cleanup
 
 **0.0.1.7** - building/exporting the .conf files will be quicker, clean up the alert box for "Check Config", added check for WorldChat.Enable and also Character.Template when using client build 26972
