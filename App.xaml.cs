@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace SPP_Config_Generator
+namespace SPP_LegionV2_Management
 {
 	/// <summary>
 	/// Interaction logic for App.xaml

@@ -1,7 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 
-namespace SPP_Config_Generator
+namespace SPP_LegionV2_Management
 {
 	public static class MySqlManager
 	{

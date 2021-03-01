@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows;
 
-namespace SPP_Config_Generator
+namespace SPP_LegionV2_Management
 {
 	/// <summary>
 	/// This class handles the general settings, save/load with files

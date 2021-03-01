@@ -1,7 +1,7 @@
 ﻿using Caliburn.Micro;
 using System.Windows;
 
-namespace SPP_Config_Generator
+namespace SPP_LegionV2_Management
 {
 	public class Bootstrapper : BootstrapperBase
 	{
