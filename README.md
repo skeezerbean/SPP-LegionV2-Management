@@ -3,6 +3,8 @@
 
 ### Usage
 
+This application requires .net framework 4.8. 
+
 (screenshots for setup and usage at the bottom) - Make sure the **SPP Database** engine is running.
 
 You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
