@@ -52,87 +52,87 @@ If you see an error similar to **[not allowed to connect to this MySQL server]**
 
 To begin - Make sure the SPP Database is running
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/database-started.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/database-started.PNG)
 
 
 Launch the App - The 1st time will show this. Hit OK
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/1st-run.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/1st-run.PNG)
 
 
 Go to the General Settings tab
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Settings-Tab.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Settings-Tab.PNG)
 
 
 When browsing for the SPP folder, it will be the one that has these items
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/SPP-server-folder.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/SPP-server-folder.PNG)
 
 
 Browsing for the Wow Config Location will be your WoW Legion Client folder, which will look more or less like this
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/wow-client-folder.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/wow-client-folder.PNG)
 
 
 Once you've set the folder locations, click this button
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Reload-Configs-Button.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Reload-Configs-Button.PNG)
 
 
 This will pull in data from your current config and populate the World/Bnet tabs. Click on the World tab to see the config
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/World-Config-Loaded.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/World-Config-Loaded.PNG)
 
 
 Click the "Check Config" button
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Button.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Check-Config-Button.PNG)
 
 
 This will show any potential issues with your setup. The picture below shows an issue with duplicate entry, as well as a warning for the value having a comment in the line
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Errors-Duplicates.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Check-Config-Errors-Duplicates.PNG)
 
 
 Use the search tool to find the entry
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Search-entry-duplicate.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Search-entry-duplicate.PNG)
 
 
 Click the entry, and you'll see that it's highlighted in blue in that row
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Select-Line-To-Delete.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Select-Line-To-Delete.PNG)
 
 
 Press Delete on your keyboard, and the line will be gone
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/After-Delete.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/After-Delete.PNG)
 
 
 You can now Check Config again, and you can see that the alert is now gone
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Success.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Check-Config-Success.PNG)
 
 
 If you are missing some entries, such as new lines added from one of the updates, this will alert you when you **Check Config** (and automatically add them and their default values to your config)
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Check-Config-Missing-Entries.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Check-Config-Missing-Entries.PNG)
 
 
 The **[Game.Build.Version]** must be the same as whatever client you're using. You can find this by launching the Legion client, and checking the build # at the bottom-left
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Legion-Client-Build.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Legion-Client-Build.PNG)
 
 
 If this is different than what your config has set, then use the **Set Build** button to update. You'll enter the build number from your legion client, which may be different than the example above
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Set-Build.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Set-Build.PNG)
 
 
 Once you're ready, click on **Save/Export** to save your updated configs to disk. This will auto-backup existing configs into the SPP Config Generator's backup folder before saving new ones
 
-![](https://github.com/skeezerbean/SPPConfigGenerator/blob/main/Resources/Save-Export-Backup.PNG)
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Save-Export-Backup.PNG)
 
 
 Once the config has been exported then you can start/restart your bnet/world servers to use the updated configuration.
