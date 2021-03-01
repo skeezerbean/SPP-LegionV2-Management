@@ -1,5 +1,5 @@
-# SPPConfigGenerator
-## Build/Update config generator for SPP LegionV2
+# SPP-LegionV2-Management
+## Configuration and Management for SPP LegionV2 Servers
 
 ### Usage
 
