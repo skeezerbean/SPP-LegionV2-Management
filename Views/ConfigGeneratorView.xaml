@@ -28,26 +28,28 @@
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
-					<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue" Grid.Column="0"
+					<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue" Grid.Column="1"
 							HorizontalAlignment="Center"
 					ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the server config, DB and WoW Legion client config if able." />
 					<Button x:Name="SetBuild" Content="Set Build" Padding="5" Margin="5" Background="AliceBlue"
 							HorizontalAlignment="Center"
-					ToolTip="Sets the Game.Build.Version in the config/database" Grid.Column="1" />
-					<Button x:Name="SetDefaults" Content="Set Defaults" Padding="5" Margin="5" Background="AliceBlue" Grid.Column="2"
+					ToolTip="Sets the Game.Build.Version in the config/database" Grid.Column="2" />
+					<Button x:Name="SetDefaults" Content="Set Defaults" Padding="5" Margin="5" Background="AliceBlue" Grid.Column="3"
 							HorizontalAlignment="Center"
 					ToolTip="Sets default entries in the SPP config. This will overwrite current settings from the local default template file." />
 					<Button x:Name="LoadSettings" Content="Reload Configs" Padding="5" Margin="5" Background="AliceBlue" 
-							Grid.Column="3" HorizontalAlignment="Center"
+							Grid.Column="4" HorizontalAlignment="Center"
 					ToolTip="This reloads the Settings file, default templates and SPP world/bnet files from disk. This is helpful to undo any changes in the current session instead of restarting the app." />
 					<Button x:Name="CheckSPPConfig" Content="Check Config" Padding="5" Margin="5" Background="AliceBlue" 
-							Grid.Column="4" HorizontalAlignment="Center"
+							Grid.Column="5" HorizontalAlignment="Center"
 					ToolTip="This will check the current SPP config for some potential issues." />
 					<Button x:Name="SaveConfig" Content="Save/Export" Padding="5" Margin="5" Background="AliceBlue" 
-							Grid.Column="5" HorizontalAlignment="Center"
+							Grid.Column="6" HorizontalAlignment="Center"
 					ToolTip="Save settings and generate configs to SPP installation and database." />
-					<TextBlock Padding="5" Margin="6" Background="AliceBlue" Grid.Column="6" HorizontalAlignment="Center">
+					<TextBlock Padding="5" Margin="6" Background="AliceBlue" Grid.Column="7" HorizontalAlignment="Center">
 					<Hyperlink NavigateUri="https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/README.md"
 							   RequestNavigate="Hyperlink_RequestNavigate">
 						Help / About
@@ -119,20 +121,20 @@
 						<TabItem Header="General App Settings" Margin="1">
 							<StackPanel Orientation="Horizontal">
 								<StackPanel Margin="2">
-									<Button x:Name="SPPFolderBrowse" Content="SPP Folder Location" />
-									<Button x:Name="WowConfigBrowse" Content="Wow Config Location" />
-									<TextBlock Text="MySQL Server" />
+									<Button x:Name="SPPFolderBrowse" Content="Set SPP Folder Location" Margin="5" />
+									<Button x:Name="WowConfigBrowse" Content="Set Wow Client Location" Margin="5"/>
+									<!--<TextBlock Text="MySQL Server" />
 									<TextBlock Text="MySQL Port" />
 									<TextBlock Text="MySQL User" />
-									<TextBlock Text="MySQL Pass" />
+									<TextBlock Text="MySQL Pass" />-->
 								</StackPanel>
-								<StackPanel Margin="2">
-									<TextBlock x:Name="SPPFolderLocation" />
-									<TextBlock x:Name="WOWConfigLocation" />
-									<TextBox x:Name="MySQLServer" />
+								<StackPanel Margin="1">
+									<TextBlock x:Name="SPPFolderLocation" Margin="5,7" VerticalAlignment="Center"/>
+									<TextBlock x:Name="WOWConfigLocation" Margin="5,7" VerticalAlignment="Center"/>
+									<!--<TextBox x:Name="MySQLServer" />
 									<TextBox x:Name="MySQLPort" />
 									<TextBox x:Name="MySQLUser" />
-									<TextBox x:Name="MySQLPass" />
+									<TextBox x:Name="MySQLPass" />-->
 								</StackPanel>
 							</StackPanel>
 						</TabItem>
