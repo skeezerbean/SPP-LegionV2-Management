@@ -23,19 +23,39 @@
 					<RowDefinition Height="auto" />
 					<RowDefinition Height="*" />	<!-- Header -->
 				</Grid.RowDefinitions>
-				
-				<!-- Top buttons for switching pages -->
-				<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-					<Button x:Name="LoadPageConfigGenerator" Content="Config Generator"
+
+				<StackPanel>
+					<!-- Top buttons for switching pages -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+						<Button x:Name="LoadPageConfigGenerator" Content="Config Generator"
 							Width="120" Height="30" Margin="5,5,25,5" HorizontalAlignment="Center" />
-					<Button x:Name="LoadPageAccountManager" Content="Account Manager" 
+						<Button x:Name="LoadPageAccountManager" Content="Account Manager" 
 							Width="120" Height="30" Margin="25,5,5,5" HorizontalAlignment="Center"/>
+						<Button x:Name="LoadPageSettings" Content="Settings" 
+							Width="120" Height="30" Margin="25,5,25,5" HorizontalAlignment="Center"/>
+						<TextBlock Width="120" Height="30" Margin="25,5,5,5" Background="AliceBlue" 
+								   TextAlignment="Center" Padding="5">
+							<Hyperlink NavigateUri="https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/README.md"
+							   RequestNavigate="Hyperlink_RequestNavigate">
+						Help / About
+							</Hyperlink>
+						</TextBlock>
+					</StackPanel>
+					<!-- Status boxes for server config, client config, SQL access -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+						<TextBlock Text="Server Config:" Margin="5" />
+						<TextBlock x:Name="ServerConfigStatus" Margin="0,5,25,5" />
+						<TextBlock Text="Client Config:" Margin="5" />
+						<TextBlock x:Name="ClientConfigStatus" Margin="0,5,25,5" />
+						<TextBlock Text="Database Connection:" Margin="5" />
+						<TextBlock x:Name="SQLConnectionStatus" Margin="0,5,5,5" />
+					</StackPanel>
 				</StackPanel>
 				<!-- ActiveItem is Caliburn, marks this as the active child form -->
 				<Border Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Padding="5" Margin="5" 
 						Background="#111111ff" BorderBrush="Black" BorderThickness="2">
 					<Grid>
-						<ContentControl x:Name="ActiveItem" Opacity="0.7"/>
+						<ContentControl x:Name="ActiveItem" Opacity="0.85"/>
 					</Grid>
 				</Border>
 			</Grid>

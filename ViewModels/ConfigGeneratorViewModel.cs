@@ -1,6 +1,5 @@
 ﻿using Caliburn.Micro;
 using MahApps.Metro.Controls.Dialogs;
-using Ookii.Dialogs.Wpf;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -28,13 +27,6 @@ namespace SPP_LegionV2_Management
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
 
-		public string SPPFolderLocation { get { return GeneralSettingsManager.GeneralSettings.SPPFolderLocation; } set { GeneralSettingsManager.GeneralSettings.SPPFolderLocation = value; } }
-		public string WOWConfigLocation { get { return GeneralSettingsManager.GeneralSettings.WOWConfigLocation; } set { GeneralSettingsManager.GeneralSettings.WOWConfigLocation = value; } }
-		public string MySQLServer { get { return GeneralSettingsManager.GeneralSettings.MySQLServer; } set { GeneralSettingsManager.GeneralSettings.MySQLServer = value; } }
-		public int MySQLPort { get { return GeneralSettingsManager.GeneralSettings.MySQLPort; } set { GeneralSettingsManager.GeneralSettings.MySQLPort = value; } }
-		public string MySQLUser { get { return GeneralSettingsManager.GeneralSettings.MySQLUser; } set { GeneralSettingsManager.GeneralSettings.MySQLUser = value; } }
-		public string MySQLPass { get { return GeneralSettingsManager.GeneralSettings.MySQLPass; } set { GeneralSettingsManager.GeneralSettings.MySQLPass = value; } }
-
 		// stores the filesystem path to the files
 		public string WowConfigFile { get; set; } = string.Empty;
 		public string BnetConfFile { get; set; } = string.Empty;
@@ -47,8 +39,8 @@ namespace SPP_LegionV2_Management
 		public string LogText { get; set; }
 
 		// For search/filtering
-		public ICollectionView worldView { get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
-		public ICollectionView bnetView { get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
+		public ICollectionView WorldView { get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
+		public ICollectionView BnetView { get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
 		private string _SearchBox = "";
 
 		public string SearchBox
@@ -78,29 +70,24 @@ namespace SPP_LegionV2_Management
 		{
 			_dialogCoordinator = instance;
 
-			Log("App Initializing...");
-			Log("Loading settings");
+			// This child page gets called before the GUI or main page shows, and the config settings attempt to get
+			// setup for the world/bnet collection. Loading settings here resolves having an initial blank collection
+			// since it can help populate them before they're needed
+			GeneralSettingsManager.LoadGeneralSettings();
+
 			LoadSettings();
+			RefreshViews();
 
-			// If the window was last saved in position that is no longer
-			// in view, then move it
-			Log("Set Window position/width/height, moving into view");
-
-			// Alert if this variable is empty, it means we either have no saved settings
-			// Or the SPP folder location was never set
-			if (SPPFolderLocation == string.Empty)
-				StatusBox = "Please set SPP Location in the General Settings tab";
-
-			worldView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
-			bnetView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
+			WorldView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
+			BnetView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
 		}
 
 		// Refresh the ICollectionView whenever anything changes, for all collections
 		private void RefreshViews()
 		{
 			NotifyPropertyChanged("SearchBox");
-			worldView.Refresh();
-			bnetView.Refresh();
+			WorldView.Refresh();
+			BnetView.Refresh();
 		}
 
 		private bool Filter(ConfigEntry entry)
@@ -144,6 +131,8 @@ namespace SPP_LegionV2_Management
 			if (input.Length > 6)
 				BnetCollection = UpdateConfigCollection(BnetCollection, "LoginREST.ExternalAddress", input);
 
+			// For whatever reason, this quick pause helps refresh visually as the collection changed
+			Thread.Sleep(1);
 			RefreshViews();
 		}
 
@@ -167,6 +156,8 @@ namespace SPP_LegionV2_Management
 				if (input != "")
 				MessageBox.Show("Build input invalid, ignoring");
 
+			// For whatever reason, this quick pause helps refresh visually as the collection changed
+			Thread.Sleep(1);
 			RefreshViews();
 		}
 
@@ -174,6 +165,8 @@ namespace SPP_LegionV2_Management
 		// overwrites our current settings with those defaults
 		public void SetDefaults()
 		{
+			FindConfigPaths();
+
 			// Due to switching to CollectionView, we cannot simply replace the collection
 			// with the template, but need to clear and re-use the existing, adding items in
 			if (WorldCollectionTemplate == null)
@@ -300,43 +293,6 @@ namespace SPP_LegionV2_Management
 			return result;
 		}
 
-		// From hitting the SPP Browse button in settings tab
-		public void SPPFolderBrowse()
-		{
-			// If it's empty, then it was cancelled and we keep the old setting
-			string tmp = BrowseFolder();
-			if (tmp != string.Empty)
-				SPPFolderLocation = tmp;
-		}
-
-		// From hitting the Wow browse button in settings tab
-		public void WowConfigBrowse()
-		{
-			// If it's empty, then it was cancelled and we keep the old setting
-			string tmp = BrowseFolder();
-			if (tmp != string.Empty)
-				WOWConfigLocation = tmp;
-		}
-
-		// Method to browse to a folder
-		public string BrowseFolder()
-		{
-			const string baseFolder = @"C:\";
-			string result = string.Empty;
-			try
-			{
-				VistaFolderBrowserDialog dialog = new VistaFolderBrowserDialog();
-				dialog.Description = "Please select a folder.";
-				dialog.UseDescriptionForTitle = true; // This applies to the Vista style dialog only, not the old dialog.
-				dialog.SelectedPath = baseFolder; // place to start search
-				if ((bool)dialog.ShowDialog())
-					result = dialog.SelectedPath;
-			}
-			catch { return string.Empty; }
-
-			return result;
-		}
-
 		// Take a collection, parse it out and save to a file path
 		public async void BuildConfFile(BindableCollection<ConfigEntry> collection, string path)
 		{
@@ -384,13 +340,6 @@ namespace SPP_LegionV2_Management
 			// Make sure our conf file locations are up to date in case folder changed in settings
 			FindConfigPaths();
 
-			// This should save general settings
-			if (GeneralSettingsManager.GeneralSettings == null)
-				Log("General Settings are empty, cannot save");
-			else
-				if (!GeneralSettingsManager.SaveSettings(GeneralSettingsManager.SettingsPath, GeneralSettingsManager.GeneralSettings))
-				Log($"Exception saving file {GeneralSettingsManager.SettingsPath}");
-
 			// Export to bnetserver.conf
 			if (BnetConfFile == string.Empty)
 				Log("BNET Export -> Config File cannot be found");
@@ -433,6 +382,8 @@ namespace SPP_LegionV2_Management
 		// Take our wow config.wtf file and update the SET portal entry
 		public void UpdateWowConfig()
 		{
+			FindConfigPaths();
+
 			string tmpstr = string.Empty;
 
 			if (WowConfigFile == string.Empty)
@@ -476,6 +427,8 @@ namespace SPP_LegionV2_Management
 		// that we want to save, and flush to the file
 		public void ExportToFile(string path, string entry, bool append = true)
 		{
+			FindConfigPaths();
+
 			var permissionSet = new PermissionSet(PermissionState.None);
 			var writePermission = new FileIOPermission(FileIOPermissionAccess.Write, path);
 			permissionSet.AddPermission(writePermission);
@@ -533,9 +486,6 @@ namespace SPP_LegionV2_Management
 		// Load in our saved settings (settings.json, SPP server config)
 		public void LoadSettings()
 		{
-			// Pull in the saved settings, if any
-			Log("Loading general settings");
-			GeneralSettingsManager.LoadGeneralSettings();
 			FindConfigPaths();
 
 			// Pull in the default templates if they exist
@@ -543,66 +493,82 @@ namespace SPP_LegionV2_Management
 			BnetCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\bnetserver.conf");
 			WorldCollectionTemplate = GeneralSettingsManager.CreateCollectionFromConfigFile("Default Templates\\worldserver.conf");
 
-			// Pull in the SPP server configs, if the location is set correctly
-			// in the general settings tab
+			// Pull in the SPP server configs, if the location is set correctly in settings
+			// Clear, then add items, otherwise it breaks the CollectionView
 			Log("Loading current World/Bnet config files");
-			BnetCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(BnetConfFile);
-			WorldCollection = GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile);
+			BnetCollection.Clear();
+			WorldCollection.Clear();
+			foreach (var entry in GeneralSettingsManager.CreateCollectionFromConfigFile(BnetConfFile))
+			{
+				BnetCollection.Add(entry);
+			}
+			foreach (var entry in GeneralSettingsManager.CreateCollectionFromConfigFile(WorldConfFile))
+			{
+				WorldCollection.Add(entry);
+			}
 
 			if (WorldCollectionTemplate.Count == 0)
 				Log("WorldCollectionTemplate is empty, error loading file worldserver.conf");
 			if (BnetCollectionTemplate.Count == 0)
 				Log("BnetCollectionTemplate is empty, error loading file bnetserver.conf");
 			if (WorldCollection.Count == 0)
-				Log($"WorldConfig is empty, error loading file {WorldConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+				Log($"WorldConfig is empty, error loading file {WorldConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Export]");
 			if (BnetCollection.Count == 0)
-				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Save/Export]");
+				Log($"BnetConfig is empty, error loading file {BnetConfFile} -- if no configuration has been made, please hit the [Set Defaults] and [Export]");
 
-			// If the SPP folder or wow client location was empty, assume this is the first time running or
-			// that something was deleted. Either way, user needs to know.
-			if (SPPFolderLocation == string.Empty || WowConfigFile == string.Empty)
-			{
-				string tmp = "Hello! The location for either SPP folder or WOW config doesn't seem to be set, so if this is your first time running this app ";
-				tmp += "then please go to the General App Settings tab and browse to the folder locations, then reload configs. From there you can ";
-				tmp += "check the config and make any adjustments, then save/export when ready. Click the [Help/About] button for more details.";
-				MessageBox.Show(tmp, "Settings Need Attention!");
-			}
+			Thread.Sleep(1);
+			RefreshViews();
 		}
 
 		// Take the folder locations in settings, and try to determine the path for each config file
 		public void FindConfigPaths()
 		{
 			// Find our world/bnet configs
-			if (SPPFolderLocation?.Length == 0)
+			if (GeneralSettingsManager.GeneralSettings.SPPFolderLocation?.Length == 0)
 				Log("SPP Folder Location is empty, cannot find existing settings to parse.");
 			else
 			{
-				if (File.Exists($"{SPPFolderLocation}\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\bnetserver.conf"))
+				if (File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\worldserver.conf") 
+					|| File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\bnetserver.conf"))
 				{
-					WorldConfFile = $"{SPPFolderLocation}\\worldserver.conf";
-					BnetConfFile = $"{SPPFolderLocation}\\bnetserver.conf";
+					WorldConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\worldserver.conf";
+					BnetConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\bnetserver.conf";
 				}
-				else if (File.Exists($"{SPPFolderLocation}\\Servers\\worldserver.conf") || File.Exists($"{SPPFolderLocation}\\Servers\\bnetserver.conf") || (Directory.Exists($"{SPPFolderLocation}\\Servers")))
+				else if (File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\worldserver.conf") 
+					|| File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\bnetserver.conf") 
+					|| (Directory.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers")))
 				{
 					// Either we find the files themselves, or we found the Servers folder and we'll generate them here on saving
 					// since this is the best guess given our saved path info
-					WorldConfFile = $"{SPPFolderLocation}\\Servers\\worldserver.conf";
-					BnetConfFile = $"{SPPFolderLocation}\\Servers\\bnetserver.conf";
+					WorldConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\worldserver.conf";
+					BnetConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\bnetserver.conf";
+				}
+				else
+				{
+					// In case folder location changed, may still need to update this
+					WorldConfFile = "";
+					BnetConfFile = "";
+					WorldCollection.Clear();
+					BnetCollection.Clear();
 				}
 			}
 
 			// Find our wow client config
-			if (WOWConfigLocation?.Length == 0)
+			if (GeneralSettingsManager.GeneralSettings.WOWConfigLocation?.Length == 0)
 				Log("WOW Client Folder Location is empty, cannot find existing settings to parse.");
 			else
 			{
-				if (File.Exists($"{WOWConfigLocation}\\config.wtf"))
-					WowConfigFile = $"{WOWConfigLocation}\\config.wtf";
-				else if (File.Exists($"{WOWConfigLocation}\\WTF\\config.wtf") || (Directory.Exists($"{WOWConfigLocation}\\WTF")))
+				if (File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\config.wtf"))
+					WowConfigFile = $"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\config.wtf";
+				else if (File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF\\config.wtf")
+					|| (Directory.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF")))
 					// Either we find the file, or we found the WTF folder and we'll assume this is it
 					// since this is the best guess given our saved path info. Won't be anything to parse, though
 					// if the file itself doesn't exist. Sad face...
-					WowConfigFile = $"{WOWConfigLocation}\\WTF\\config.wtf";
+					WowConfigFile = $"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF\\config.wtf";
+				else
+					// In case folder location was changed, this will catch
+					WowConfigFile = "";
 			}
 		}
 
@@ -677,7 +643,7 @@ namespace SPP_LegionV2_Management
 				{
 					if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
 					{
-						result += $"Warning - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n\n";
+						result += $"Warning - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to export afterwards to save)\n\n";
 						BnetCollection.Add(item);
 					}
 				}
@@ -692,7 +658,7 @@ namespace SPP_LegionV2_Management
 				{
 					if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
 					{
-						result += $"Warning - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to save/export afterwards to save)\n\n";
+						result += $"Warning - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to export afterwards to save)\n\n";
 						WorldCollection.Add(item);
 					}
 				}
@@ -711,7 +677,7 @@ namespace SPP_LegionV2_Management
 					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n\n";
 				}
 				else
-					result += "Game.Build.Version numbers match, this is good!\n\n";
+					result += $"Game.Build.Version [{buildFromDB}] numbers match, this is good!\n\n";
 
 				// Compare IP bindings for listening - these really never need to change
 				if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
@@ -721,7 +687,7 @@ namespace SPP_LegionV2_Management
 					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n\n";
 				}
 				else
-					result += "BindIP settings match and are set properly.\n\n";
+					result += $"BindIP settings match [{worldBindIP}] and are set properly.\n\n";
 
 				// Gather WoW portal IP from config.wtf
 				if (File.Exists(WowConfigFile) == false)
@@ -758,7 +724,7 @@ namespace SPP_LegionV2_Management
 					result += "Alert - All of these addresses should match. Use the \"Set IP\" button to set.\n\n";
 				}
 				else
-					result += "IP settings for hosting all match, this is good!\n\n";
+					result += $"IP settings for hosting all match [{addressFromDB}], this is good!\n\n";
 
 				// Check the local (not external hosting) IP settings. These don't need to change from 127.0.0.1 (localhost)
 				if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))

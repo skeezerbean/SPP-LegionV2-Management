@@ -1,0 +1,30 @@
+﻿<UserControl x:Class="SPP_LegionV2_Management.SettingsView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SPP_LegionV2_Management"
+	    Background="DimGray"
+        mc:Ignorable="d">
+	<Grid>
+
+		<StackPanel Orientation="Horizontal">
+			<StackPanel Margin="5">
+				<Button x:Name="SPPFolderBrowse" Content="Set SPP Folder Location" Margin="5" />
+				<Button x:Name="WowConfigBrowse" Content="Set Wow Client Location" Margin="5"/>
+				<!--<TextBlock Text="MySQL Server" />
+									<TextBlock Text="MySQL Port" />
+									<TextBlock Text="MySQL User" />
+									<TextBlock Text="MySQL Pass" />-->
+			</StackPanel>
+			<StackPanel Margin="5">
+				<TextBlock x:Name="SPPFolderLocation" Margin="5,7" VerticalAlignment="Center"/>
+				<TextBlock x:Name="WOWConfigLocation" Margin="5,7" VerticalAlignment="Center"/>
+				<!--<TextBox x:Name="MySQLServer" />
+									<TextBox x:Name="MySQLPort" />
+									<TextBox x:Name="MySQLUser" />
+									<TextBox x:Name="MySQLPass" />-->
+			</StackPanel>
+		</StackPanel>
+	</Grid>
+</UserControl>

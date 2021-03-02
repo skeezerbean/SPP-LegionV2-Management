@@ -6,7 +6,52 @@
         xmlns:local="clr-namespace:SPP_LegionV2_Management"
 	    Background="DimGray"
         mc:Ignorable="d">
-    <Grid>
-        
-    </Grid>
+	<Grid>
+		<!-- Turn this into tabs rather than bunch of buttons? -->
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+			<!-- Main list -->
+			<ColumnDefinition Width="*" />
+			<!-- Secondary list -->
+		</Grid.ColumnDefinitions>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="50" />
+			<!-- Main Button area -->
+			<RowDefinition Height="50" />
+			<!-- Add/Remove Button area -->
+			<RowDefinition Height="*" />
+			<!-- Data display area -->
+		</Grid.RowDefinitions>
+		<StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Center">
+			
+			<Button x:Name="RetrieveAccounts" Content="Show Accounts" Margin="5" Padding="5"
+				ToolTip="Retreives Legion Account/BNET account info from the database"/>
+			
+			<Button x:Name="FindOrphanedCharacters" Content="Show Orphaned Characters" Margin="5" Padding="5"
+				ToolTip="Displays characters in the database without associated accounts" />
+			
+			<Button x:Name="FindOrphanedObjects" Content="Show Orphaned Objects" Margin="5" Padding="5"
+				ToolTip="Find leftover character information for characters that don't seem to exist" />
+			
+		</StackPanel>
+		<StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Center">
+			
+			<Button x:Name="AddOAccount" Content="Create Account" Margin="5" Padding="5"
+				ToolTip="Open Dialog to create an account and BNET account"/>
+			
+			<Button x:Name="DeleteSelectedObject" Content="Delete Selected Item" Margin="5" Padding="5" />
+			
+			<!-- Buttons for backing up characters/realm DBs? and for restoring?
+			     Or is this out of scope of this project, and should use Heidi? -->
+			
+		</StackPanel>
+		<Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="3" Grid.Row="2">
+			<Grid>
+				<DataGrid ItemsSource="{Binding currentMainView}" AutoGenerateColumns="False"
+					EnableColumnVirtualization="True" EnableRowVirtualization="True" Grid.Column="0">
+					
+				</DataGrid>
+			</Grid>
+		</Border>
+	</Grid>
 </UserControl>

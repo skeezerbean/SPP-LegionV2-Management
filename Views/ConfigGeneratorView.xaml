@@ -37,7 +37,7 @@
 					<Button x:Name="SetBuild" Content="Set Build" Padding="5" Margin="5" Background="AliceBlue"
 							HorizontalAlignment="Center"
 					ToolTip="Sets the Game.Build.Version in the config/database" Grid.Column="2" />
-					<Button x:Name="SetDefaults" Content="Set Defaults" Padding="5" Margin="5" Background="AliceBlue" Grid.Column="3"
+					<Button x:Name="SetDefaults" Content="Set Configs to Default" Padding="5" Margin="5" Background="AliceBlue" Grid.Column="3"
 							HorizontalAlignment="Center"
 					ToolTip="Sets default entries in the SPP config. This will overwrite current settings from the local default template file." />
 					<Button x:Name="LoadSettings" Content="Reload Configs" Padding="5" Margin="5" Background="AliceBlue" 
@@ -46,15 +46,10 @@
 					<Button x:Name="CheckSPPConfig" Content="Check Config" Padding="5" Margin="5" Background="AliceBlue" 
 							Grid.Column="5" HorizontalAlignment="Center"
 					ToolTip="This will check the current SPP config for some potential issues." />
-					<Button x:Name="SaveConfig" Content="Save/Export" Padding="5" Margin="5" Background="AliceBlue" 
+					<Button x:Name="SaveConfig" Content="Export Config" Padding="5" Margin="5" Background="AliceBlue" 
 							Grid.Column="6" HorizontalAlignment="Center"
 					ToolTip="Save settings and generate configs to SPP installation and database." />
-					<TextBlock Padding="5" Margin="6" Background="AliceBlue" Grid.Column="7" HorizontalAlignment="Center">
-					<Hyperlink NavigateUri="https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/README.md"
-							   RequestNavigate="Hyperlink_RequestNavigate">
-						Help / About
-					</Hyperlink>
-					</TextBlock>
+					
 					<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
 					   Name="StatusBox" Margin="5" FontWeight="Bold" />
 				</Grid>
@@ -81,7 +76,7 @@
 						<TabItem Header="World Config" Margin="1">
 							<!-- Datagrid for World settings -->
 							<DataGrid
-									ItemsSource="{Binding worldView}" AutoGenerateColumns="False"
+									ItemsSource="{Binding WorldView}" AutoGenerateColumns="False"
 									EnableColumnVirtualization="True" EnableRowVirtualization="True">
 								<!-- This sets up columns with the names we want,
 									without desccription column (which will become tooltip) -->
@@ -102,7 +97,7 @@
 						<TabItem Header="Bnet Config" Margin="1">
 							<!-- Datagrid for Bnet settings, duplicated from world collection -->
 							<DataGrid
-								ItemsSource="{Binding bnetView}" AutoGenerateColumns="False"
+								ItemsSource="{Binding BnetView}" AutoGenerateColumns="False"
 								EnableColumnVirtualization="True" EnableRowVirtualization="True">
 								<DataGrid.Columns>
 									<DataGridTextColumn Header="Setting" Binding="{Binding Name}" />
@@ -115,29 +110,7 @@
 								</DataGrid.Resources>
 							</DataGrid>
 						</TabItem>
-
-						<!-- Set up our general settings tab, bind our browse methods to the
-							buttons, and data to the names of text boxes -->
-						<TabItem Header="General App Settings" Margin="1">
-							<StackPanel Orientation="Horizontal">
-								<StackPanel Margin="2">
-									<Button x:Name="SPPFolderBrowse" Content="Set SPP Folder Location" Margin="5" />
-									<Button x:Name="WowConfigBrowse" Content="Set Wow Client Location" Margin="5"/>
-									<!--<TextBlock Text="MySQL Server" />
-									<TextBlock Text="MySQL Port" />
-									<TextBlock Text="MySQL User" />
-									<TextBlock Text="MySQL Pass" />-->
-								</StackPanel>
-								<StackPanel Margin="1">
-									<TextBlock x:Name="SPPFolderLocation" Margin="5,7" VerticalAlignment="Center"/>
-									<TextBlock x:Name="WOWConfigLocation" Margin="5,7" VerticalAlignment="Center"/>
-									<!--<TextBox x:Name="MySQLServer" />
-									<TextBox x:Name="MySQLPort" />
-									<TextBox x:Name="MySQLUser" />
-									<TextBox x:Name="MySQLPass" />-->
-								</StackPanel>
-							</StackPanel>
-						</TabItem>
+					
 					</TabControl>
 				</Grid>
 				<!-- Give us a movable splitter to adjust the size of the log if needed -->
