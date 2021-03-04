@@ -15,6 +15,12 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.1** - ** PLEASE NOTE** The .exe file name has changed and the old one should be deleted. Revamped GUI, added some account/character management
+
+-- Working - listing/changing current account/character information
+
+-- Not working - creating new account, cleanup/deletion of accounts/characters/orphaned objects
+
 **0.0.2.0** - Prep work for adding additional modules for management, renaming project
 
 **0.0.1.8** - Massive internal changes to virtualize datagrid -> loading/filtering should be MUCH faster, code cleanup
