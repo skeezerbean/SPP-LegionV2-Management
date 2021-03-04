@@ -22,26 +22,26 @@
 				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" MinWidth="60" />
+						<ColumnDefinition Width="*" MinWidth="70"  />
+						<ColumnDefinition Width="*" MinWidth="150"  />
+						<ColumnDefinition Width="*" MinWidth="110" />
+						<ColumnDefinition Width="*" MinWidth="100" />
+						<ColumnDefinition Width="*" MinWidth="100" />
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue" Grid.Column="1"
-							HorizontalAlignment="Center"
+							HorizontalAlignment="Center" 
 					ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the server config, DB and WoW Legion client config if able." />
 					<Button x:Name="SetBuild" Content="Set Build" Padding="5" Margin="5" Background="AliceBlue"
-							HorizontalAlignment="Center"
+							HorizontalAlignment="Center" 
 					ToolTip="Sets the Game.Build.Version in the config/database" Grid.Column="2" />
 					<Button x:Name="SetDefaults" Content="Set Configs to Default" Padding="5" Margin="5" Background="AliceBlue" Grid.Column="3"
-							HorizontalAlignment="Center"
+							HorizontalAlignment="Center" 
 					ToolTip="Sets default entries in the SPP config. This will overwrite current settings from the local default template file." />
 					<Button x:Name="LoadSettings" Content="Reload Configs" Padding="5" Margin="5" Background="AliceBlue" 
-							Grid.Column="4" HorizontalAlignment="Center"
+							Grid.Column="4" HorizontalAlignment="Center" 
 					ToolTip="This reloads the Settings file, default templates and SPP world/bnet files from disk. This is helpful to undo any changes in the current session instead of restarting the app." />
 					<Button x:Name="CheckSPPConfig" Content="Check Config" Padding="5" Margin="5" Background="AliceBlue" 
 							Grid.Column="5" HorizontalAlignment="Center"
