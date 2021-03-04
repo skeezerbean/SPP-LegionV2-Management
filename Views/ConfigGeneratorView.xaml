@@ -21,14 +21,14 @@
 			<StackPanel>
 				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="0.5*" />
 						<ColumnDefinition Width="*" MinWidth="60" />
 						<ColumnDefinition Width="*" MinWidth="70"  />
 						<ColumnDefinition Width="*" MinWidth="150"  />
 						<ColumnDefinition Width="*" MinWidth="110" />
 						<ColumnDefinition Width="*" MinWidth="100" />
 						<ColumnDefinition Width="*" MinWidth="100" />
-						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="0.5*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue" Grid.Column="1"
@@ -82,7 +82,7 @@
 									without desccription column (which will become tooltip) -->
 								<DataGrid.Columns>
 									<DataGridTextColumn Header="Setting" Binding="{Binding Name}" />
-									<DataGridTextColumn Header="Value" Binding="{Binding Value}" />
+									<DataGridTextColumn Header="Value" Binding="{Binding Value}" MaxWidth="300" />
 								</DataGrid.Columns>
 								<DataGrid.Resources>
 									<Style TargetType="{x:Type DataGridRow}">

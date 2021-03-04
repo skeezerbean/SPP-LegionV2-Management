@@ -81,7 +81,11 @@ namespace SPP_LegionV2_Management
 					}
 				}
 			}
-			catch (Exception e) { return e.Message; }
+			catch (Exception e) 
+			{
+				Console.WriteLine($"SQL exception, query = {query}");
+				return e.Message; 
+			}
 
 			return response;
 		}

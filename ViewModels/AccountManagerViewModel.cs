@@ -60,18 +60,26 @@ namespace SPP_LegionV2_Management
 			{
 				string response = string.Empty;
 
+				// Update our username
 				MySqlManager.MySQLQueryToString($"UPDATE legion_auth.account SET username=\"{account.Username}\" WHERE id={account.ID}", true);
-				MySqlManager.MySQLQueryToString($"UPDATE legion_auth.battlenet_accounts SET email=\"{account.BattleNetEmail}\",donate={account.BattleCoins} WHERE id={account.BattleNetAccount}", true);
-				response = MySqlManager.MySQLQueryToString($"SELECT gmlevel FROM legion_auth.account_access WHERE id = {account.ID}");
 
-				if (account.GMLevel < 0 || account.GMLevel > 6)
-					MessageBox.Show($"Account ID {account.ID}({account.Username}) - entry for GMLevel must be from 1 to 6 only, or set to 0 to remove GM status");
-				else if (response.Contains("Invalid attempt to access a field before calling Read()") && account.GMLevel != 0)
+				// If this was -1 then the account didn't exist, so skip. Otherwise update the login/battlecoins
+				if (account.BattleNetAccount != -1)
+					MySqlManager.MySQLQueryToString($"UPDATE legion_auth.battlenet_accounts SET email=\"{account.BattleNetEmail}\",donate={account.BattleCoins} WHERE id={account.BattleNetAccount}", true);
+
+
+				response = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT gmlevel FROM legion_auth.account_access WHERE id = {account.ID}), \"-1\")");
+
+				if (account.GMLevel < -1 || account.GMLevel > 6)
+					MessageBox.Show($"Account ID {account.ID}({account.Username}) - entry for GMLevel must be from 1 to 6 only, or set to -1 or 0 to remove GM status");
+
+				else if (response == "-1" && account.GMLevel > 0)
 				{
 						// perform insert to new gm access entry if default GMlevel also changed
 						Console.WriteLine($" {account.ID}({account.Username}) Adding GM Entry - " + MySqlManager.MySQLQueryToString($"INSERT INTO legion_auth.account_access (id,gmlevel,RealmID) VALUES ({account.ID},{account.GMLevel},-1)", true));
 				}
-				else if (!response.Contains("Invalid attempt to access a field before calling Read()") && account.GMLevel == 0) // remove the entry if exists
+				// remove the entry if exists
+				else if (response != "-1" && (account.GMLevel == -1 || account.GMLevel == 0))
 					Console.WriteLine($" {account.ID}({account.Username}) Removing from GM status - " + MySqlManager.MySQLQueryToString($"DELETE FROM legion_auth.account_access WHERE id={account.ID}", true));
 			}
 
@@ -115,7 +123,7 @@ namespace SPP_LegionV2_Management
 				return;
 
 			Accounts.Clear();
-			MySqlDataReader reader = MySqlManager.MySQLQuery(@"SELECT id,username,battlenet_account FROM legion_auth.account", GetAccountsFromSQL);
+			MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT id,username,IFNULL(battlenet_account,\"-1\") FROM legion_auth.account", GetAccountsFromSQL);
 			AccountsTotal = Accounts.Count;
 			await Task.Delay(1);
 		}
@@ -153,7 +161,7 @@ namespace SPP_LegionV2_Management
 			OrphanedCharacters.Clear();
 			tempCharacters.Clear();
 			tempOrphanedCharacters.Clear();
-			MySqlDataReader reader = MySqlManager.MySQLQuery(@"SELECT guid,account,name FROM legion_characters.characters", GetCharactersFromSQL);
+			MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT guid,account,name FROM legion_characters.characters", GetCharactersFromSQL);
 			await Task.Delay(1);
 
 			Characters = tempCharacters;
@@ -173,15 +181,20 @@ namespace SPP_LegionV2_Management
 				account.ID = reader.GetInt32(0);
 				account.Username = reader.GetString(1);
 				account.BattleNetAccount = reader.GetInt32(2);
-				account.BattleNetEmail = MySqlManager.MySQLQueryToString($"SELECT email FROM legion_auth.battlenet_accounts WHERE id = {account.BattleNetAccount}");
+				account.BattleNetEmail = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT email FROM legion_auth.battlenet_accounts WHERE id = {account.BattleNetAccount}),\"-1\")");
 
-				tmp = MySqlManager.MySQLQueryToString($"SELECT donate FROM legion_auth.battlenet_accounts WHERE id = {account.BattleNetAccount}");
-				Int32.TryParse(tmp, out num);
+				if (account.BattleNetAccount != -1)
+				{
+					tmp = MySqlManager.MySQLQueryToString($"SELECT donate FROM legion_auth.battlenet_accounts WHERE id = {account.BattleNetAccount}");
+					Int32.TryParse(tmp, out num);
+				}
 				account.BattleNetAccount = num;
 
 				num = -1;
 				tmp = string.Empty;
-				tmp = MySqlManager.MySQLQueryToString($"SELECT gmlevel FROM legion_auth.account_access WHERE id = {account.ID}");
+				tmp = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT gmlevel FROM legion_auth.account_access WHERE id = {account.ID}), \"-1\")");
+
+				// If there was an uncaught exception/failure somewhere
 				if (!tmp.Contains("Invalid attempt to access a field before calling Read()"))
 				{
 					Int32.TryParse(tmp, out num);
@@ -203,13 +216,15 @@ namespace SPP_LegionV2_Management
 				character.Account = reader.GetInt32(1);
 				character.Name = reader.GetString(2);
 
-				string response = MySqlManager.MySQLQueryToString($"SELECT * FROM legion_auth.account WHERE id={character.Account}");
-				if (response.Contains("Invalid attempt to access a field before calling Read()"))
+				// This should return -1 for characters missing an account
+				string response = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT id FROM legion_auth.account WHERE id={character.Account}),\"-1\")");
+
+				if (response == "-1")
 					tempOrphanedCharacters.Add(character);
 				else
 					tempCharacters.Add(character);
 			}
-			catch (Exception e) { Console.WriteLine(e.Message); }
+			catch (Exception e) { Console.WriteLine($"Error retrieving character info - {e.Message}"); }
 
 			if (OrphanedCharacters.Count % 200 == 0)
 			{

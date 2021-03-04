@@ -42,7 +42,7 @@
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="User Name" Binding="{Binding Username}" MinWidth="100" />
 							<DataGridTextColumn Header="ID" Binding="{Binding ID}" MinWidth="60" />
-							<DataGridTextColumn Header="BattleNet Account" Binding="{Binding BattleNetEmail}" MinWidth="180" />
+							<DataGridTextColumn Header="BattleNet Email" Binding="{Binding BattleNetEmail}" MinWidth="180" />
 						</DataGrid.Columns>
 					</DataGrid>
 					
@@ -59,7 +59,7 @@
 						<StackPanel Margin="10" >
 							<TextBlock Text="Total Accounts:"  />
 							<TextBlock Text="Selected Account ID:" />
-							<TextBlock Text="Selected BattleNetAccount:" Margin="1"/>
+							<TextBlock Text="Selected BattleNet Login:" Margin="1"/>
 							<TextBlock Text="Selected Account Username:" Margin="1" />
 							<TextBlock Text="Selected Account BattleCoins:" Margin="1" />
 							<TextBlock Text="Selected Account GM Level:" Margin="1" />
@@ -67,10 +67,11 @@
 						<StackPanel Margin="10" >
 							<TextBlock x:Name="AccountsTotal"  />
 							<TextBlock x:Name="CurrentID" />
-							<TextBox x:Name="CurrentBattleNetEmail" />
+							<TextBox x:Name="CurrentBattleNetEmail" 
+								ToolTip="If this is -1, then don't change. This account has no battlenet counterpart and was not created completely" />
 							<TextBox x:Name="CurrentUsername" />
 							<TextBox x:Name="CurrentBattleCoins" />
-							<TextBox x:Name="CurrentGMLevel" ToolTip="GM Level set to 0 to disable, or between 1 and 6" />
+							<TextBox x:Name="CurrentGMLevel" ToolTip="GM Level set to -1 or 0 to disable, or between 1 and 6" />
 						</StackPanel>
 					</StackPanel>
 
@@ -136,7 +137,7 @@
 				</Grid>
 			</TabItem>
 
-			<TabItem Header="Clean Up Tools" Margin="1">
+			<TabItem Header="Orphaned Characters" Margin="1">
 				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
@@ -152,7 +153,7 @@
 						<Button x:Name="RetrieveOrphanedCharacters" Content="Show Characters" Margin="5" Padding="5"
 							ToolTip="Retreives character info from the database"/>
 
-						<Button x:Name="RemoveOrphanedCharacters" Content="Delete Selected Character" Margin="5" Padding="5"
+						<Button x:Name="RemoveOrphanedCharacters" Content="Remove all Orphaned Characters" Margin="5" Padding="5"
 							ToolTip="Delete the orphaned characters"/>
 
 					</StackPanel>
@@ -183,17 +184,56 @@
 					</StackPanel>
 
 				</Grid>
-				<!--button to list orphaned characters with no matching account 
-				 button to list orphaned character items/settings with no matching character--> 
+			</TabItem>
+
+			<TabItem Header="Clean Up Tools" Margin="1">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="40" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+						<Button x:Name="RetrieveOrphanedItems" Content="Check for Orphaned Objects" Margin="5" Padding="5"
+							ToolTip="Searches Database for orphaned character objects"/>
+
+						<Button x:Name="RemoveOrphanedItems" Content="Remove all Orphaned Objects" Margin="5" Padding="5"
+							ToolTip="Delete the orphaned objects"/>
+
+					</StackPanel>
+
+					<!--<DataGrid ItemsSource="{Binding OrphanedCharacters}" AutoGenerateColumns="False" IsReadOnly="True"
+						ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+						Grid.Column="0" Grid.Row="1" SelectionMode="Single"
+						EnableColumnVirtualization="True" EnableRowVirtualization="True">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="GUID" Binding="{Binding Guid}" MinWidth="60" />
+							<DataGridTextColumn Header="Character Name" Binding="{Binding Name}" MinWidth="100" />
+						</DataGrid.Columns>
+					</DataGrid>-->
+
+					<!-- Buttons for top-right side -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
+
+					</StackPanel>
+
+					<!--Right side, list details of selected character-->
+					<StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="1" Margin="10">
+						<StackPanel Margin="10" >
+							<TextBlock Text="Total Orphaned Objects:"  />
+						</StackPanel>
+						<StackPanel Margin="10" >
+							<TextBlock x:Name="OrphanedObjectsTotal"  />
+						</StackPanel>
+					</StackPanel>
+
+				</Grid>
 			</TabItem>
 		</TabControl>
-		<!--<Button x:Name="FindOrphanedCharacters" Content="Show Orphaned Characters" Margin="5" Padding="5"
-				ToolTip="Displays characters in the database without associated accounts" />
-		
-			<Button x:Name="FindOrphanedObjects" Content="Show Orphaned Objects" Margin="5" Padding="5"
-				ToolTip="Find leftover character information for characters that don't seem to exist" />
-		
-			Add button for deleting orphaned characters
-			Add button for deleting orphaned objects -->
 	</Grid>
 </UserControl>
