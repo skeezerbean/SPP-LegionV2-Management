@@ -10,8 +10,7 @@
 		Height="{Binding WindowHeight, Mode=TwoWay}"
 		Width="{Binding WindowWidth, Mode=TwoWay}"
 		Top="{Binding WindowTop, Mode=TwoWay}"
-		Left="{Binding WindowLeft, Mode=TwoWay}"
-		DataContext="{Binding RelativeSource={RelativeSource Self}}">
+		Left="{Binding WindowLeft, Mode=TwoWay}">
 
 	<Grid>
 		<Border Margin="5" BorderBrush="Black" BorderThickness="3">

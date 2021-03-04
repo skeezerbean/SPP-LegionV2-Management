@@ -8,7 +8,7 @@ namespace SPP_LegionV2_Management
 		// https://stackoverflow.com/questions/21618015/how-to-connect-to-mysql-database
 
 		private static string server;
-		private static string database = "legion_auth";
+		//private static string database;
 		private static string user;
 		private static string password;
 		private static int port;
@@ -21,10 +21,39 @@ namespace SPP_LegionV2_Management
 			user = GeneralSettingsManager.GeneralSettings.MySQLUser;
 			password = GeneralSettingsManager.GeneralSettings.MySQLPass;
 			port = GeneralSettingsManager.GeneralSettings.MySQLPort;
-			connectionString = String.Format("server={0};port={1};user id={2}; password={3}; database={4};", server, port, user, password, database);
+			connectionString = String.Format("server={0};port={1};user id={2}; password={3};", server, port, user, password);
 		}
 
-		public static string MySQLQuery(string query, bool update = false)
+		public static MySqlDataReader MySQLQuery(string query, Action<MySqlDataReader> loader)
+		{
+			UpdateConnectionInfo();
+
+			try
+			{
+				using (MySqlConnection connection = new MySqlConnection(connectionString))
+				{
+					connection.Open();
+					//Console.WriteLine("connect");
+
+					using (MySqlCommand cmd = connection.CreateCommand())
+					{
+						cmd.CommandText = query;
+						using (var reader = cmd.ExecuteReader())
+						{
+							while (reader.Read())
+							{
+								loader.Invoke(reader);
+							}
+						}
+					}
+				}
+			}
+			catch (Exception e) { Console.WriteLine(e.Message); }
+
+			return null;
+		}
+
+		public static string MySQLQueryToString(string query, bool update = false)
 		{
 			UpdateConnectionInfo();
 			string response = string.Empty;
@@ -34,17 +63,14 @@ namespace SPP_LegionV2_Management
 				using (MySqlConnection connection = new MySqlConnection(connectionString))
 				{
 					connection.Open();
-					Console.WriteLine("connect");
+					//Console.WriteLine("connect");
+
 					using (var cmd = connection.CreateCommand())
 					{
 						cmd.CommandText = query;
-
-						// SQL update
 						if (update)
-						{
-							response = $"{cmd.ExecuteNonQuery().ToString()} rows affected.";
-						}
-						else // SQL Select
+							response = $"{cmd.ExecuteNonQuery()} rows affected.";
+						else
 						{
 							using (var reader = cmd.ExecuteReader())
 							{
@@ -55,7 +81,7 @@ namespace SPP_LegionV2_Management
 					}
 				}
 			}
-			catch (Exception ex) { return ex.Message.ToString(); }
+			catch (Exception e) { return e.Message; }
 
 			return response;
 		}

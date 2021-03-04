@@ -53,9 +53,15 @@ namespace SPP_LegionV2_Management
 						ClientConfigStatus = "Not Found";
 
 					if (await CheckSQLStatus())
+					{
 						SQLConnectionStatus = "Connected";
+						GeneralSettingsManager.IsMySQLRunning = true;
+					}
 					else
+					{
 						SQLConnectionStatus = "Not Found";
+						GeneralSettingsManager.IsMySQLRunning = false;
+					}
 
 					lastUpdate = DateTime.Now;
 				}
@@ -70,7 +76,7 @@ namespace SPP_LegionV2_Management
 
 			await Task.Run(() =>
 			{
-				result = MySqlManager.MySQLQuery(@"SELECT 1");
+				result = MySqlManager.MySQLQueryToString(@"SELECT 1");
 			});
 
 			return result == "1";

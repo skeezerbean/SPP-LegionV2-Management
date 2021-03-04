@@ -110,7 +110,6 @@
 								</DataGrid.Resources>
 							</DataGrid>
 						</TabItem>
-					
 					</TabControl>
 				</Grid>
 				<!-- Give us a movable splitter to adjust the size of the log if needed -->

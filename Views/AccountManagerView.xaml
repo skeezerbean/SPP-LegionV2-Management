@@ -4,54 +4,196 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SPP_LegionV2_Management"
-	    Background="DimGray"
+	    Background="DimGray" x:Name="root"
         mc:Ignorable="d">
-	<Grid>
-		<!-- Turn this into tabs rather than bunch of buttons? -->
-		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="*" />
-			<!-- Main list -->
-			<ColumnDefinition Width="*" />
-			<!-- Secondary list -->
-		</Grid.ColumnDefinitions>
-		<Grid.RowDefinitions>
-			<RowDefinition Height="50" />
-			<!-- Main Button area -->
-			<RowDefinition Height="50" />
-			<!-- Add/Remove Button area -->
-			<RowDefinition Height="*" />
-			<!-- Data display area -->
-		</Grid.RowDefinitions>
-		<StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Grid.Row="0" HorizontalAlignment="Center">
-			
-			<Button x:Name="RetrieveAccounts" Content="Show Accounts" Margin="5" Padding="5"
-				ToolTip="Retreives Legion Account/BNET account info from the database"/>
-			
-			<Button x:Name="FindOrphanedCharacters" Content="Show Orphaned Characters" Margin="5" Padding="5"
+	
+	<Grid >
+		<TabControl Background="DarkGray" Margin="1" Grid.Row="2">
+			<TabItem Header="Accounts" Margin="1">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="40" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+
+					<!-- Buttons for left side -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+						<Button x:Name="RetrieveAccounts" Content="Show Accounts" Margin="5" Padding="5"
+							ToolTip="Retreives Legion Account/BNET account info from the database" />
+
+						<Button x:Name="AddAccount" Content="Create Account" Margin="5" Padding="5"
+							ToolTip="Open Dialog to create an account and BNET account"/>
+
+						<Button x:Name="DeleteSelectedAccount" Content="Delete Selected Account" Margin="5" Padding="5"
+							ToolTip="Delete the selected account"/>
+
+					</StackPanel>
+
+					<DataGrid ItemsSource="{Binding Accounts}" AutoGenerateColumns="False" IsReadOnly="True"
+							  ScrollViewer.CanContentScroll="True"
+						Grid.Column="0" Grid.Row="1" SelectedItem="{Binding SelectedAccount}" SelectionMode="Single"
+						EnableColumnVirtualization="True" EnableRowVirtualization="True">
+
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="User Name" Binding="{Binding Username}" MinWidth="100" />
+							<DataGridTextColumn Header="ID" Binding="{Binding ID}" MinWidth="60" />
+							<DataGridTextColumn Header="BattleNet Account" Binding="{Binding BattleNetEmail}" MinWidth="180" />
+						</DataGrid.Columns>
+					</DataGrid>
+					
+					<!-- Buttons for top-right side -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
+
+						<Button x:Name="ApplyAccountChanges" Content="Apply Changes To Database" Margin="5" Padding="5"
+							ToolTip="Save any account changes to the database"/>
+
+					</StackPanel>
+					
+					<!-- Right side, list details of selected account -->
+					<StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Margin="10">
+						<StackPanel Margin="10" >
+							<TextBlock Text="Total Accounts:"  />
+							<TextBlock Text="Selected Account ID:" />
+							<TextBlock Text="Selected BattleNetAccount:" Margin="1"/>
+							<TextBlock Text="Selected Account Username:" Margin="1" />
+							<TextBlock Text="Selected Account BattleCoins:" Margin="1" />
+							<TextBlock Text="Selected Account GM Level:" Margin="1" />
+						</StackPanel>
+						<StackPanel Margin="10" >
+							<TextBlock x:Name="AccountsTotal"  />
+							<TextBlock x:Name="CurrentID" />
+							<TextBox x:Name="CurrentBattleNetEmail" />
+							<TextBox x:Name="CurrentUsername" />
+							<TextBox x:Name="CurrentBattleCoins" />
+							<TextBox x:Name="CurrentGMLevel" ToolTip="GM Level set to 0 to disable, or between 1 and 6" />
+						</StackPanel>
+					</StackPanel>
+
+				</Grid>
+			</TabItem>
+
+			<TabItem Header="Characters" Margin="1">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="40" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+						<Button x:Name="RetrieveCharacters" Content="Show Characters" Margin="5" Padding="5"
+							ToolTip="Retreives character info from the database"/>
+
+						<Button x:Name="DeleteSelectedCharacter" Content="Delete Selected Character" Margin="5" Padding="5"
+							ToolTip="Delete the selected account"/>
+
+					</StackPanel>
+
+					<DataGrid ItemsSource="{Binding Characters}" AutoGenerateColumns="False" IsReadOnly="True"
+						ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+						Grid.Column="0" Grid.Row="1" SelectedItem="{Binding SelectedCharacter}" SelectionMode="Single"
+						EnableColumnVirtualization="True" EnableRowVirtualization="True">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="GUID" Binding="{Binding Guid}" MinWidth="60" />
+							<DataGridTextColumn Header="Account" Binding="{Binding Account}" MinWidth="60" />
+							<DataGridTextColumn Header="Character Name" Binding="{Binding Name}" MinWidth="100" />
+						</DataGrid.Columns>
+					</DataGrid>
+
+					<!-- Buttons for top-right side -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
+
+						<Button x:Name="ApplyCharacterChanges" Content="Apply Changes To Database" Margin="5" Padding="5"
+							ToolTip="Save any character changes to the database"/>
+
+					</StackPanel>
+
+					<!--Right side, list details of selected character-->
+					<StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Margin="10">
+						<StackPanel Margin="10" >
+							<TextBlock Text="Total Characters:"  />
+							<TextBlock Text="Selected Character GUID:" />
+							<TextBlock Text="Selected Character Account ID:" Margin="1" />
+							<TextBlock Text="Selected Character Name:" Margin="1" />
+						</StackPanel>
+						<StackPanel Margin="10" >
+							<TextBlock x:Name="CharactersTotal"  />
+							<TextBlock x:Name="CurrentCharacterGUID" />
+							<TextBox x:Name="CurrentCharacterAccountID" ToolTip="You can change this to another account if you want to move this character to another (possibly unsafe), apply changes button when done" />
+							<TextBox x:Name="CurrentCharacterName" ToolTip="Use this to change the character name, apply changes button when done" />
+						</StackPanel>
+					</StackPanel>
+
+				</Grid>
+			</TabItem>
+
+			<TabItem Header="Clean Up Tools" Margin="1">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="*" />
+						<ColumnDefinition Width="*" />
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="40" />
+						<RowDefinition Height="*" />
+					</Grid.RowDefinitions>
+
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+
+						<Button x:Name="RetrieveOrphanedCharacters" Content="Show Characters" Margin="5" Padding="5"
+							ToolTip="Retreives character info from the database"/>
+
+						<Button x:Name="RemoveOrphanedCharacters" Content="Delete Selected Character" Margin="5" Padding="5"
+							ToolTip="Delete the orphaned characters"/>
+
+					</StackPanel>
+
+					<DataGrid ItemsSource="{Binding OrphanedCharacters}" AutoGenerateColumns="False" IsReadOnly="True"
+						ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+						Grid.Column="0" Grid.Row="1" SelectionMode="Single"
+						EnableColumnVirtualization="True" EnableRowVirtualization="True">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="GUID" Binding="{Binding Guid}" MinWidth="60" />
+							<DataGridTextColumn Header="Character Name" Binding="{Binding Name}" MinWidth="100" />
+						</DataGrid.Columns>
+					</DataGrid>
+
+					<!-- Buttons for top-right side -->
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
+
+					</StackPanel>
+
+					<!--Right side, list details of selected character-->
+					<StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Margin="10">
+						<StackPanel Margin="10" >
+							<TextBlock Text="Total Orphaned Characters:"  />
+						</StackPanel>
+						<StackPanel Margin="10" >
+							<TextBlock x:Name="OrphanedCharactersTotal"  />
+						</StackPanel>
+					</StackPanel>
+
+				</Grid>
+				<!--button to list orphaned characters with no matching account 
+				 button to list orphaned character items/settings with no matching character--> 
+			</TabItem>
+		</TabControl>
+		<!--<Button x:Name="FindOrphanedCharacters" Content="Show Orphaned Characters" Margin="5" Padding="5"
 				ToolTip="Displays characters in the database without associated accounts" />
-			
+		
 			<Button x:Name="FindOrphanedObjects" Content="Show Orphaned Objects" Margin="5" Padding="5"
 				ToolTip="Find leftover character information for characters that don't seem to exist" />
-			
-		</StackPanel>
-		<StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Center">
-			
-			<Button x:Name="AddOAccount" Content="Create Account" Margin="5" Padding="5"
-				ToolTip="Open Dialog to create an account and BNET account"/>
-			
-			<Button x:Name="DeleteSelectedObject" Content="Delete Selected Item" Margin="5" Padding="5" />
-			
-			<!-- Buttons for backing up characters/realm DBs? and for restoring?
-			     Or is this out of scope of this project, and should use Heidi? -->
-			
-		</StackPanel>
-		<Border BorderBrush="Black" BorderThickness="2" Grid.ColumnSpan="3" Grid.Row="2">
-			<Grid>
-				<DataGrid ItemsSource="{Binding currentMainView}" AutoGenerateColumns="False"
-					EnableColumnVirtualization="True" EnableRowVirtualization="True" Grid.Column="0">
-					
-				</DataGrid>
-			</Grid>
-		</Border>
+		
+			Add button for deleting orphaned characters
+			Add button for deleting orphaned objects -->
 	</Grid>
 </UserControl>

@@ -1,7 +1,5 @@
 ﻿using MahApps.Metro.Controls.Dialogs;
-using System.Diagnostics;
 using System.Windows.Controls;
-using System.Windows.Navigation;
 
 namespace SPP_LegionV2_Management
 {

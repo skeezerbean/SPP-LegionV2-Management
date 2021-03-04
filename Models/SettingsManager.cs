@@ -14,6 +14,7 @@ namespace SPP_LegionV2_Management
 	{
 		public static GeneralSettings GeneralSettings { get; set; } = new GeneralSettings();
 		public static JObject SettingsJSON { get; set; }
+		public static bool IsMySQLRunning { get; set; }
 		public static string SettingsPath = "Settings.json";
 
 		// If the file doesn't exist, it will resort to defaults listed in the class itself
