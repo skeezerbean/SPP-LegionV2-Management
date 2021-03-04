@@ -20,12 +20,13 @@ namespace SPP_LegionV2_Management
 		public BindableCollection<Character> OrphanedCharacters { get; set; } = new BindableCollection<Character>();
 		public Account SelectedAccount { get; set; } = new Account();
 		public Character SelectedCharacter { get; set; } = new Character();
+		public Character OrphanedSelectedCharacter { get; set; } = new Character();
 
 		// Accounts
 		public int AccountsTotal { get; set; }
 		public int CurrentID { get { return SelectedAccount.ID; } }
 		public int CurrentBattleNetAccount { get { return SelectedAccount.BattleNetAccount; } }
-		public string CurrentBattleNetEmail { get { return SelectedAccount.BattleNetEmail; } set { SelectedAccount.BattleNetEmail = value; NotifyOfPropertyChange("Accounts"); } }
+		public string CurrentBattleNetEmail { get { return SelectedAccount.BattleNetEmail; } set { SelectedAccount.BattleNetEmail = value; } }
 		public string CurrentUsername { get { return SelectedAccount.Username; } set { SelectedAccount.Username = value; } }
 		public int CurrentBattleCoins { get { return SelectedAccount.BattleCoins; } set { SelectedAccount.BattleCoins = value; } }
 		public int CurrentGMLevel { get { return SelectedAccount.GMLevel; } set { SelectedAccount.GMLevel = value; } }
@@ -33,10 +34,16 @@ namespace SPP_LegionV2_Management
 
 		// Characters
 		public int CharactersTotal { get; set; }
-		public int OrphanedCharactersTotal { get; set; }
 		public int CurrentCharacterGUID { get { return SelectedCharacter.Guid; } }
 		public int CurrentCharacterAccountID { get { return SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
 		public string CurrentCharacterName { get { return SelectedCharacter.Name; } set { SelectedCharacter.Name = value; } }
+
+		// Orphaned Characters
+		public int OrphanedCharactersTotal { get; set; }
+		public int OrphanedOrphanedCharactersTotal { get; set; }
+		public int OrphanedCurrentCharacterGUID { get { return OrphanedSelectedCharacter.Guid; } }
+		public int OrphanedCurrentCharacterAccountID { get { return OrphanedSelectedCharacter.Account; } set { OrphanedSelectedCharacter.Account = value; } }
+		public string OrphanedCurrentCharacterName { get { return OrphanedSelectedCharacter.Name; } set { OrphanedSelectedCharacter.Name = value; } }
 
 		public override event PropertyChangedEventHandler PropertyChanged;
 
@@ -96,11 +103,18 @@ namespace SPP_LegionV2_Management
 			RetrieveAccounts();
 		}
 
-		public void ApplyCharacterChanges()
+		// Button for Character changes calls this
+		public void ApplyCharacterChanges() { ApplyCharacterChangesProcess(Characters); }
+
+		// Button for Orphaned Character changes calls this
+		public void ApplyOrphanedCharacterChanges() { ApplyCharacterChangesProcess(OrphanedCharacters); }
+
+		// Work to actually change character settings
+		public void ApplyCharacterChangesProcess(BindableCollection<Character> characters)
 		{
 			string tmp = string.Empty;
 
-			foreach (var character in Characters)
+			foreach (var character in characters)
 			{
 				int accountIDFromDB = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT `account` FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'"));
 				string nameFromDB = MySqlManager.MySQLQueryToString($"SELECT `name` FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'");

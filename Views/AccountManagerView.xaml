@@ -163,7 +163,7 @@
 
 					<DataGrid ItemsSource="{Binding OrphanedCharacters}" AutoGenerateColumns="False" IsReadOnly="True"
 						ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-						Grid.Column="0" Grid.Row="1" SelectionMode="Single"
+						Grid.Column="0" Grid.Row="1" SelectionMode="Single" SelectedItem="{Binding OrphanedSelectedCharacter}"
 						EnableColumnVirtualization="True" EnableRowVirtualization="True">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="GUID" Binding="{Binding Guid}" MinWidth="60" />
@@ -173,16 +173,25 @@
 
 					<!-- Buttons for top-right side -->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
-
+						<Button x:Name="ApplyOrphanedCharacterChanges" Content="Apply Changes To Database" Margin="5" Padding="5"
+							ToolTip="Save any character changes to the database"/>
 					</StackPanel>
 
 					<!--Right side, list details of selected character-->
 					<StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Margin="10">
 						<StackPanel Margin="10" >
 							<TextBlock Text="Total Orphaned Characters:"  />
+							<TextBlock Text="Selected Character GUID:" />
+							<TextBlock Text="Selected Character Account ID:" Margin="1" />
+							<TextBlock Text="Selected Character Name:" Margin="1" />
 						</StackPanel>
 						<StackPanel Margin="10" >
 							<TextBlock x:Name="OrphanedCharactersTotal"  />
+							<TextBlock x:Name="OrphanedCurrentCharacterGUID" />
+							<TextBox x:Name="OrphanedCurrentCharacterAccountID" 
+								ToolTip="You can change this to another account if you want to move this character to another (possibly unsafe), apply changes button when done" />
+							<TextBox x:Name="OrphanedCurrentCharacterName" 
+								ToolTip="Use this to change the character name, apply changes button when done" />
 						</StackPanel>
 					</StackPanel>
 
