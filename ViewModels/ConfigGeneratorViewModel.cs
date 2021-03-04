@@ -361,7 +361,7 @@ namespace SPP_LegionV2_Management
 					string realmAddress = GetValueFromCollection(BnetCollection, "LoginREST.ExternalAddress");
 
 					Log("Updating Database Realm entry with build/IP from BNet config");
-					var result = MySqlManager.MySQLQueryToString($"UPDATE legion_auth.realmlist SET address=\"{realmAddress}\",gamebuild={clientBuild} WHERE  id= 1", true);
+					var result = MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`realmlist` SET `address`='{realmAddress}',`gamebuild`='{clientBuild}' WHERE  `id`= '1'", true);
 					if (!result.Contains("ordinal"))  // I don't understand SQL, it works if this error pops up...
 						Log(result);
 				}
@@ -612,13 +612,13 @@ namespace SPP_LegionV2_Management
 			}
 
 			// Setup our values to test later
-			string buildFromDB = MySqlManager.MySQLQueryToString(@"SELECT gamebuild FROM legion_auth.realmlist WHERE id = 1");
+			string buildFromDB = MySqlManager.MySQLQueryToString(@"SELECT `gamebuild` FROM `legion_auth`.`realmlist` WHERE `id` = '1'");
 			string buildFromWorld = GetValueFromCollection(WorldCollection, "Game.Build.Version");
 			string buildFromBnet = GetValueFromCollection(BnetCollection, "Game.Build.Version");
 			string loginRESTExternalAddress = GetValueFromCollection(BnetCollection, "LoginREST.ExternalAddress");
 			string loginRESTLocalAddress = GetValueFromCollection(BnetCollection, "LoginREST.LocalAddress");
-			string addressFromDB = MySqlManager.MySQLQueryToString(@"SELECT address FROM legion_auth.realmlist WHERE id = 1");
-			string localAddressFromDB = MySqlManager.MySQLQueryToString(@"SELECT localAddress FROM legion_auth.realmlist WHERE id = 1");
+			string addressFromDB = MySqlManager.MySQLQueryToString(@"SELECT `address` FROM `legion_auth`.`realmlist` WHERE `id` = '1'");
+			string localAddressFromDB = MySqlManager.MySQLQueryToString(@"SELECT `localAddress` FROM `legion_auth`.`realmlist` WHERE id = '1'");
 			string wowConfigPortal = string.Empty;
 			string bnetBindIP = GetValueFromCollection(BnetCollection, "BindIP");
 			string worldBindIP = GetValueFromCollection(WorldCollection, "BindIP");

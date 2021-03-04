@@ -33,7 +33,6 @@ namespace SPP_LegionV2_Management
 				using (MySqlConnection connection = new MySqlConnection(connectionString))
 				{
 					connection.Open();
-					//Console.WriteLine("connect");
 
 					using (MySqlCommand cmd = connection.CreateCommand())
 					{
@@ -63,7 +62,6 @@ namespace SPP_LegionV2_Management
 				using (MySqlConnection connection = new MySqlConnection(connectionString))
 				{
 					connection.Open();
-					//Console.WriteLine("connect");
 
 					using (var cmd = connection.CreateCommand())
 					{

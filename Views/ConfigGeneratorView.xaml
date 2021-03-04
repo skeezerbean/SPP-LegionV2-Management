@@ -31,6 +31,8 @@
 						<ColumnDefinition Width="0.5*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
+					
+					<!-- Top row of buttons -->
 					<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue" Grid.Column="1"
 							HorizontalAlignment="Center" 
 					ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the server config, DB and WoW Legion client config if able." />
@@ -49,15 +51,19 @@
 					<Button x:Name="SaveConfig" Content="Export Config" Padding="5" Margin="5" Background="AliceBlue" 
 							Grid.Column="6" HorizontalAlignment="Center"
 					ToolTip="Save settings and generate configs to SPP installation and database." />
-					
-					<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
-					   Name="StatusBox" Margin="5" FontWeight="Bold" />
 				</Grid>
 			</StackPanel>
+			
+			<!-- Search box and status box, above tabs -->
 			<TextBlock Text="Search Filter:" FontSize="14" />
-			<TextBox Width="200" HorizontalAlignment="Left" Margin="10,2"
-				Text="{Binding SearchBox, UpdateSourceTrigger=PropertyChanged}"
-				ToolTip="As you type this will update based on matching entries" />
+			<StackPanel Orientation="Horizontal">
+				
+				<TextBox Width="200" HorizontalAlignment="Left" Margin="10,2"
+					Text="{Binding SearchBox, UpdateSourceTrigger=PropertyChanged}"
+					ToolTip="As you type this will update based on matching entries" />
+				
+				<TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Name="StatusBox" Margin="15,5" FontWeight="Bold" />
+			</StackPanel>
 		</StackPanel>
 
 		<!-- Main window area -->

@@ -18,11 +18,13 @@ namespace SPP_LegionV2_Management
 		public AccountManagerViewModel AccountManagerVM = new AccountManagerViewModel(DialogCoordinator.Instance);
 		public SettingsViewModel SettingsVM = new SettingsViewModel(DialogCoordinator.Instance);
 
+		// This holds the values for the window position/size to be pulled from saved settings
 		public double WindowTop { get { return GeneralSettingsManager.GeneralSettings.WindowTop; } set { GeneralSettingsManager.GeneralSettings.WindowTop = value; } }
 		public double WindowLeft { get { return GeneralSettingsManager.GeneralSettings.WindowLeft; } set { GeneralSettingsManager.GeneralSettings.WindowLeft = value; } }
 		public double WindowHeight { get { return GeneralSettingsManager.GeneralSettings.WindowHeight; } set { GeneralSettingsManager.GeneralSettings.WindowHeight = value; } }
 		public double WindowWidth { get { return GeneralSettingsManager.GeneralSettings.WindowWidth; } set { GeneralSettingsManager.GeneralSettings.WindowWidth = value; } }
 
+		// Status display at the top section of the app
 		public string ServerConfigStatus { get; set; } = "Not Found";
 		public string ClientConfigStatus { get; set; } = "Not Found";
 		public string SQLConnectionStatus { get; set; } = "Not Found";
@@ -36,8 +38,10 @@ namespace SPP_LegionV2_Management
 		// This will constantly run to update the status
 		private async void UpdateStatus()
 		{
+			// Keep this running always
 			while (1 == 1)
 			{
+				// Every 2 seconds we want to check for updates in the even the Database Server status or file locations change
 				if (lastUpdate.AddSeconds(2) < DateTime.Now)
 				{
 					if ((File.Exists($"{ GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\worldserver.conf") && File.Exists($"{ GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\bnetserver.conf"))
@@ -76,7 +80,7 @@ namespace SPP_LegionV2_Management
 
 			await Task.Run(() =>
 			{
-				result = MySqlManager.MySQLQueryToString(@"SELECT 1");
+				result = MySqlManager.MySQLQueryToString(@"SELECT '1'");
 			});
 
 			return result == "1";
