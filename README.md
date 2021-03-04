@@ -147,7 +147,9 @@ To use this, click on the **Account Manager** button
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Account-Manager-Button.PNG)
 
 
-On the Account Manager screen, in the **Accounts** tab, hit **1** to pull the list of accounts from the database.
+On the Account Manager screen, in the **Accounts** tab - 
+
+**1** - Pulls the list of accounts from the database.
 
 **2** - You can select an account and see/change the settings on the right side
 
@@ -163,7 +165,9 @@ If you changed any account information and applied, it will push those updates t
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Account-Manager-Accounts-Update.PNG)
 
 
-You can also list and change some character information on the **Characters** or **Orphaned Characters** tab. Hit **1** to gather the list of characters in the database
+You can also list and change some character information on the **Characters** or **Orphaned Characters** tab. 
+
+**1** - Gathers the list of characters in the database
 
 **2** - Select a character, and it will populate settings on the right
 
