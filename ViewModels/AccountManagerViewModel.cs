@@ -29,6 +29,7 @@ namespace SPP_LegionV2_Management
 		public string CurrentUsername { get { return SelectedAccount.Username; } set { SelectedAccount.Username = value; } }
 		public int CurrentBattleCoins { get { return SelectedAccount.BattleCoins; } set { SelectedAccount.BattleCoins = value; } }
 		public int CurrentGMLevel { get { return SelectedAccount.GMLevel; } set { SelectedAccount.GMLevel = value; } }
+		public int CurrentBattleNetID { get { return SelectedAccount.BattleNetAccount; } }
 
 		// Characters
 		public int CharactersTotal { get; set; }
@@ -187,8 +188,8 @@ namespace SPP_LegionV2_Management
 				{
 					tmp = MySqlManager.MySQLQueryToString($"SELECT donate FROM legion_auth.battlenet_accounts WHERE id = {account.BattleNetAccount}");
 					Int32.TryParse(tmp, out num);
+					account.BattleCoins = num;
 				}
-				account.BattleNetAccount = num;
 
 				num = -1;
 				tmp = string.Empty;

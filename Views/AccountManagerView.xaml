@@ -42,7 +42,8 @@
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="User Name" Binding="{Binding Username}" MinWidth="100" />
 							<DataGridTextColumn Header="ID" Binding="{Binding ID}" MinWidth="60" />
-							<DataGridTextColumn Header="BattleNet Email" Binding="{Binding BattleNetEmail}" MinWidth="180" />
+							<DataGridTextColumn Header="BattleNet Login" Binding="{Binding BattleNetEmail}" MinWidth="180" />
+							<DataGridTextColumn Header="GM Level" Binding="{Binding GMLevel}" MinWidth="50" />
 						</DataGrid.Columns>
 					</DataGrid>
 					
@@ -59,14 +60,16 @@
 						<StackPanel Margin="10" >
 							<TextBlock Text="Total Accounts:"  />
 							<TextBlock Text="Selected Account ID:" />
+							<TextBlock Text="Selected BattleNet ID:" />
 							<TextBlock Text="Selected BattleNet Login:" Margin="1"/>
 							<TextBlock Text="Selected Account Username:" Margin="1" />
-							<TextBlock Text="Selected Account BattleCoins:" Margin="1" />
+							<TextBlock Text="Selected BattleCoins:" Margin="1" />
 							<TextBlock Text="Selected Account GM Level:" Margin="1" />
 						</StackPanel>
 						<StackPanel Margin="10" >
 							<TextBlock x:Name="AccountsTotal"  />
 							<TextBlock x:Name="CurrentID" />
+							<TextBlock x:Name="CurrentBattleNetID" ToolTip="If this is -1 then the matching BattleNet account doesn't exist" />
 							<TextBox x:Name="CurrentBattleNetEmail" 
 								ToolTip="If this is -1, then don't change. This account has no battlenet counterpart and was not created completely" />
 							<TextBox x:Name="CurrentUsername" />
@@ -206,16 +209,6 @@
 							ToolTip="Delete the orphaned objects"/>
 
 					</StackPanel>
-
-					<!--<DataGrid ItemsSource="{Binding OrphanedCharacters}" AutoGenerateColumns="False" IsReadOnly="True"
-						ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-						Grid.Column="0" Grid.Row="1" SelectionMode="Single"
-						EnableColumnVirtualization="True" EnableRowVirtualization="True">
-						<DataGrid.Columns>
-							<DataGridTextColumn Header="GUID" Binding="{Binding Guid}" MinWidth="60" />
-							<DataGridTextColumn Header="Character Name" Binding="{Binding Name}" MinWidth="100" />
-						</DataGrid.Columns>
-					</DataGrid>-->
 
 					<!-- Buttons for top-right side -->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
