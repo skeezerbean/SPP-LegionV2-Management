@@ -57,27 +57,24 @@ To begin - Make sure the SPP Database is running
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/database-started.PNG)
 
 
-Launch the App - The 1st time will show this. Hit OK
-
-![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/1st-run.PNG)
-
-
-Go to the General Settings tab
+Click on the **Settings** button
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Settings-Tab.PNG)
 
 
-When browsing for the SPP folder, it will be the one that has these items
+When browsing for the SPP folder, it will be the one that has these items where you extracted your SPP LegionV2 Server files
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/SPP-server-folder.PNG)
 
 
-Browsing for the Wow Config Location will be your WoW Legion Client folder, which will look more or less like this
+Browsing for the Wow Config Location will be your WoW Legion **Client** folder, which will look more or less like this
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/wow-client-folder.PNG)
 
 
-Once you've set the folder locations, click this button
+Once you've set the folder locations, click these buttons
+
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Config-Generator-Button.PNG)
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Reload-Configs-Button.PNG)
 
@@ -97,7 +94,7 @@ This will show any potential issues with your setup. The picture below shows an 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Check-Config-Errors-Duplicates.PNG)
 
 
-Use the search tool to find the entry
+Use the search tool to find the entry. This will filter results as you type
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Search-entry-duplicate.PNG)
 
