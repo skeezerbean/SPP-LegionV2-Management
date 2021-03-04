@@ -92,11 +92,17 @@ namespace SPP_LegionV2_Management
 				else if (response == "-1" && account.GMLevel > 0)
 				{
 					// perform insert to new gm access entry if default GMlevel also changed
-					MessageBox.Show($" {account.ID}({account.Username}) Adding GM Entry - " + MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`account_access` (`id`,`gmlevel`,`RealmID`) VALUES ('{account.ID}','{account.GMLevel}','-1')", true));
+					MessageBox.Show($" {account.ID}({account.Username}) Adding GM Entry - " 
+						+ MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`account_access` (`id`,`gmlevel`,`RealmID`) VALUES ('{account.ID}','{account.GMLevel}','-1')", true));
 				}
 				// If they ARE GM (response not -1), and the new value declares they shouldn't be...
 				else if (response != "-1" && (account.GMLevel == -1 || account.GMLevel == 0))
-					MessageBox.Show($" {account.ID}({account.Username}) Removing from GM status - " + MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{account.ID}'", true));
+					MessageBox.Show($" {account.ID}({account.Username}) Removing from GM status - " 
+						+ MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{account.ID}'", true));
+				// In case GM Level was changed for existing account
+				else if (response != "-1" && (account.GMLevel != Int32.Parse(response)))
+					MessageBox.Show($" {account.ID}({account.Username}) Changing GM status from {response} to {account.GMLevel} - " 
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account_access` SET `gmlevel`='{account.GMLevel}' WHERE `id`='{account.ID}'", true));
 			}
 
 			// now that things have been updated, refresh our list
