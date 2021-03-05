@@ -11,7 +11,7 @@ namespace SPP_LegionV2_Management
 		private DateTime lastUpdate = DateTime.Now;
 
 		// Setup our public variables and such, many are saved within the general settings class, so we'll get/set from those
-		public string AppTitle { get; set; } = $"SPP Config Generator v{Assembly.GetExecutingAssembly().GetName().Version}";
+		public string AppTitle { get; set; } = $"SPP LegionV2 Management v{Assembly.GetExecutingAssembly().GetName().Version}";
 
 		// declare individual VMs, lets us always show the same one as we switch tabs
 		public ConfigGeneratorViewModel ConfigGeneratorVM = new ConfigGeneratorViewModel(DialogCoordinator.Instance);
