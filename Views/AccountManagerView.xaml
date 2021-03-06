@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SPP_LegionV2_Management"
+		xmlns:ff="clr-namespace:SPP_LegionV2_Management"
 	    Background="DimGray" x:Name="root"
         mc:Ignorable="d">
 	
@@ -62,6 +63,7 @@
 							<TextBlock Text="Selected Account ID:" />
 							<TextBlock Text="Selected BattleNet ID:" />
 							<TextBlock Text="Selected BattleNet Login:" Margin="1"/>
+							<TextBlock Text="Password for BattleNet:" Margin="1"/>
 							<TextBlock Text="Selected Account Username:" Margin="1" />
 							<TextBlock Text="Selected BattleCoins:" Margin="1" />
 							<TextBlock Text="Selected Account GM Level:" Margin="1" />
@@ -72,6 +74,12 @@
 							<TextBlock x:Name="CurrentBattleNetID" ToolTip="If this is -1 then the matching BattleNet account doesn't exist" />
 							<TextBox x:Name="CurrentBattleNetEmail" 
 								ToolTip="If this is -1, then don't change. This account has no battlenet counterpart and was not created completely" />
+							<PasswordBox x:Name="PasswordBox"
+								ff:PasswordBoxAssistant.BindPassword="true"  
+								ff:PasswordBoxAssistant.BoundPassword="{Binding Path=CurrentPassword, 
+									Mode=TwoWay, 
+									UpdateSourceTrigger=PropertyChanged}"
+								ToolTip="You MUST add a password if you change the BattleNet email, as the SHA256 password hash is derived from both email and password" />
 							<TextBox x:Name="CurrentUsername" />
 							<TextBox x:Name="CurrentBattleCoins" />
 							<TextBox x:Name="CurrentGMLevel" ToolTip="GM Level set to -1 or 0 to disable, or between 1 and 6" />

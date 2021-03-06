@@ -1,4 +1,5 @@
-﻿
+﻿using System.Security;
+
 namespace SPP_LegionV2_Management
 {
 	public class Account
@@ -9,6 +10,7 @@ namespace SPP_LegionV2_Management
 		public string BattleNetEmail { get; set; }
 		public int BattleCoins { get; set; } // donate columm in battlenet_accounts
 		public int GMLevel { get; set; } // gmlevel in account_access
+		public string Password { get; set; }
 
 		public Account() { }
 	}
