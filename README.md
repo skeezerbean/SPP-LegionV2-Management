@@ -15,6 +15,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.2** - Added ability to set BattleNet password, which is also required if changing BattleNet login because of how the password hash is created in TrinityCore
+
 **0.0.2.1** - ** PLEASE NOTE** The .exe file name has changed and the old one should be deleted. Revamped GUI, added some account/character management
 
 -- Working - listing/changing current account/character information
@@ -159,7 +161,7 @@ On the Account Manager screen, in the **Accounts** tab -
 
 **2** - You can select an account and see/change the settings on the right side
 
-**3** - Change settings here for an account. If the BattleNet ID or Login is -1, then chances are that BattleNet account doesn't exist. Leave it alone. The account may have not been fully created. Otherwise you can change the number of Battle Coins for an account, change the BattleNet Email or Account Username.
+**3** - Change settings here for an account. If the BattleNet ID or Login is -1, then chances are that BattleNet account doesn't exist. Leave it alone. The account may have not been fully created. Otherwise you can change the number of Battle Coins for an account, change the BattleNet Email or Account Username. **Note - if you change the BattleNet Email for login, you will need to enter a password as well as they are tied together in how the password hash is created (TrinityCore). This can be the original password for this account, or you can set a new one.**
 
 **4** - Click this when done editing characters and it will push changes to the database. 
 
