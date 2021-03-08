@@ -3,11 +3,9 @@ using MahApps.Metro.Controls.Dialogs;
 using MySql.Data.MySqlClient;
 using System;
 using System.ComponentModel;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
+using System.Security;
 
 namespace SPP_LegionV2_Management
 {
@@ -38,7 +36,7 @@ namespace SPP_LegionV2_Management
 		public int CurrentBattleCoins { get { return SelectedAccount.BattleCoins; } set { SelectedAccount.BattleCoins = value; } }
 		public int CurrentGMLevel { get { return SelectedAccount.GMLevel; } set { SelectedAccount.GMLevel = value; } }
 		public int CurrentBattleNetID { get { return SelectedAccount.BattleNetAccount; } }
-		public string CurrentPassword { private get { return SelectedAccount.Password; } set { SelectedAccount.Password = value; } }
+		public SecureString SecurePassword { get { return SelectedAccount.SecurePassword; } set { SelectedAccount.SecurePassword = value; } }
 
 		// Characters
 		public int CharactersTotal { get; set; }
@@ -57,32 +55,6 @@ namespace SPP_LegionV2_Management
 		public AccountManagerViewModel(IDialogCoordinator instance)
 		{
 			_dialogCoordinator = instance;
-		}
-
-		// This is used to compute a new SHA256 password hash for the bnet account, and
-		// is REQUIRED if the bnet account name changed, as the 2 are tied together
-		private string sha256_hash(string randomString, bool reverse = false)
-		{
-			var crypt = new SHA256Managed();
-			var hash = new System.Text.StringBuilder();
-			byte[] crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(randomString));
-
-			foreach (byte theByte in crypto)
-				hash.Append(theByte.ToString("x2"));
-
-			// the 2nd time hashing the password needs the string reversed
-			if (reverse)
-			{
-				string a = hash.ToString();
-				char[] ca = a.ToCharArray();
-				StringBuilder sb = new StringBuilder(a.Length);
-				for (int i = 0; i < a.Length; i += 2)
-					sb.Insert(0, ca, i, 2);
-
-				return sb.ToString();
-			}
-
-			return hash.ToString();
 		}
 
 		public void ApplyAccountChanges()
@@ -108,12 +80,13 @@ namespace SPP_LegionV2_Management
 					{
 						// Changing BattleNet Email means the password hash MUST be updated, or this account will no longer be able
 						// to login. The password box on the account page needed filled out. If not, we alert and ignore the 
-						// BattleNet Email change.
-						if (account.Password != null && account.Password.Length > 0)
+						// BattleNet Email change. With the Controls/Externsions classes, we're able to keep the password in a
+						// SecureString until passing directly into the generation of the hash
+						if (account.SecurePassword != null && account.SecurePassword.Length > 0)
 						{
 							// the WoW Bnet password hash is built by getting uppercase hash of the email login, then combining
 							// that hash + ":" and the password, then reverse order, uppercase the result and shove in the DB
-							passHash = sha256_hash(sha256_hash(account.BattleNetEmail).ToUpper() + ":" + account.Password, true).ToUpper();
+							passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail).ToUpper() + ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword), true).ToUpper();
 							MessageBox.Show($"Changing BattleNet Login for [{battlenetLoginFromDB}] to [{account.BattleNetEmail}] - "
 							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail}',`sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
 
@@ -130,9 +103,9 @@ namespace SPP_LegionV2_Management
 
 					// In case they entered a password (to change account pass only, not the login)
 					// see above notes about hash/passwords
-					if (account.Password != null && !_updatedPassword && account.Password.Length > 0)
+					if (account.SecurePassword != null && !_updatedPassword && account.SecurePassword.Length > 0)
 					{
-						passHash = sha256_hash(sha256_hash(account.BattleNetEmail).ToUpper() + ":" + account.Password, true).ToUpper();
+						passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail).ToUpper() + ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword), true).ToUpper();
 						MessageBox.Show($"Changing BattleNet Password for [{account.BattleNetEmail}] - "
 							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
 					}
@@ -425,111 +398,6 @@ namespace SPP_LegionV2_Management
 				OrphanedCharactersTotal = OrphanedCharacters.Count;
 				await Task.Delay(1);
 			}
-		}
-	}
-
-	// This class handles adding dependency properties for password boxes,
-	// allowing me to actually clear the box and handle password hashing easier.
-	public static class PasswordBoxAssistant
-	{
-		public static readonly DependencyProperty BoundPassword =
-			DependencyProperty.RegisterAttached("BoundPassword", typeof(string), typeof(PasswordBoxAssistant), new PropertyMetadata(string.Empty, OnBoundPasswordChanged));
-
-		public static readonly DependencyProperty BindPassword = DependencyProperty.RegisterAttached(
-			"BindPassword", typeof(bool), typeof(PasswordBoxAssistant), new PropertyMetadata(false, OnBindPasswordChanged));
-
-		private static readonly DependencyProperty UpdatingPassword =
-			DependencyProperty.RegisterAttached("UpdatingPassword", typeof(bool), typeof(PasswordBoxAssistant), new PropertyMetadata(false));
-
-		private static void OnBoundPasswordChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-		{
-			PasswordBox box = d as PasswordBox;
-
-			// only handle this event when the property is attached to a PasswordBox
-			// and when the BindPassword attached property has been set to true
-			if (d == null || !GetBindPassword(d))
-			{
-				return;
-			}
-
-			// avoid recursive updating by ignoring the box's changed event
-			box.PasswordChanged -= HandlePasswordChanged;
-
-			string newPassword = (string)e.NewValue;
-
-			if (!GetUpdatingPassword(box))
-			{
-				box.Password = newPassword;
-			}
-
-			box.PasswordChanged += HandlePasswordChanged;
-		}
-
-		private static void OnBindPasswordChanged(DependencyObject dp, DependencyPropertyChangedEventArgs e)
-		{
-			// when the BindPassword attached property is set on a PasswordBox,
-			// start listening to its PasswordChanged event
-
-			PasswordBox box = dp as PasswordBox;
-
-			if (box == null)
-			{
-				return;
-			}
-
-			bool wasBound = (bool)(e.OldValue);
-			bool needToBind = (bool)(e.NewValue);
-
-			if (wasBound)
-			{
-				box.PasswordChanged -= HandlePasswordChanged;
-			}
-
-			if (needToBind)
-			{
-				box.PasswordChanged += HandlePasswordChanged;
-			}
-		}
-
-		private static void HandlePasswordChanged(object sender, RoutedEventArgs e)
-		{
-			PasswordBox box = sender as PasswordBox;
-
-			// set a flag to indicate that we're updating the password
-			SetUpdatingPassword(box, true);
-			// push the new password into the BoundPassword property
-			SetBoundPassword(box, box.Password);
-			SetUpdatingPassword(box, false);
-		}
-
-		public static void SetBindPassword(DependencyObject dp, bool value)
-		{
-			dp.SetValue(BindPassword, value);
-		}
-
-		public static bool GetBindPassword(DependencyObject dp)
-		{
-			return (bool)dp.GetValue(BindPassword);
-		}
-
-		public static string GetBoundPassword(DependencyObject dp)
-		{
-			return (string)dp.GetValue(BoundPassword);
-		}
-
-		public static void SetBoundPassword(DependencyObject dp, string value)
-		{
-			dp.SetValue(BoundPassword, value);
-		}
-
-		private static bool GetUpdatingPassword(DependencyObject dp)
-		{
-			return (bool)dp.GetValue(UpdatingPassword);
-		}
-
-		private static void SetUpdatingPassword(DependencyObject dp, bool value)
-		{
-			dp.SetValue(UpdatingPassword, value);
 		}
 	}
 }

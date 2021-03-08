@@ -42,6 +42,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,6 +52,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>spp.ico</ApplicationIcon>
@@ -164,7 +166,9 @@
     </ApplicationDefinition>
     <Compile Include="Models\Account.cs" />
     <Compile Include="Models\Character.cs" />
+    <Compile Include="Models\Controls.cs" />
     <Compile Include="Models\MySqlManager.cs" />
+    <Compile Include="Models\Extensions.cs" />
     <Compile Include="Models\SettingsManager.cs" />
     <Compile Include="ViewModels\AccountManagerViewModel.cs" />
     <Compile Include="ViewModels\BaseViewModel.cs" />
