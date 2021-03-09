@@ -1,6 +1,8 @@
 # SPP-LegionV2-Management
 ## Configuration and Management for SPP LegionV2 Servers
 
+THANK YOU to Serithul of SPP discord for helping with SQL. This project wouldn't be half of what it is without you :)
+
 ### Usage
 
 This application requires .net framework 4.8. 
