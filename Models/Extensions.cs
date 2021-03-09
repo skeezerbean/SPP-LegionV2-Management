@@ -75,8 +75,10 @@ namespace SPP_LegionV2_Management.Extensions
         {
             var crypt = new SHA256Managed();
             byte[] crypto = crypt.ComputeHash(Encoding.UTF8.GetBytes(randomString));
+
             // clear our potential password as quickly as possible
             randomString = string.Empty;
+
             var hash = new System.Text.StringBuilder();
 
             foreach (byte theByte in crypto)

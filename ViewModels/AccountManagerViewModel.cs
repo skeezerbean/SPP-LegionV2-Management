@@ -9,7 +9,7 @@ using System.Security;
 
 namespace SPP_LegionV2_Management
 {
-	public class AccountManagerViewModel : Screen, INotifyPropertyChanged
+	public class AccountManagerViewModel : Screen
 	{
 		// IDialogCoordinator is for metro message boxes
 		private readonly IDialogCoordinator _dialogCoordinator;
@@ -86,7 +86,8 @@ namespace SPP_LegionV2_Management
 						{
 							// the WoW Bnet password hash is built by getting uppercase hash of the email login, then combining
 							// that hash + ":" and the password, then reverse order, uppercase the result and shove in the DB
-							passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail).ToUpper() + ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword), true).ToUpper();
+							passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail).ToUpper()
+								+ ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword), true).ToUpper();
 							MessageBox.Show($"Changing BattleNet Login for [{battlenetLoginFromDB}] to [{account.BattleNetEmail}] - "
 							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail}',`sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
 
@@ -220,12 +221,45 @@ namespace SPP_LegionV2_Management
 		// Called from button, pass to actual character deletion
 		public async void DeleteSelectedCharacter()
 		{
+			if (!CheckSQL() || _deleteCharacterRunning)
+				return;
+
 			Task t = Task.Run(() =>
 			{
+				Console.WriteLine($"Deleting character: {SelectedCharacter}");
 				DeleteCharacter(SelectedCharacter);
 			});
 
+			// Give it a moment to start before checking, lets the bool check get set
+			Task.Delay(100);
 			while (!t.IsCompleted) { await Task.Delay(100); }
+		}
+
+		// called from button, pass to actual character deletion
+		public async void DeleteOrphanedCharacters()
+		{
+			if (!CheckSQL() || _deleteCharacterRunning)
+				return;
+
+			// Refresh or make sure we have updated Orphaned character info
+			RetrieveCharacters();
+
+			foreach (var character in OrphanedCharacters)
+			{
+				// Run the deletion for each
+				Task t = Task.Run(() =>
+				{
+					Console.WriteLine($"Deleting orphaned character: {character}");
+					DeleteCharacter(character);
+				});
+
+				// Give it a moment to start before checking, lets the bool check get set
+				Task.Delay(100);
+				while (!t.IsCompleted) { await Task.Delay(100); }
+			}
+
+			// Refresh list of characters
+			RetrieveCharacters();
 		}
 
 		// Delete specified character passed in, either from deleting selected character, or
@@ -249,9 +283,6 @@ namespace SPP_LegionV2_Management
 		{
 			if (!CheckSQL() || _deleteAccountRunning)
 				return;
-
-			// For now, return until this can be finished.
-			return;
 
 			_deleteAccountRunning = true;
 
@@ -310,10 +341,7 @@ namespace SPP_LegionV2_Management
 		}
 
 		// Only here for the sake of button unique name
-		public void RetrieveOrphanedCharacters()
-		{
-			RetrieveCharacters();
-		}
+		public void RetrieveOrphanedCharacters() { RetrieveCharacters(); }
 
 		// This creates a 'reader' to pull character data from the database, using GetCharactersFromSQL as it's processing function
 		public async void RetrieveCharacters()

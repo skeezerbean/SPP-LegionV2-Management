@@ -159,7 +159,7 @@
 						<Button x:Name="RetrieveOrphanedCharacters" Content="Show Characters" Margin="5" Padding="5"
 							ToolTip="Retreives character info from the database"/>
 
-						<Button x:Name="RemoveOrphanedCharacters" Content="Remove all Orphaned Characters" Margin="5" Padding="5"
+						<Button x:Name="DeleteOrphanedCharacters" Content="Remove all Orphaned Characters" Margin="5" Padding="5"
 							ToolTip="Delete the orphaned characters"/>
 
 					</StackPanel>
