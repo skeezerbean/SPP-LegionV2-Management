@@ -74,7 +74,7 @@ Click on the **Settings** button
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Settings-Tab.PNG)
 
 
-When browsing for the SPP folder, it will be the one that has these items where you extracted your SPP LegionV2 Server files
+When browsing for the SPP folder, it will be the one that has these items where you extracted your SPP LegionV2 Server files. Note that changing a folder automatically saves the new locations, as well as the window position/size
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/SPP-server-folder.PNG)
 
@@ -141,7 +141,7 @@ If this is different than what your config has set, then use the **Set Build** b
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Set-Build.PNG)
 
 
-Once you're ready, click on **Save/Export** to save your updated configs to disk. This will auto-backup existing configs into the SPP Config Generator's backup folder before saving new ones
+Once you're ready, click on **Export** to save your updated configs to disk. This will auto-backup existing configs into the SPP Config Generator's backup folder before saving new ones
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Save-Export-Backup.PNG)
 
