@@ -214,11 +214,8 @@
 
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
-						<Button x:Name="RetrieveOrphanedItems" Content="Check for Orphaned Objects" Margin="5" Padding="5"
-							ToolTip="Searches Database for orphaned character objects"/>
-
 						<Button x:Name="RemoveOrphanedItems" Content="Remove all Orphaned Objects" Margin="5" Padding="5"
-							ToolTip="Delete the orphaned objects"/>
+							ToolTip="Delete the orphaned objects (will take a while)"/>
 
 					</StackPanel>
 
@@ -230,10 +227,14 @@
 					<!--Right side, list details of selected character-->
 					<StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="1" Margin="10">
 						<StackPanel Margin="10" >
+							<TextBlock Text="Total Orphaned Character IDs:"  />
 							<TextBlock Text="Total Orphaned Objects:"  />
+							<TextBlock Text="Status:"  />
 						</StackPanel>
 						<StackPanel Margin="10" >
+							<TextBlock x:Name="OrphanedIDsTotal"  />
 							<TextBlock x:Name="OrphanedObjectsTotal"  />
+							<TextBlock x:Name="OrphanedObjectsStatus"  />
 						</StackPanel>
 					</StackPanel>
 
