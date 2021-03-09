@@ -15,6 +15,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.3** - Fixed bug in setting passwords, adding account creation logic
+
 **0.0.2.2** - Added ability to set BattleNet password, which is also required if changing BattleNet login because of how the password hash is created in TrinityCore
 
 **0.0.2.1** - **PLEASE NOTE** The .exe file name has changed and the old one should be deleted. Revamped GUI, added some account/character management
