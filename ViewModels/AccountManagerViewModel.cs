@@ -76,7 +76,7 @@ namespace SPP_LegionV2_Management
 					bool _updatedPassword = false;
 					string passHash;
 
-					if (battlenetLoginFromDB != account.BattleNetEmail)
+					if (battlenetLoginFromDB != account.BattleNetEmail.ToUpper())
 					{
 						// Changing BattleNet Email means the password hash MUST be updated, or this account will no longer be able
 						// to login. The password box on the account page needed filled out. If not, we alert and ignore the 
@@ -84,12 +84,12 @@ namespace SPP_LegionV2_Management
 						// SecureString until passing directly into the generation of the hash
 						if (account.SecurePassword != null && account.SecurePassword.Length > 0)
 						{
-							// the WoW Bnet password hash is built by getting uppercase hash of the email login, then combining
+							// the WoW Bnet password hash is built by getting uppercase hash of the (uppercase) email login, then combining
 							// that hash + ":" and the password, then reverse order, uppercase the result and shove in the DB
-							passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail).ToUpper()
-								+ ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword), true).ToUpper();
-							MessageBox.Show($"Changing BattleNet Login for [{battlenetLoginFromDB}] to [{account.BattleNetEmail}] - "
-							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail}',`sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
+							passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail.ToUpper()).ToUpper()
+								+ ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword).ToUpper(), true).ToUpper();
+							MessageBox.Show($"Changing BattleNet Login for [{battlenetLoginFromDB}] to [{account.BattleNetEmail.ToUpper()}] - "
+							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail.ToUpper()}',`sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
 
 							_updatedPassword = true;
 						}
@@ -106,7 +106,8 @@ namespace SPP_LegionV2_Management
 					// see above notes about hash/passwords
 					if (account.SecurePassword != null && !_updatedPassword && account.SecurePassword.Length > 0)
 					{
-						passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail).ToUpper() + ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword), true).ToUpper();
+						passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail.ToUpper()).ToUpper()
+							+ ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword).ToUpper(), true).ToUpper();
 						MessageBox.Show($"Changing BattleNet Password for [{account.BattleNetEmail}] - "
 							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
 					}
@@ -214,8 +215,23 @@ namespace SPP_LegionV2_Management
 			if (!CheckSQL())
 				return;
 
-			// This should run through the process of adding an account with relevant info, then add bnet,
-			// link them, add GM status if needed, as well as set the bnet password hash
+			// This should run through the process of adding an account with the login name,
+			// to uppercase, the rest happens at account list screen to manage password/GM level
+			string loginName = Microsoft.VisualBasic.Interaction.InputBox("Enter the login name for the account", "Login Account Name").ToUpper();
+
+			// If they hit cancel
+			if (loginName.Length == 0)
+				return;
+
+			// Create the DB entries, battle_net first, then we can pull the ID it creates and add to account table after
+			MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`battlenet_accounts` (`email`) VALUES ('{loginName}')", true);
+			int battlenetID = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT `id` FROM `legion_auth`.`battlenet_accounts` WHERE `email`='{loginName}'"));
+			MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`account` (`username`,`email`,`battlenet_account`) VALUES ('{loginName}','{loginName}','{battlenetID}')", true);
+
+			// Pop up to let user know to create a password on the account page once the list is refreshed.
+			// this lets us used the existing more-secure method than simply taking text input
+			RetrieveAccounts();
+			MessageBox.Show("Note - once the account list refreshes, you will need to set a password for this account before it can be used.", "Note");
 		}
 
 		// Called from button, pass to actual character deletion
