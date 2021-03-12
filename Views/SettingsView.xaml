@@ -11,15 +11,15 @@
 		<StackPanel Orientation="Horizontal">
 			<StackPanel Margin="5">
 				<Button x:Name="SPPFolderBrowse" Content="Set SPP Folder Location" Margin="5" />
-				<Button x:Name="WowConfigBrowse" Content="Set Wow Client Location" Margin="5"/>
+				<Button x:Name="WowConfigBrowse" Content="Set Wow Client Location" Margin="5" />
 				<!--<TextBlock Text="MySQL Server" />
 									<TextBlock Text="MySQL Port" />
 									<TextBlock Text="MySQL User" />
 									<TextBlock Text="MySQL Pass" />-->
 			</StackPanel>
 			<StackPanel Margin="5">
-				<TextBlock x:Name="SPPFolderLocation" Margin="-5,7" VerticalAlignment="Center"/>
-				<TextBlock x:Name="WOWConfigLocation" Margin="-5,7" VerticalAlignment="Center"/>
+				<TextBlock x:Name="SPPFolderLocation" Margin="-5,7" VerticalAlignment="Center" />
+				<TextBlock x:Name="WOWConfigLocation" Margin="-5,7" VerticalAlignment="Center" />
 				<!--<TextBox x:Name="MySQLServer" />
 									<TextBox x:Name="MySQLPort" />
 									<TextBox x:Name="MySQLUser" />

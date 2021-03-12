@@ -1,5 +1,4 @@
-﻿
-namespace SPP_LegionV2_Management
+﻿namespace SPP_LegionV2_Management
 {
 	public class Character
 	{
@@ -7,6 +6,8 @@ namespace SPP_LegionV2_Management
 		public int Account { get; set; }
 		public string Name { get; set; }
 
-		public Character() { }
+		public Character()
+		{
+		}
 	}
 }

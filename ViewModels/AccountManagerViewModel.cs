@@ -2,9 +2,9 @@
 using MahApps.Metro.Controls.Dialogs;
 using MySql.Data.MySqlClient;
 using System;
+using System.Security;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Security;
 
 namespace SPP_LegionV2_Management
 {
@@ -12,17 +12,15 @@ namespace SPP_LegionV2_Management
 	{
 		// IDialogCoordinator is for metro message boxes
 		private readonly IDialogCoordinator _dialogCoordinator;
-		private DateTime _lastUpdate = DateTime.Now;
-		private int _tempObjectsOrphanedTotal;
 
 		// block parallel tasks running of the same type
 		private bool _accountRetrieveRunning = false;
 		private bool _characterRetrieveRunning = false;
 		private bool _deleteAccountRunning = false;
 		private bool _deleteCharacterRunning = false;
-		private bool _deleteObjectsRunning = false;
 		private bool _removingObjects = false;
 		private bool _retrievingObjects = false;
+		private BindableCollection<int> _guildMasters = new BindableCollection<int>();
 
 		public BindableCollection<Account> Accounts { get; set; } = new BindableCollection<Account>();
 		public BindableCollection<Character> Characters { get; set; } = new BindableCollection<Character>();
@@ -41,25 +39,28 @@ namespace SPP_LegionV2_Management
 		public int CurrentGMLevel { get { return (SelectedAccount == null) ? -1 : SelectedAccount.GMLevel; } set { SelectedAccount.GMLevel = value; } }
 		public int CurrentBattleNetID { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
 		public SecureString SecurePassword { get { return (SelectedAccount == null) ? new SecureString() : SelectedAccount.SecurePassword; } set { SelectedAccount.SecurePassword = value; } }
+		public string AccountStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
 
 		// Characters
 		public int CharactersTotal { get; set; }
-		public int CurrentCharacterGUID { get { return SelectedCharacter.Guid; } }
-		public int CurrentCharacterAccountID { get { return SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
-		public string CurrentCharacterName { get { return SelectedCharacter.Name; } set { SelectedCharacter.Name = value; } }
+		public int CurrentCharacterGUID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Guid; } }
+		public int CurrentCharacterAccountID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
+		public string CurrentCharacterName { get { return (SelectedCharacter == null) ? string.Empty : SelectedCharacter.Name; } set { SelectedCharacter.Name = value; } }
+		public string CharacterStatus { get; set; }
 
 		// Orphaned Characters
 		public int OrphanedCharactersTotal { get; set; }
 		public int OrphanedOrphanedCharactersTotal { get; set; }
-		public int OrphanedCurrentCharacterGUID { get { return OrphanedSelectedCharacter.Guid; } }
-		public int OrphanedCurrentCharacterAccountID { get { return OrphanedSelectedCharacter.Account; } set { OrphanedSelectedCharacter.Account = value; } }
-		public string OrphanedCurrentCharacterName { get { return OrphanedSelectedCharacter.Name; } set { OrphanedSelectedCharacter.Name = value; } }
+		public int OrphanedCurrentCharacterGUID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Guid; } }
+		public int OrphanedCurrentCharacterAccountID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Account; } set { OrphanedSelectedCharacter.Account = value; } }
+		public string OrphanedCurrentCharacterName { get { return (OrphanedSelectedCharacter == null) ? string.Empty : OrphanedSelectedCharacter.Name; } set { OrphanedSelectedCharacter.Name = value; } }
+		public string OrphanedCharacterStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
 
 		// Orphaned Objects
 		public int OrphanedObjectsTotal { get; set; }
 		public BindableCollection<int> OrphanedIDs = new BindableCollection<int>();
 		public int OrphanedIDsTotal { get; set; }
-		public string OrphanedObjectsStatus { get; set; }
+		public string OrphanedObjectsStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
 
 		// IDialogCoordinator is part of Metro, for dialog handling in the view model
 		public AccountManagerViewModel(IDialogCoordinator instance)
@@ -67,7 +68,7 @@ namespace SPP_LegionV2_Management
 			_dialogCoordinator = instance;
 		}
 
-		public void ApplyAccountChanges()
+		public async void ApplyAccountChanges()
 		{
 			foreach (var account in Accounts)
 			{
@@ -89,7 +90,7 @@ namespace SPP_LegionV2_Management
 					if (battlenetLoginFromDB != account.BattleNetEmail.ToUpper())
 					{
 						// Changing BattleNet Email means the password hash MUST be updated, or this account will no longer be able
-						// to login. The password box on the account page needed filled out. If not, we alert and ignore the 
+						// to login. The password box on the account page needed filled out. If not, we alert and ignore the
 						// BattleNet Email change. With the Controls/Externsions classes, we're able to keep the password in a
 						// SecureString until passing directly into the generation of the hash
 						if (account.SecurePassword != null && account.SecurePassword.Length > 0)
@@ -138,21 +139,23 @@ namespace SPP_LegionV2_Management
 				else if (response == "-1" && account.GMLevel > 0)
 				{
 					// perform insert to new gm access entry if default GMlevel also changed
-					MessageBox.Show($"Account [{account.ID}({account.Username})] Adding GM Entry - " 
+					MessageBox.Show($"Account [{account.ID}({account.Username})] Adding GM Entry - "
 						+ MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`account_access` (`id`,`gmlevel`,`RealmID`) VALUES ('{account.ID}','{account.GMLevel}','-1')", true));
 				}
 				// If they ARE GM (response not -1), and the new value declares they shouldn't be...
 				else if (response != "-1" && (account.GMLevel == -1 || account.GMLevel == 0))
-					MessageBox.Show($"Account [{account.ID}({account.Username})] Removing from GM status - " 
+					MessageBox.Show($"Account [{account.ID}({account.Username})] Removing from GM status - "
 						+ MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{account.ID}'", true));
 				// In case GM Level was changed for existing account
 				else if (response != "-1" && (account.GMLevel != Int32.Parse(response)))
-					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing GM status from {response} to {account.GMLevel} - " 
+					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing GM status from {response} to {account.GMLevel} - "
 						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account_access` SET `gmlevel`='{account.GMLevel}' WHERE `id`='{account.ID}'", true));
 			}
 
+			// Sometimes screen updates too quickly before DB changes applies, this should help
+			await Task.Delay(500);
 			// now that things have been updated, refresh our list
-			RetrieveAccounts();
+			_ = RetrieveAccounts();
 		}
 
 		// Button for Character changes calls this
@@ -162,7 +165,7 @@ namespace SPP_LegionV2_Management
 		public void ApplyOrphanedCharacterChanges() { ApplyCharacterChangesProcess(OrphanedCharacters); }
 
 		// Work to actually change character settings
-		public void ApplyCharacterChangesProcess(BindableCollection<Character> characters)
+		public async void ApplyCharacterChangesProcess(BindableCollection<Character> characters)
 		{
 			string tmp = string.Empty;
 
@@ -181,7 +184,9 @@ namespace SPP_LegionV2_Management
 						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`characters` SET `account`='{character.Account}' WHERE `guid`='{character.Guid}'", true));
 			}
 
-			RetrieveCharacters();
+			// Sometimes screen updates too quickly before DB changes applies, this should help
+			await Task.Delay(500);
+			_ = RetrieveCharacters();
 		}
 
 		// This checks the status of the constant SQL check in the ShellViewModel
@@ -197,13 +202,13 @@ namespace SPP_LegionV2_Management
 		}
 
 		// This creates a 'reader' to pull account data from the database, using GetAccountsFromSQL as it's processing function
-		public async void RetrieveAccounts()
+		public async Task RetrieveAccounts()
 		{
-			if (!CheckSQL() || _accountRetrieveRunning)
+			if (!CheckSQL() || _accountRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning)
 				return;
 
 			_accountRetrieveRunning = true;
-
+			CharacterStatus = "Collecting Account Info...";
 			// Clear the collection since we're re-using
 			Accounts.Clear();
 
@@ -214,8 +219,9 @@ namespace SPP_LegionV2_Management
 			});
 
 			// Loop until it completes, awaiting each iteration to let the UI update
-			while (!t.IsCompleted) { await Task.Delay(100); }
+			while (!t.IsCompleted) { await Task.Delay(1); }
 
+			CharacterStatus = "Account Retrieval Finished...";
 			AccountsTotal = Accounts.Count;
 			_accountRetrieveRunning = false;
 		}
@@ -225,13 +231,23 @@ namespace SPP_LegionV2_Management
 			if (!CheckSQL())
 				return;
 
-			// This should run through the process of adding an account with the login name,
-			// to uppercase, the rest happens at account list screen to manage password/GM level
-			string loginName = Microsoft.VisualBasic.Interaction.InputBox("Enter the login name for the account", "Login Account Name").ToUpper();
+			string result = string.Empty;
+			string loginName = string.Empty;
 
-			// If they hit cancel
-			if (loginName.Length == 0)
-				return;
+			while (result != "-1")
+			{
+				// This should run through the process of adding an account with the login name,
+				// to uppercase, the rest happens at account list screen to manage password/GM level
+				loginName = Microsoft.VisualBasic.Interaction.InputBox("Enter the login name for the account", "Login Account Name").ToUpper();
+
+				// If they hit cancel
+				if (loginName.Length == 0)
+					return;
+
+				result = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `email` FROM `legion_auth`.`battlenet_accounts` WHERE `email` = '{loginName}'), \"-1\")");
+				if (result != "-1")
+					MessageBox.Show($"BattleNet Login \"{loginName}\" already exists. Please try again.");
+			}
 
 			// Create the DB entries, battle_net first, then we can pull the ID it creates and add to account table after
 			MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`battlenet_accounts` (`email`) VALUES ('{loginName}')", true);
@@ -240,59 +256,82 @@ namespace SPP_LegionV2_Management
 
 			// Pop up to let user know to create a password on the account page once the list is refreshed.
 			// this lets us used the existing more-secure method than simply taking text input
-			RetrieveAccounts();
 			MessageBox.Show("Note - once the account list refreshes, you will need to set a password for this account before it can be used.", "Note");
+			_ = RetrieveAccounts();
 		}
 
 		// Called from button, pass to actual character deletion
 		public async void DeleteSelectedCharacter()
 		{
-			if (!CheckSQL() || _deleteCharacterRunning)
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
 				return;
 
+			CharacterStatus = $"Deleting Character {SelectedCharacter.Name}";
 			Task t = Task.Run(() =>
 			{
-				Console.WriteLine($"Deleting character: {SelectedCharacter}");
 				DeleteCharacter(SelectedCharacter);
 			});
 
 			// Give it a moment to start before checking, lets the bool check get set
-			Task.Delay(100);
-			while (!t.IsCompleted) { await Task.Delay(100); }
+			await Task.Delay(100);
+			while (_deleteCharacterRunning) { await Task.Delay(1); }
+
+			CharacterStatus = $"{SelectedCharacter.Name} has been removed.";
+
+			// Sometimes screen updates too quickly before DB changes applies, this should help
+			await Task.Delay(500);
+			RetrieveCharacters();
 		}
 
 		// called from button, pass to actual character deletion
 		public async void DeleteOrphanedCharacters()
 		{
-			if (!CheckSQL() || _deleteCharacterRunning)
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
 				return;
 
-			// Refresh or make sure we have updated Orphaned character info
-			RetrieveCharacters();
-
-			foreach (var character in OrphanedCharacters)
+			// Refresh if we don't know of any orphaned characters
+			if (OrphanedCharacters.Count == 0)
 			{
-				// Run the deletion for each
 				Task t = Task.Run(() =>
 				{
-					Console.WriteLine($"Deleting orphaned character: {character}");
-					DeleteCharacter(character);
+					// Refresh or make sure we have updated Orphaned character info
+					RetrieveCharacters();
 				});
 
 				// Give it a moment to start before checking, lets the bool check get set
-				Task.Delay(100);
-				while (!t.IsCompleted) { await Task.Delay(100); }
+				await Task.Delay(1);
+				while (_characterRetrieveRunning) { await Task.Delay(1); }
 			}
 
+			// Sometimes at the right moment the character list may refresh when someone clicks a button. hopefully this keeps from crashing
+			try
+			{
+				foreach (var character in OrphanedCharacters)
+				{
+					// Run the deletion for each
+					Task t = Task.Run(() =>
+					{
+						DeleteCharacter(character);
+					});
+
+					// Give it a moment to start before checking, lets the bool check get set
+					await Task.Delay(100);
+					while (_deleteCharacterRunning) { await Task.Delay(1); }
+				}
+			}
+			catch { }
+			// Sometimes screen updates too quickly before DB changes applies, this should help
+			CharacterStatus = "Orphaned characters removal finished";
+			await Task.Delay(500);
 			// Refresh list of characters
-			RetrieveCharacters();
+			_ = RetrieveCharacters();
 		}
 
 		// Delete specified character passed in, either from deleting selected character, or
 		// running through all characters in an account being deleted
 		private async Task DeleteCharacter(Character character)
 		{
-			if (!CheckSQL() || _deleteCharacterRunning)
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects)
 				return;
 
 			_deleteCharacterRunning = true;
@@ -300,29 +339,30 @@ namespace SPP_LegionV2_Management
 			// Run the deletion for each
 			Task t = Task.Run(() =>
 			{
-				Console.WriteLine($"Deleting objects for character: {character}");
 				// remove rows with info for this character
-				RemoveObjectsByID(character.Guid);
+				foreach (var entry in CharacterTableField.CharacterTableFields)
+				{
+					//MySqlManager.MySQLQueryToString($"DELETE FROM `{entry.table}` WHERE `{entry.field}` = '{character.Guid}'", true);
+					RemoveObjectRows(entry.table, entry.field, character.Guid);
+				}
 			});
-
-			// Give it a moment to start before checking, lets the bool check get set
 			Task.Delay(100);
-			while (!t.IsCompleted) { await Task.Delay(100); }
+			while (_removingObjects) { await Task.Delay(1); }
 
 			// then finally delete the character itself
+			CharacterStatus = $"{character.Name} removed";
 			MySqlManager.MySQLQueryToString($"DELETE FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'", true);
 
 			// reset the flag and update the lists
 			_deleteCharacterRunning = false;
-			RetrieveCharacters();
 		}
 
 		public async Task DeleteSelectedAccount()
 		{
-			if (!CheckSQL() || _deleteAccountRunning)
+			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects)
 				return;
 
-			_deleteAccountRunning = true;
+			CharacterStatus = $"Collecting character info for Account:{SelectedAccount.BattleNetAccount}";
 
 			// Get a fresh character list, or populate a new one
 			Task t = Task.Run(() =>
@@ -336,6 +376,7 @@ namespace SPP_LegionV2_Management
 			// Loop until task completes, awaiting each iteration to let the UI update
 			while (_characterRetrieveRunning) { await Task.Delay(1); }
 
+			_deleteAccountRunning = true;
 			BindableCollection<Character> charactersToDelete = new BindableCollection<Character>();
 			charactersToDelete.Clear();
 			string msg = "ARE YOU SURE??\n\nCharacters in this account to be deleted:\n";
@@ -360,200 +401,173 @@ namespace SPP_LegionV2_Management
 				{
 					t = Task.Run(() =>
 					{
+						CharacterStatus = $"Removing character {character.Name}";
 						DeleteCharacter(character);
 					});
 
+					await Task.Delay(100);
 					// Loop until it completes, awaiting each iteration to let the UI update
-					while (!t.IsCompleted) { await Task.Delay(100); }
+					while (_deleteCharacterRunning) { await Task.Delay(1); }
 				}
 
 				// Delete account, bnet, gm entry if exists from SQL then retrieve accounts/characters again to refresh from DB directly, verify account is gone
 				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{SelectedAccount.ID}'", true);
 				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`battlenet_accounts` WHERE `id`='{SelectedAccount.BattleNetAccount}'", true);
 				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account` WHERE `id`='{SelectedAccount.ID}'", true);
+				CharacterStatus = $"Removal of Account:{SelectedAccount.BattleNetEmail} completed";
 
-				RetrieveAccounts();
-				RetrieveCharacters();
+				t = Task.Run(async () =>
+				{
+					await RetrieveCharacters();
+					await RetrieveAccounts();
+				});
 			}
 
 			_deleteAccountRunning = false;
 		}
 
+		// Check the DB against our list, see if any orphaned objects exist. If so, remove
 		public async void RemoveOrphanedItems()
 		{
-			if (!CheckSQL() || _removingObjects)
+			if (!CheckSQL() || _removingObjects || _retrievingObjects || _deleteAccountRunning || _deleteCharacterRunning)
 				return;
+
+			int completedItems = 0;
 
 			_retrievingObjects = true;
 			_removingObjects = true;
-			_tempObjectsOrphanedTotal = 0;
-			OrphanedIDs.Clear();
 			OrphanedObjectsTotal = 0;
-			OrphanedObjectsStatus = "Gathering Data...";
+			CharacterStatus = "Gathering Data...";
 
-			Task t = Task.Run(() =>
+			foreach (var entry in CharacterTableField.CharacterTableFields)
 			{
-				RetrieveOrphanedItems();
-			});
-
-			// Loop until it completes, awaiting each iteration to let the UI update
-			while (_retrievingObjects) { await Task.Delay(100); }
-
-			OrphanedIDsTotal = OrphanedIDs.Count;
-			OrphanedObjectsTotal = _tempObjectsOrphanedTotal;
-			OrphanedObjectsStatus = "Gathering Complete, removing objects";
-
-			if (OrphanedIDs.Count > 0)
-			{
-				int completedItems = 0;
-				foreach (var id in OrphanedIDs)
-				{
-					t = Task.Run(() =>
-					{
-						OrphanedObjectsStatus = $"{(int)(0.5f + ((100f * completedItems) / OrphanedIDs.Count))}% - Removing objects for ID {id}";
-						RemoveObjectsByID(id);
-					});
-
-					// Loop until it completes, awaiting each iteration to let the UI update
-					while (!t.IsCompleted) { await Task.Delay(1); }
-					completedItems++;
-				}
-			}
-
-			OrphanedObjectsStatus = "Finished removing orphaned items";
-			_removingObjects = false;
-		}
-
-		public async Task RemoveObjectsByID(int guid)
-		{
-			// Each table we gathered from, we'll remove rows with corresponding IDs
-			await Task.Delay(1000);
-		}
-
-		public async Task RetrieveOrphanedItems()
-		{
-			// cycle through our tables and gather guid's for characters
-			// wrap this in a task, waiting for it to complete. This will let the UI update through progress
-			// Can each be run in sequence inside a single task?
-			Task t = Task.Run(() =>
-			{
-				MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_account_data`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_achievement`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_achievement_progress`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_action`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_adventure_quest`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_achievement`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_archaeology`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_archaeology_finds`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_army_training_info`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_artifact`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_aura`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_aura_effect`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_banned`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_battleground_data`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_battleground_random`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_achievement`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_battle_pet_journal`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_achievement`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_chat_logos`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_cheat_common`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_cuf_profiles`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_currency`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_custom_event_reapeter`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_custom_reward`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_custom_server_rewards_reapeter`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_deathmatch`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_deathmatch_store`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_declinedname`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `owner_guid` FROM `legion_characters`.`character_donate`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_donate_service`", GetOrphanedIDsFromSQL);
-				// Unsure about this one
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_equipmentsets`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_feed_log`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `CharacterGuid` FROM `legion_characters`.`character_garrison`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_garrison_blueprints`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_garrison_buildings`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_garrison_followers`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_garrison_missions`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_garrison_shipment`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_garrison_talents`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_gifts`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_glyphs`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_homebind`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `Guid` FROM `legion_characters`.`character_honor`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_instance`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_inventory`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_kill`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_lfg_cooldown`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_loot_cooldown`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `owner` FROM `legion_characters`.`character_pet`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `owner` FROM `legion_characters`.`character_pet_declinedname`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_pvp_talent`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_queststatus`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_queststatus_daily`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_queststatus_objectives`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_queststatus_rewarded`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_queststatus_seasonal`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_queststatus_weekly`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_queststatus_world`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_quests_ignored`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_rates`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_rename`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_reputation`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_reward`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_share`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_skills`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_social`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_spell`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_spell_cooldown`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_stats`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_stat_kill_creature`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_talent`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_transmogs`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_transmog_outfits`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_visuals`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`character_visual_enchant`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `playerGuid` FROM `legion_characters`.`character_void_storage`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`gm_tickets`", GetOrphanedIDsFromSQL);
-				// Need to figure out handling guilds if leader removed - table character.guild - leaderguid
-				// same with guild_eventlog, PlayerGuid1, PlayerGuid2
-
-				reader = MySqlManager.MySQLQuery("SELECT `playerGuid` FROM `legion_characters`.`guild_finder_applicant`", GetOrphanedIDsFromSQL);
-
-				// where rank > 0 ??? to not delete leader
-				reader = MySqlManager.MySQLQuery("SELECT `guid` FROM `legion_characters`.`guild_member`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `PlayerGuid` FROM `legion_characters`.`guild_newslog`", GetOrphanedIDsFromSQL);
-
-				// This may be the really large query
-				reader = MySqlManager.MySQLQuery("SELECT `owner_guid` FROM `legion_characters`.`item_instance`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `char_guid` FROM `legion_characters`.`item_instance_artifact`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `char_guid` FROM `legion_characters`.`item_instance_artifact_powers`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `char_guid` FROM `legion_characters`.`item_instance_relics`", GetOrphanedIDsFromSQL);
-				reader = MySqlManager.MySQLQuery("SELECT `player_guid` FROM `legion_characters`.`item_refund_instance`", GetOrphanedIDsFromSQL);
-
-				// How to handle mail, queue, mail_items?
-
-			});
-
-			// Loop until it completes, awaiting each iteration to let the UI update
-			while (!t.IsCompleted)
-			{
-				// Let the UI update
-				await Task.Delay(1000);
-				OrphanedIDsTotal = OrphanedIDs.Count;
-				OrphanedObjectsTotal = _tempObjectsOrphanedTotal;
+				OrphanedObjectsTotal += GetOrphanedTotalRows(entry.table, entry.field);
 			}
 
 			_retrievingObjects = false;
+
+			// If none, skip out
+			if (OrphanedObjectsTotal == 0)
+			{
+				CharacterStatus = "No Orphaned Objects found";
+				_removingObjects = false;
+				return;
+			}
+
+			// Setup a task to run through each entry, update the GUI with completion %
+			foreach (var entry in CharacterTableField.CharacterTableFields)
+			{
+				Task t = Task.Run(() =>
+				{
+					CharacterStatus = $"{(int)(0.1f + ((100f * completedItems) / CharacterTableField.CharacterTableFields.Count))}% - Removing objects from table `{entry.table}`";
+					RemoveObjectRows(entry.table, entry.field);
+					completedItems++;
+				});
+
+				// Loop until it completes, awaiting each iteration to let the UI update
+				while (!t.IsCompleted) { await Task.Delay(1); }
+			}
+
+			CharacterStatus = "Finished removing orphaned items";
+			_removingObjects = false;
+		}
+
+		// Get our of orphaned objects, anything belonging to a character ID that doesn't exist in the
+		// characters table, and isn't part of the AH auctions, return the matches to add to our total
+		private int GetOrphanedTotalRows(string table, string field)
+		{
+			// If the orphaned items in item_instance match an item in the auctionhouse, then we need to ignore
+			if (table == "legion_characters`.`item_instance")
+				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` "
+					+ "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)"));
+
+			return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)"));
+		}
+
+		// If our guid is -1 then it's removing orphaned objects. Otherwise it's targetting specific guid to remove
+		private void RemoveObjectRows(string table, string field, int guid = -1)
+		{
+			string defaultQuery = $"DELETE FROM `{table}` WHERE `{((guid == -1) ? $"{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)" : $"{field}` = '{guid}'")}";
+
+			// If the character ID matches a guild master, then we need to check if there's a replacement guild member available
+			// There could be multiple matches and need handled 1 at a time. This character ID will get removed from the guild_member
+			// table whenever it gets to that object anyways, so no need to handle that part here
+			if (table == "legion_characters`.`guild")
+			{
+				// this will be our holder of guildmasters without a matching character ID
+				_guildMasters.Clear();
+
+				// Either grabbing all orphaned guildmasters, or checking for specific one
+				MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT IFNULL((SELECT `leaderguid` FROM `legion_characters`.`guild` WHERE `leaderguid` "
+					+ $"{((guid == -1) ? "NOT IN(SELECT `guid` FROM `legion_characters`.`characters`)" : $"= '{guid}'")}), \"-1\")", GetGuildMasters);
+
+				// now our _guildMasters collection is populated
+				if (_guildMasters.Count > 0)
+				{
+					foreach (var guildmaster in _guildMasters)
+					{
+						// Get a count of members for this guild, minus guildmaster, and has a match in characters table (non-orphaned)
+						int guildID = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `guildid` FROM `legion_characters`.`guild` WHERE `leaderguid` = '{guildmaster}'), \"-1\")"));
+						int membercount = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `legion_characters`.`guild_member` WHERE `guildid` = '{guildID}' AND NOT 'guid' = '{guildmaster}' AND `guid` IN (SELECT `guid` FROM `legion_characters`.`characters`)"));
+
+						if (membercount > 0)
+						{
+							// We need to find a replacement guildmaster, and this will return the first match for this guild ID
+							// in ranking order, so whatever guid returns first as the highest rank, congrats. You're the leader
+							// and Uncle Ben will lecture you about great power and responsbility.
+							int newGM = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `guid` FROM `legion_characters`.`guild_member` WHERE `guildid` = '{guildID}' AND NOT `guid` = '{guildmaster}' ORDER BY `rank` LIMIT 1), \"-1\")"));
+
+							// Now update the guild leaderguid record with the new guildmaster
+							if (newGM == -1)
+								// This means there were no valid guild members, so run the default
+								MySqlManager.MySQLQueryToString(defaultQuery, true);
+							else
+							{
+								// Set the new guildmaster, and update guild_member rank
+								MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`guild` SET `leaderguid` = '{newGM}' WHERE `leaderguid` = '{guildmaster}'", true);
+								MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`guild_member` SET `rank` = '0' WHERE `guid` = '{newGM}'", true);
+							}
+						}
+						else
+						{
+							// This means guildmaster was the only entry, so let's remove
+							MySqlManager.MySQLQueryToString(defaultQuery, true);
+						}
+					}
+				}
+			}
+			else if (table == "legion_characters`.`item_instance")
+			{
+				// The guid may be the same as the auctionhouse, so we need to make sure we're not removing any items that
+				// are listed in the auctionhouse table, otherwise they may be orphaned auctions that the AH code didn't clean up
+				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
+					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `owner_guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)" : $"= '{guid}'")}", true);
+			}
+			else
+			{
+				// Nothing else has matched, so squirt out our default
+				MySqlManager.MySQLQueryToString(defaultQuery, true);
+			}
 		}
 
 		// Only here for the sake of button unique name
 		public void RetrieveOrphanedCharacters() { RetrieveCharacters(); }
 
-		// This creates a 'reader' to pull character data from the database, using GetCharactersFromSQL as it's processing function
-		public async void RetrieveCharacters()
+		// Incoming reader is from the RemoveOrphanedRows function
+		private void GetGuildMasters(MySqlDataReader reader)
 		{
-			if (!CheckSQL() || _characterRetrieveRunning)
+			try
+			{
+				// Add each guild master that matches the query into the collection
+				_guildMasters.Add(reader.GetInt32(0));
+			}
+			catch (Exception e) { Console.WriteLine($"GetOrphanedGuildMasters: {e.Message}"); }
+		}
+
+		// This creates a 'reader' to pull character data from the database, called from multiple functions
+		public async Task RetrieveCharacters()
+		{
+			if (!CheckSQL() || _characterRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning)
 				return;
 
 			_characterRetrieveRunning = true;
@@ -569,39 +583,11 @@ namespace SPP_LegionV2_Management
 			});
 
 			// Loop until it completes, awaiting each iteration to let the UI update
-			while (!t.IsCompleted) { await Task.Delay(100); }
+			while (!t.IsCompleted) { await Task.Delay(1); }
 
 			CharactersTotal = Characters.Count;
 			OrphanedCharactersTotal = OrphanedCharacters.Count;
 			_characterRetrieveRunning = false;
-		}
-
-		// Incoming reader is from the RetrieveOrphanedItems task
-		private async void GetOrphanedIDsFromSQL(MySqlDataReader reader)
-		{
-			try
-			{
-				bool match;
-				int guid = reader.GetInt32(0);
-				string existingChar = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `guid` FROM `legion_characters`.`characters` WHERE `guid` = '{guid}'), \"-1\")");
-
-				// will be -1 if the guid doesn't exist
-				if (existingChar == "-1")
-				{
-					match = false;
-
-					foreach (var id in OrphanedIDs)
-						if (id == guid)
-							match = true;
-
-					// If we don't have this ID already, add to the list
-					if (!match)
-						OrphanedIDs.Add(guid);
-
-					_tempObjectsOrphanedTotal++;
-				}
-			}
-			catch (Exception e) { Console.WriteLine($"Getting OrphanedObject: {e.Message}"); }
 		}
 
 		// Incoming reader is from the RetrieveAccounts task
@@ -621,7 +607,7 @@ namespace SPP_LegionV2_Management
 					account.BattleCoins = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT `donate` FROM `legion_auth`.`battlenet_accounts` WHERE `id` = '{account.BattleNetAccount}'"));
 
 				// This should return -1 if there's no GM row for this account
-				account.GMLevel = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `gmlevel` FROM `legion_auth`.`account_access` WHERE `id` = '{account.ID}'), \"-1\")")) ;
+				account.GMLevel = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `gmlevel` FROM `legion_auth`.`account_access` WHERE `id` = '{account.ID}'), \"-1\")"));
 
 				// This should only add if there wasn't an exception causing a problem
 				Accounts.Add(account);

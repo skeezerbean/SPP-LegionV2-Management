@@ -8,8 +8,10 @@ namespace SPP_LegionV2_Management
 		// https://stackoverflow.com/questions/21618015/how-to-connect-to-mysql-database
 
 		private static string server;
+
 		//private static string database;
 		private static string user;
+
 		private static string password;
 		private static int port;
 		private static string connectionString;
@@ -21,7 +23,7 @@ namespace SPP_LegionV2_Management
 			user = GeneralSettingsManager.GeneralSettings.MySQLUser;
 			password = GeneralSettingsManager.GeneralSettings.MySQLPass;
 			port = GeneralSettingsManager.GeneralSettings.MySQLPort;
-			connectionString = String.Format("server={0};port={1};user id={2}; password={3};", server, port, user, password);
+			connectionString = String.Format("server={0};port={1};user id={2}; password={3};default command timeout=1800;", server, port, user, password);
 		}
 
 		public static MySqlDataReader MySQLQuery(string query, Action<MySqlDataReader> loader)
@@ -79,10 +81,10 @@ namespace SPP_LegionV2_Management
 					}
 				}
 			}
-			catch (Exception e) 
+			catch (Exception e)
 			{
 				Console.WriteLine($"SQL exception, query = {query}");
-				return e.Message; 
+				return e.Message;
 			}
 
 			return response;

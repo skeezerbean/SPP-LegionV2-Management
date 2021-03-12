@@ -3,7 +3,6 @@ using System.Windows.Controls;
 
 namespace SPP_LegionV2_Management
 {
-
 	/// <summary>
 	/// Interaction logic for AccountManagerView.xaml
 	/// </summary>
