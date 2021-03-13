@@ -167,8 +167,6 @@ namespace SPP_LegionV2_Management
 		// Work to actually change character settings
 		public async void ApplyCharacterChangesProcess(BindableCollection<Character> characters)
 		{
-			string tmp = string.Empty;
-
 			// For either name or account, if they've changed then update the entry for them
 			foreach (var character in characters)
 			{
@@ -542,6 +540,8 @@ namespace SPP_LegionV2_Management
 				// are listed in the auctionhouse table, otherwise they may be orphaned auctions that the AH code didn't clean up
 				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
 					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `owner_guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)" : $"= '{guid}'")}", true);
+				// optimize the table. Not supported in InnoDB, but will perform the same sort of thing and shrink the table to release the now-empty space
+				MySqlManager.MySQLQueryToString("OPTIMIZE TABLE `legion_characters`.`item_instance`");
 			}
 			else
 			{
