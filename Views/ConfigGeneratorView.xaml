@@ -122,7 +122,9 @@
 				<GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" />
 				<!-- Log -->
 				<Border Grid.Column="2" BorderThickness="2" BorderBrush="AliceBlue">
-					<TextBlock Text="{Binding LogText}" Margin="5" TextWrapping="Wrap" />
+					<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+						<TextBlock Text="{Binding LogText}" Margin="5" TextWrapping="Wrap"/>
+					</ScrollViewer>
 				</Border>
 			</Grid>
 		</Border>
