@@ -200,7 +200,7 @@ namespace SPP_LegionV2_Management
 
 		public async void AddAccount()
 		{
-			if (!CheckSQL())
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
 				return;
 
 			string result = string.Empty;
