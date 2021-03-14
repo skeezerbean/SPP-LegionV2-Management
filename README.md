@@ -17,6 +17,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.5** - Cleaned up some code. If you're currently executing a task within the account manager section then trying to start other tasks will be likely ignored until the original task is complete.
+
 **0.0.2.4** - This is a massive change, finishing up the logic for handling orphaned objects in the characters table. Each character has an ID, and this searches for objects without a matching character associated with them. This enables you can cleanup much of the character database, remove orphaned characters (characters in the datbase that don't have a existing account), delete accounts. This also handles logic if the character being deleted is a guild master and tries to find a highest-ranking non-orphaned guild member to replace them, or to remove the guild entry if there are no available members. This resolves a crash if that isn't handled when starting the world server as it checks on guilds.
 
 **0.0.2.3** - Fixed bug in setting passwords, adding account creation logic
@@ -199,7 +201,7 @@ If you changed any information then the app will notify you
 
 You can change some character information, and remove orphaned characters, on the **Orphaned Characters** tab. 
 
-**1** - Gathers the list of characters in the database, or select to remove all. Example shows removing all and as it shows progress. Spam the **Show Characters** button to get it to refresh and stop removing
+**1** - Gathers the list of characters in the database, or select to remove all. Example shows removing all and as it shows progress. You'll have to close the app to get it to stop removing, or wait until the task is finished if you clicked to remove all orphaned characters
 
 **2** - Select a character, and it will populate settings on the right. This will let you change the account to associate with a legit account if needed
 
@@ -210,6 +212,6 @@ You can change some character information, and remove orphaned characters, on th
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Account-Manager-OrphanedCharacters.PNG)
 
 
-Use this to search for and remove orphaned objects from the database. These are items belonging to a character that no longer exists in the database, and adds a lot of extra info to be stored that isn't needed. At the time of writing this, it also includes massive amounts of items from the AH Bot, as it doesn't remove items from here when they expire auctions, or when it buys items. On a test machine this was 1.9 million orphaned objects. On the Aurora partner server, it showed over 10 million objects orphaned. This should be corrected in a future patch, but in the mean time you can use this to potentially clean up your server and reduce memory usage. Note, if you have a lot of items it will take a WHILE to finish.
+Use this to search for and remove orphaned objects from the database. These are items belonging to a character that no longer exists in the database, and adds a lot of extra info to be stored that isn't needed. At the time of writing this, it also includes massive amounts of items from the AH Bot, as it doesn't remove items from here when they expire auctions, or when the AHBot buys items if that setting is enabled. On a test machine this was 1.9 million orphaned objects. On the Aurora partner server, it showed over 10 million objects orphaned. This should be corrected in a future patch, but in the mean time you can use this to potentially clean up your server and reduce memory usage. Note, if you have a lot of items it will take a LONG WHILE to finish.
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Clean-Orphaned-Objects.PNG)
