@@ -19,7 +19,6 @@ namespace SPP_LegionV2_Management
 		private bool _deleteAccountRunning = false;
 		private bool _deleteCharacterRunning = false;
 		private bool _removingObjects = false;
-		private bool _retrievingObjects = false;
 		private BindableCollection<int> _guildMasters = new BindableCollection<int>();
 
 		public BindableCollection<Account> Accounts { get; set; } = new BindableCollection<Account>();
@@ -236,82 +235,87 @@ namespace SPP_LegionV2_Management
 		// Called from button, pass to actual character deletion
 		public async void DeleteSelectedCharacter()
 		{
-			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
+			if (!CheckSQL() || _deleteCharacterRunning)
 				return;
 
 			_deleteCharacterRunning = true;
-			CharacterStatus = $"Deleting Character {SelectedCharacter.Name}";
-			await DeleteCharacter(SelectedCharacter);
+			BindableCollection<Character> characters = new BindableCollection<Character>();
+			characters.Add(SelectedCharacter);
+			Task delete = Task.Run(() => DeleteCharacters(characters));
+			while (!delete.IsCompleted) { await Task.Delay(1); }
 
 			CharacterStatus = $"{SelectedCharacter.Name} has been removed.";
 			_deleteCharacterRunning = false;
 
+			// refresh our list
 			await RetrieveCharacters();
 		}
 
 		// called from button, pass to actual character deletion
 		public async void DeleteOrphanedCharacters()
 		{
-			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
+			if (!CheckSQL() || _deleteCharacterRunning)
 				return;
 
-			// Refresh if we don't know of any orphaned characters
-			if (OrphanedCharacters.Count == 0)
-				await RetrieveCharacters();
-
+			// refresh our list
+			Task refresh = Task.Run(() => RetrieveCharacters());
+			while (!refresh.IsCompleted) { await Task.Delay(1); }
 			_deleteCharacterRunning = true;
-			// Sometimes at the right moment the character list may refresh when someone clicks a button. hopefully this keeps from crashing
-			try
-			{
-				foreach (var character in OrphanedCharacters)
-					await DeleteCharacter(character);
-			}
-			catch { }
+
+			// Let this task handle all characters and objects
+			Task delete = Task.Run(() => DeleteCharacters(OrphanedCharacters));
+			while (!delete.IsCompleted) { await Task.Delay(1); }
 
 			CharacterStatus = "Orphaned characters removal finished";
-			_deleteCharacterRunning = false;
 
-			await Task.Delay(500);
+			_deleteCharacterRunning = false;
 			// Refresh list of characters
 			await RetrieveCharacters();
 		}
 
-		// Delete specified character passed in, either from deleting selected character, or
-		// running through all characters in an account being deleted
-		private async Task<int> DeleteCharacter(Character character)
+		// Delete specified character(s) passed in, either from deleting selected character,
+		// running through all characters in an account being deleted, or orphaned characters
+		private async Task<int> DeleteCharacters(BindableCollection<Character> characters)
 		{
-			if (!CheckSQL() || _removingObjects)
+			if (!CheckSQL())
 				return 0;
 
 			BindableCollection<Task<int>> removalTasks = new BindableCollection<Task<int>>();
 			int total = 0;
 
-			// Run the deletion for each
-			CharacterStatus = $"Removing database objects for {character.Name}";
-
-			// remove rows with info for this character, all tasks run at the same time
-			foreach (var entry in CharacterTableField.CharacterTableFields)
-				removalTasks.Add(Task.Run(() => RemoveObjectRows(entry.table, entry.field, character.Guid)));
-
-			// As long as a task hasn't finished, wait here for it
-			while (removalTasks.Count > 0)
+			CharacterStatus = "Building task list of character deletion";
+			foreach (var character in characters)
 			{
-				Task<int> finishedTask = await Task.WhenAny(removalTasks);
-				removalTasks.Remove(finishedTask);
-				total ++;
-				CharacterStatus = $"Character {character.Name}: removing database objects - {(int)(0.1f + ((100f * total) / CharacterTableField.CharacterTableFields.Count))}%";
+				// 1 at a time, each character will remove data from all tables at once
+				foreach (var entry in CharacterTableField.CharacterTableFields)
+				{
+					removalTasks.Add(Task.Run(() => RemoveObjectRows(entry.table, entry.field, character.Guid)));
+				}
+
+				// As long as a task hasn't finished, wait here for it
+				// This will update as each character finishes
+				while (removalTasks.Count > 0)
+				{
+					Task<int> finishedTask = await Task.WhenAny(removalTasks);
+					removalTasks.Remove(finishedTask);
+
+					// update status every x times
+					if (total % 5 == 0)
+						CharacterStatus = $"Character removal tasks {(int)(0.1f + ((100f * total) / characters.Count))}%\n--> {total} / {characters.Count}";
+				}
+
+				total++;
+
+				// Since this character is finished, remove it from the characters table
+				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'", true);
 			}
 
-			// then finally delete the character itself
-			CharacterStatus = $"{character.Name} removed";
-
-			MySqlManager.MySQLQueryToString($"DELETE FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'", true);
 			return 0;
 		}
 
 		public async void DeleteSelectedAccount()
 		{
-			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects)
+			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning)
 				return;
 
 			_deleteAccountRunning = true;
@@ -343,12 +347,9 @@ namespace SPP_LegionV2_Management
 
 			if (mbr.ToString() == "Yes")
 			{
-				// Cycle through all characters and issue delete for them
-				foreach (var character in charactersToDelete)
-				{
-					CharacterStatus = $"Removing character {character.Name}";
-					await DeleteCharacter(character);
-				}
+				// Send the collection to be deleted
+				Task delete = Task.Run(() => DeleteCharacters(charactersToDelete));
+				while(!delete.IsCompleted) { await Task.Delay(1); }
 
 				// Delete account, bnet, gm entry if exists from SQL then retrieve accounts/characters again to refresh from DB directly, verify account is gone
 				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{SelectedAccount.ID}'", true);
@@ -357,13 +358,15 @@ namespace SPP_LegionV2_Management
 
 				_deleteCharacterRunning = false;
 				_deleteAccountRunning = false;
-				// This seems to help GUI pause a moment for the database to catch up with updates before refreshing
-				//await Task.Delay(500);
 
-				await RetrieveAccounts();
-				await RetrieveCharacters();
+				delete = Task.Run(() =>
+				{
+					RetrieveAccounts();
+					RetrieveCharacters();
+				});
+				while (!delete.IsCompleted) { await Task.Delay(1); }
 
-				CharacterStatus = "Finished";
+				CharacterStatus = "Finished removing account";
 			}
 
 			_deleteCharacterRunning = false;
