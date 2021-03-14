@@ -440,6 +440,10 @@ namespace SPP_LegionV2_Management
 			{
 				try
 				{
+					// If our folder doesn't exist for some reason, this should create it and avoid an exception
+					// This will do nothing if the directory already exists
+					Directory.CreateDirectory("Backup Configs");
+
 					// Determine filename and backup existing before overwrite
 					string[] pathArray = path.Split('\\');
 
@@ -453,6 +457,7 @@ namespace SPP_LegionV2_Management
 				}
 				catch (Exception e)
 				{
+					// If we have an exception creating a backup, then we don't want to overwrite the existing file until this is corrected
 					string msg = $"Error backing up to {path}\n(permissions/attributes issue such as read-only)\nThe exception details are -\n{e.ToString()}";
 					Log(msg);
 					Alert(msg);
