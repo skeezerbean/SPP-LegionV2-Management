@@ -81,6 +81,9 @@ namespace SPP_LegionV2_Management
 
 		public async void ApplyAccountChanges()
 		{
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
+				return;
+
 			foreach (var account in Accounts)
 			{
 				string userFromDB = MySqlManager.MySQLQueryToString($"SELECT `username` FROM `legion_auth`.`account` WHERE `id` = '{account.ID}'");
@@ -235,7 +238,7 @@ namespace SPP_LegionV2_Management
 		// Called from button, pass to actual character deletion
 		public async void DeleteSelectedCharacter()
 		{
-			if (!CheckSQL() || _deleteCharacterRunning)
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects)
 				return;
 
 			_deleteCharacterRunning = true;
@@ -254,7 +257,7 @@ namespace SPP_LegionV2_Management
 		// called from button, pass to actual character deletion
 		public async void DeleteOrphanedCharacters()
 		{
-			if (!CheckSQL() || _deleteCharacterRunning)
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects)
 				return;
 
 			// refresh our list
@@ -315,7 +318,7 @@ namespace SPP_LegionV2_Management
 
 		public async void DeleteSelectedAccount()
 		{
-			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning)
+			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects)
 				return;
 
 			_deleteAccountRunning = true;
