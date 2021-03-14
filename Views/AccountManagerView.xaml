@@ -30,7 +30,7 @@
 							ToolTip="Open Dialog to create an account and BNET account" />
 
 						<Button x:Name="DeleteSelectedAccount" Content="Delete Selected Account" Margin="5" Padding="5"
-							ToolTip="Delete the selected account" />
+							ToolTip="Delete the selected account, may take a while if there are a lot of database objects" />
 					</StackPanel>
 
 					<DataGrid ItemsSource="{Binding Accounts}" AutoGenerateColumns="False" IsReadOnly="True"
@@ -162,7 +162,7 @@
 							ToolTip="Retreives character info from the database" />
 
 						<Button x:Name="DeleteOrphanedCharacters" Content="Remove all Orphaned Characters" Margin="5" Padding="5"
-							ToolTip="Delete the orphaned characters" />
+							ToolTip="Delete the orphaned characters (may take a while)" />
 					</StackPanel>
 
 					<DataGrid ItemsSource="{Binding OrphanedCharacters}" AutoGenerateColumns="False" IsReadOnly="True"
@@ -217,7 +217,7 @@
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
 						<Button x:Name="RemoveOrphanedItems" Content="Remove all Orphaned Objects" Margin="5" Padding="5"
-							ToolTip="Delete the orphaned objects (will take a while)" />
+							ToolTip="Delete the orphaned objects (may take a while)" />
 					</StackPanel>
 
 					<!-- Buttons for top-right side -->

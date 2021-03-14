@@ -68,6 +68,18 @@ namespace SPP_LegionV2_Management
 			_dialogCoordinator = instance;
 		}
 
+		// This checks the status of the constant SQL check in the ShellViewModel
+		public bool CheckSQL()
+		{
+			if (!GeneralSettingsManager.IsMySQLRunning)
+			{
+				MessageBox.Show("Database Engine is not running, cannot continue");
+				return false;
+			}
+
+			return true;
+		}
+
 		public async void ApplyAccountChanges()
 		{
 			foreach (var account in Accounts)
@@ -152,21 +164,22 @@ namespace SPP_LegionV2_Management
 						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account_access` SET `gmlevel`='{account.GMLevel}' WHERE `id`='{account.ID}'", true));
 			}
 
-			// Sometimes screen updates too quickly before DB changes applies, this should help
-			await Task.Delay(500);
 			// now that things have been updated, refresh our list
-			_ = RetrieveAccounts();
+			await RetrieveAccounts();
 		}
 
 		// Button for Character changes calls this
-		public void ApplyCharacterChanges() { ApplyCharacterChangesProcess(Characters); }
+		public async void ApplyCharacterChanges() { await ApplyCharacterChangesProcess(Characters); }
 
 		// Button for Orphaned Character changes calls this
-		public void ApplyOrphanedCharacterChanges() { ApplyCharacterChangesProcess(OrphanedCharacters); }
+		public async void ApplyOrphanedCharacterChanges() { await ApplyCharacterChangesProcess(OrphanedCharacters); }
 
 		// Work to actually change character settings
-		public async void ApplyCharacterChangesProcess(BindableCollection<Character> characters)
+		public async Task<int> ApplyCharacterChangesProcess(BindableCollection<Character> characters)
 		{
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
+				return 0;
+
 			// For either name or account, if they've changed then update the entry for them
 			foreach (var character in characters)
 			{
@@ -182,49 +195,10 @@ namespace SPP_LegionV2_Management
 						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`characters` SET `account`='{character.Account}' WHERE `guid`='{character.Guid}'", true));
 			}
 
-			// Sometimes screen updates too quickly before DB changes applies, this should help
-			await Task.Delay(500);
-			_ = RetrieveCharacters();
+			return await RetrieveCharacters();
 		}
 
-		// This checks the status of the constant SQL check in the ShellViewModel
-		public bool CheckSQL()
-		{
-			if (!GeneralSettingsManager.IsMySQLRunning)
-			{
-				MessageBox.Show("Database Engine is not running, cannot continue");
-				return false;
-			}
-
-			return true;
-		}
-
-		// This creates a 'reader' to pull account data from the database, using GetAccountsFromSQL as it's processing function
-		public async Task RetrieveAccounts()
-		{
-			if (!CheckSQL() || _accountRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning)
-				return;
-
-			_accountRetrieveRunning = true;
-			CharacterStatus = "Collecting Account Info...";
-			// Clear the collection since we're re-using
-			Accounts.Clear();
-
-			// wrap this in a task, waiting for it to complete. This will let the UI update through progress
-			Task t = Task.Run(() =>
-			{
-				MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT `id`,`username`,IFNULL(`battlenet_account`,\"-1\") FROM `legion_auth`.`account`", GetAccountsFromSQL);
-			});
-
-			// Loop until it completes, awaiting each iteration to let the UI update
-			while (!t.IsCompleted) { await Task.Delay(1); }
-
-			CharacterStatus = "Account Retrieval Finished...";
-			AccountsTotal = Accounts.Count;
-			_accountRetrieveRunning = false;
-		}
-
-		public void AddAccount()
+		public async void AddAccount()
 		{
 			if (!CheckSQL())
 				return;
@@ -255,7 +229,8 @@ namespace SPP_LegionV2_Management
 			// Pop up to let user know to create a password on the account page once the list is refreshed.
 			// this lets us used the existing more-secure method than simply taking text input
 			MessageBox.Show("Note - once the account list refreshes, you will need to set a password for this account before it can be used.", "Note");
-			_ = RetrieveAccounts();
+			await RetrieveAccounts();
+			return;
 		}
 
 		// Called from button, pass to actual character deletion
@@ -264,21 +239,14 @@ namespace SPP_LegionV2_Management
 			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
 				return;
 
+			_deleteCharacterRunning = true;
 			CharacterStatus = $"Deleting Character {SelectedCharacter.Name}";
-			Task t = Task.Run(() =>
-			{
-				DeleteCharacter(SelectedCharacter);
-			});
-
-			// Give it a moment to start before checking, lets the bool check get set
-			await Task.Delay(100);
-			while (_deleteCharacterRunning) { await Task.Delay(1); }
+			await DeleteCharacter(SelectedCharacter);
 
 			CharacterStatus = $"{SelectedCharacter.Name} has been removed.";
+			_deleteCharacterRunning = false;
 
-			// Sometimes screen updates too quickly before DB changes applies, this should help
-			await Task.Delay(500);
-			RetrieveCharacters();
+			await RetrieveCharacters();
 		}
 
 		// called from button, pass to actual character deletion
@@ -289,95 +257,76 @@ namespace SPP_LegionV2_Management
 
 			// Refresh if we don't know of any orphaned characters
 			if (OrphanedCharacters.Count == 0)
-			{
-				Task t = Task.Run(() =>
-				{
-					// Refresh or make sure we have updated Orphaned character info
-					RetrieveCharacters();
-				});
+				await RetrieveCharacters();
 
-				// Give it a moment to start before checking, lets the bool check get set
-				await Task.Delay(1);
-				while (_characterRetrieveRunning) { await Task.Delay(1); }
-			}
-
+			_deleteCharacterRunning = true;
 			// Sometimes at the right moment the character list may refresh when someone clicks a button. hopefully this keeps from crashing
 			try
 			{
 				foreach (var character in OrphanedCharacters)
-				{
-					// Run the deletion for each
-					Task t = Task.Run(() =>
-					{
-						DeleteCharacter(character);
-					});
-
-					// Give it a moment to start before checking, lets the bool check get set
-					await Task.Delay(100);
-					while (_deleteCharacterRunning) { await Task.Delay(1); }
-				}
+					await DeleteCharacter(character);
 			}
 			catch { }
-			// Sometimes screen updates too quickly before DB changes applies, this should help
+
 			CharacterStatus = "Orphaned characters removal finished";
+			_deleteCharacterRunning = false;
+
 			await Task.Delay(500);
 			// Refresh list of characters
-			_ = RetrieveCharacters();
+			await RetrieveCharacters();
 		}
 
 		// Delete specified character passed in, either from deleting selected character, or
 		// running through all characters in an account being deleted
-		private async Task DeleteCharacter(Character character)
+		private async Task<int> DeleteCharacter(Character character)
 		{
-			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects)
-				return;
+			if (!CheckSQL() || _removingObjects)
+				return 0;
 
-			_deleteCharacterRunning = true;
+			BindableCollection<Task<int>> removalTasks = new BindableCollection<Task<int>>();
+			int total = 0;
 
 			// Run the deletion for each
-			Task t = Task.Run(() =>
+			CharacterStatus = $"Removing database objects for {character.Name}";
+
+			// remove rows with info for this character, all tasks run at the same time
+			foreach (var entry in CharacterTableField.CharacterTableFields)
+				removalTasks.Add(Task.Run(() => RemoveObjectRows(entry.table, entry.field, character.Guid)));
+
+			// As long as a task hasn't finished, wait here for it
+			while (removalTasks.Count > 0)
 			{
-				// remove rows with info for this character
-				foreach (var entry in CharacterTableField.CharacterTableFields)
-				{
-					//MySqlManager.MySQLQueryToString($"DELETE FROM `{entry.table}` WHERE `{entry.field}` = '{character.Guid}'", true);
-					RemoveObjectRows(entry.table, entry.field, character.Guid);
-				}
-			});
-			Task.Delay(100);
-			while (_removingObjects) { await Task.Delay(1); }
+				Task<int> finishedTask = await Task.WhenAny(removalTasks);
+				removalTasks.Remove(finishedTask);
+				total ++;
+				CharacterStatus = $"Character {character.Name}: removing database objects - {(int)(0.1f + ((100f * total) / CharacterTableField.CharacterTableFields.Count))}%";
+			}
 
 			// then finally delete the character itself
 			CharacterStatus = $"{character.Name} removed";
-			MySqlManager.MySQLQueryToString($"DELETE FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'", true);
 
-			// reset the flag and update the lists
-			_deleteCharacterRunning = false;
+			MySqlManager.MySQLQueryToString($"DELETE FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'", true);
+			return 0;
 		}
 
-		public async Task DeleteSelectedAccount()
+		public async void DeleteSelectedAccount()
 		{
 			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects)
 				return;
 
-			CharacterStatus = $"Collecting character info for Account:{SelectedAccount.BattleNetAccount}";
+			_deleteAccountRunning = true;
+			_deleteCharacterRunning = true;
 
 			// Get a fresh character list, or populate a new one
-			Task t = Task.Run(() =>
-			{
-				RetrieveCharacters();
-			});
+			Task<int> getChars = RetrieveCharacters();
 
-			// give some time to let the character retrieve start
-			await Task.Delay(100);
-
-			// Loop until task completes, awaiting each iteration to let the UI update
-			while (_characterRetrieveRunning) { await Task.Delay(1); }
-
-			_deleteAccountRunning = true;
+			CharacterStatus = $"Collecting character info for Account:{SelectedAccount.BattleNetAccount}";
 			BindableCollection<Character> charactersToDelete = new BindableCollection<Character>();
 			charactersToDelete.Clear();
 			string msg = "ARE YOU SURE??\n\nCharacters in this account to be deleted:\n";
+
+			// wait for our character retrieval to finish
+			await getChars;
 
 			// Getting our list of characters for this account
 			foreach (var character in Characters)
@@ -397,52 +346,45 @@ namespace SPP_LegionV2_Management
 				// Cycle through all characters and issue delete for them
 				foreach (var character in charactersToDelete)
 				{
-					t = Task.Run(() =>
-					{
-						CharacterStatus = $"Removing character {character.Name}";
-						DeleteCharacter(character);
-					});
-
-					await Task.Delay(100);
-					// Loop until it completes, awaiting each iteration to let the UI update
-					while (_deleteCharacterRunning) { await Task.Delay(1); }
+					CharacterStatus = $"Removing character {character.Name}";
+					await DeleteCharacter(character);
 				}
 
 				// Delete account, bnet, gm entry if exists from SQL then retrieve accounts/characters again to refresh from DB directly, verify account is gone
 				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{SelectedAccount.ID}'", true);
 				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`battlenet_accounts` WHERE `id`='{SelectedAccount.BattleNetAccount}'", true);
 				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account` WHERE `id`='{SelectedAccount.ID}'", true);
-				CharacterStatus = $"Removal of Account:{SelectedAccount.BattleNetEmail} completed";
 
-				t = Task.Run(async () =>
-				{
-					await RetrieveCharacters();
-					await RetrieveAccounts();
-				});
+				_deleteCharacterRunning = false;
+				_deleteAccountRunning = false;
+				// This seems to help GUI pause a moment for the database to catch up with updates before refreshing
+				//await Task.Delay(500);
+
+				await RetrieveAccounts();
+				await RetrieveCharacters();
+
+				CharacterStatus = "Finished";
 			}
 
+			_deleteCharacterRunning = false;
 			_deleteAccountRunning = false;
 		}
 
 		// Check the DB against our list, see if any orphaned objects exist. If so, remove
 		public async void RemoveOrphanedItems()
 		{
-			if (!CheckSQL() || _removingObjects || _retrievingObjects || _deleteAccountRunning || _deleteCharacterRunning)
+			if (!CheckSQL() || _removingObjects || _deleteAccountRunning || _deleteCharacterRunning)
 				return;
 
 			int completedItems = 0;
+			BindableCollection<Task<int>> removalTasks = new BindableCollection<Task<int>>();
 
-			_retrievingObjects = true;
 			_removingObjects = true;
 			OrphanedObjectsTotal = 0;
 			CharacterStatus = "Gathering Data...";
 
 			foreach (var entry in CharacterTableField.CharacterTableFields)
-			{
 				OrphanedObjectsTotal += GetOrphanedTotalRows(entry.table, entry.field);
-			}
-
-			_retrievingObjects = false;
 
 			// If none, skip out
 			if (OrphanedObjectsTotal == 0)
@@ -452,18 +394,17 @@ namespace SPP_LegionV2_Management
 				return;
 			}
 
-			// Setup a task to run through each entry, update the GUI with completion %
+			// remove rows with info for orphaned characters, all tasks run at the same time
 			foreach (var entry in CharacterTableField.CharacterTableFields)
-			{
-				Task t = Task.Run(() =>
-				{
-					CharacterStatus = $"{(int)(0.1f + ((100f * completedItems) / CharacterTableField.CharacterTableFields.Count))}% - Removing objects from table `{entry.table}`";
-					RemoveObjectRows(entry.table, entry.field);
-					completedItems++;
-				});
+				removalTasks.Add(Task.Run(() => RemoveObjectRows(entry.table, entry.field)));
 
-				// Loop until it completes, awaiting each iteration to let the UI update
-				while (!t.IsCompleted) { await Task.Delay(1); }
+			// As long as a task hasn't finished, wait here for it
+			while (removalTasks.Count > 0)
+			{
+				Task<int> finishedTask = await Task.WhenAny(removalTasks);
+				removalTasks.Remove(finishedTask);
+				completedItems++;
+				CharacterStatus = $"Removing orphaned database objects - {(int)(0.1f + ((100f * completedItems) / CharacterTableField.CharacterTableFields.Count))}%";
 			}
 
 			CharacterStatus = "Finished removing orphaned items";
@@ -483,7 +424,7 @@ namespace SPP_LegionV2_Management
 		}
 
 		// If our guid is -1 then it's removing orphaned objects. Otherwise it's targetting specific guid to remove
-		private void RemoveObjectRows(string table, string field, int guid = -1)
+		private async Task<int> RemoveObjectRows(string table, string field, int guid = -1)
 		{
 			string defaultQuery = $"DELETE FROM `{table}` WHERE `{((guid == -1) ? $"{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)" : $"{field}` = '{guid}'")}";
 
@@ -548,10 +489,13 @@ namespace SPP_LegionV2_Management
 				// Nothing else has matched, so squirt out our default
 				MySqlManager.MySQLQueryToString(defaultQuery, true);
 			}
+
+			await Task.Delay(1);
+			return 0;
 		}
 
 		// Only here for the sake of button unique name
-		public void RetrieveOrphanedCharacters() { RetrieveCharacters(); }
+		public async void RetrieveOrphanedCharacters() { await RetrieveCharacters(); }
 
 		// Incoming reader is from the RemoveOrphanedRows function
 		private void GetGuildMasters(MySqlDataReader reader)
@@ -564,11 +508,37 @@ namespace SPP_LegionV2_Management
 			catch (Exception e) { Console.WriteLine($"GetOrphanedGuildMasters: {e.Message}"); }
 		}
 
+		// This creates a 'reader' to pull account data from the database, using GetAccountsFromSQL as it's processing function
+		public async Task<int> RetrieveAccounts()
+		{
+			if (!CheckSQL() || _accountRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning)
+				return 0;
+
+			_accountRetrieveRunning = true;
+			CharacterStatus = "Collecting Account Info...";
+			// Clear the collection since we're re-using
+			Accounts.Clear();
+
+			// wrap this in a task, waiting for it to complete. This will let the UI update through progress
+			Task t = Task.Run(() =>
+			{
+				MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT `id`,`username`,IFNULL(`battlenet_account`,\"-1\") FROM `legion_auth`.`account`", GetAccountsFromSQL);
+			});
+
+			// Loop until it completes, awaiting each iteration to let the UI update
+			while (!t.IsCompleted) { await Task.Delay(1); }
+
+			CharacterStatus = "Account List Refreshed";
+			_accountRetrieveRunning = false;
+			AccountsTotal = Accounts.Count;
+			return 0;
+		}
+
 		// This creates a 'reader' to pull character data from the database, called from multiple functions
-		public async Task RetrieveCharacters()
+		public async Task<int> RetrieveCharacters()
 		{
 			if (!CheckSQL() || _characterRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning)
-				return;
+				return 0;
 
 			_characterRetrieveRunning = true;
 
@@ -588,6 +558,7 @@ namespace SPP_LegionV2_Management
 			CharactersTotal = Characters.Count;
 			OrphanedCharactersTotal = OrphanedCharacters.Count;
 			_characterRetrieveRunning = false;
+			return 0;
 		}
 
 		// Incoming reader is from the RetrieveAccounts task
