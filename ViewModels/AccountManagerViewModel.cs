@@ -413,6 +413,9 @@ namespace SPP_LegionV2_Management
 				CharacterStatus = $"Removing orphaned database objects - {(int)(0.1f + ((100f * completedItems) / CharacterTableField.CharacterTableFields.Count))}%";
 			}
 
+			// optimize the table. Not supported in InnoDB, but will perform the same sort of thing and shrink the table to release the now-empty space
+			MySqlManager.MySQLQueryToString("OPTIMIZE TABLE `legion_characters`.`item_instance`");
+
 			CharacterStatus = "Finished removing orphaned items";
 			_removingObjects = false;
 		}
@@ -487,8 +490,6 @@ namespace SPP_LegionV2_Management
 				// are listed in the auctionhouse table, otherwise they may be orphaned auctions that the AH code didn't clean up
 				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
 					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `owner_guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)" : $"= '{guid}'")}", true);
-				// optimize the table. Not supported in InnoDB, but will perform the same sort of thing and shrink the table to release the now-empty space
-				MySqlManager.MySQLQueryToString("OPTIMIZE TABLE `legion_characters`.`item_instance`");
 			}
 			else
 			{
