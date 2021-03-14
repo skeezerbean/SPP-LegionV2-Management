@@ -23,7 +23,7 @@ namespace SPP_LegionV2_Management
 			user = GeneralSettingsManager.GeneralSettings.MySQLUser;
 			password = GeneralSettingsManager.GeneralSettings.MySQLPass;
 			port = GeneralSettingsManager.GeneralSettings.MySQLPort;
-			connectionString = String.Format("server={0};port={1};user id={2}; password={3};default command timeout=1800;", server, port, user, password);
+			connectionString = String.Format("server={0};port={1};user id={2}; password={3};default command timeout=3600;", server, port, user, password);
 		}
 
 		public static MySqlDataReader MySQLQuery(string query, Action<MySqlDataReader> loader)

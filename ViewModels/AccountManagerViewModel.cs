@@ -404,6 +404,10 @@ namespace SPP_LegionV2_Management
 			foreach (var entry in CharacterTableField.CharacterTableFields)
 				removalTasks.Add(Task.Run(() => RemoveObjectRows(entry.table, entry.field)));
 
+			// At least alert the user if there are a lot of objects, so they know what to expect
+			if (OrphanedObjectsTotal > 100000)
+				MessageBox.Show("Because you have a large number of orphaned objects, this query may take a while to finish running. Please be patient until it finishes. It could take 1 minute, or could take 30 minutes.");
+
 			// As long as a task hasn't finished, wait here for it
 			while (removalTasks.Count > 0)
 			{
