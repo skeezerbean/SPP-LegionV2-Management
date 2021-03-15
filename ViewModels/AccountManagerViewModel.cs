@@ -435,6 +435,9 @@ namespace SPP_LegionV2_Management
 				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` "
 					+ "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)"));
 
+			if (table.Contains("legion_characters`.`guild_"))
+				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `guildId` NOT IN (SELECT `guildId` FROM `legion_characters`.`guild`)"));
+
 			return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)"));
 		}
 
@@ -489,6 +492,11 @@ namespace SPP_LegionV2_Management
 						}
 					}
 				}
+			}
+			// If a guild ID is no longer existant, clean up orhaned entries in other guild tables
+			else if (guid == -1 && table.Contains("legion_characters`.`guild_"))
+			{
+				MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `guildId` NOT IN (SELECT `guildId` FROM `legion_characters`.`guild`)");
 			}
 			else if (table == "legion_characters`.`item_instance")
 			{
