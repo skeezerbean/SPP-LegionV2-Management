@@ -241,7 +241,7 @@ namespace SPP_LegionV2_Management
 		// Called from button, pass to actual character deletion
 		public async void DeleteSelectedCharacter()
 		{
-			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects)
+			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || SelectedCharacter == null || SelectedCharacter.Guid == 0)
 				return;
 
 			_deleteCharacterRunning = true;
@@ -321,7 +321,7 @@ namespace SPP_LegionV2_Management
 
 		public async void DeleteSelectedAccount()
 		{
-			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects)
+			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects || SelectedAccount == null)
 				return;
 
 			_deleteAccountRunning = true;
@@ -438,8 +438,8 @@ namespace SPP_LegionV2_Management
 					+ "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)"));
 
 			// If we're dealing with any guild tables then check to make sure no orphaned entries pointing to non-existant Guild IDs
-			if (table.Contains("legion_characters`.`guild_"))
-				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `guildId` NOT IN (SELECT `guildId` FROM `legion_characters`.`guild`)"));
+			if (table.Contains("legion_characters`.`guild_") && (field.Contains("guild") || field.Contains("Guild")))
+				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `guildId` FROM `legion_characters`.`guild`)"));
 
 			// Return our default check if not one of the circumstances above
 			return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)"));
@@ -448,7 +448,7 @@ namespace SPP_LegionV2_Management
 		// If our guid is -1 then it's removing orphaned objects. Otherwise it's targetting specific guid to remove
 		private async Task<int> RemoveObjectRows(string table, string field, int guid = -1)
 		{
-			string defaultQuery = $"DELETE FROM `{table}` WHERE `{((guid == -1) ? $"{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)" : $"{field}` = '{guid}'")} LIMIT {((OrphanedRowsLimit > 0) ? $"{OrphanedRowsLimit}" : "100000")}";
+			string defaultQuery = $"DELETE FROM `{table}` WHERE `{((guid == -1) ? $"{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)" : $"{field}` = '{guid}'")}{((OrphanedRowsLimit > 0) ? $" LIMIT {OrphanedRowsLimit}" : "")}";
 
 			// If the character ID matches a guild master, then we need to check if there's a replacement guild member available
 			// There could be multiple matches and need handled 1 at a time. This character ID will get removed from the guild_member
@@ -499,9 +499,11 @@ namespace SPP_LegionV2_Management
 			}
 			// If a guild ID is no longer existant in the guild table,
 			// clean up orhaned entries in other related tables
-			else if (table.Contains("legion_characters`.`guild_"))
+			else if (table.Contains("legion_characters`.`guild_") && (field.Contains("guild") || field.Contains("Guild")))
 			{
-				MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `guildId` NOT IN (SELECT `guildId` FROM `legion_characters`.`guild`)");
+				// if the field name contains 'guild' in some way, then process whether or not the guild ID exists, otherwise
+				// apply our default query to remove character guid rows for the character (or orphaned rows) being removed
+				MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `guildId` FROM `legion_characters`.`guild`)", true);
 			}
 			else if (table == "legion_characters`.`item_instance")
 			{
@@ -509,7 +511,7 @@ namespace SPP_LegionV2_Management
 				// are listed in the auctionhouse table, otherwise they may be orphaned auctions that the AH code didn't clean up
 				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
 					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `owner_guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)" : $"= '{guid}'")}"
-					+ $" LIMIT {((OrphanedRowsLimit > 0) ? $"{OrphanedRowsLimit}" : "100000")}", true);
+					+ $"{((OrphanedRowsLimit > 0) ? $" LIMIT {OrphanedRowsLimit}" : "")}", true);
 			}
 			else
 			{
