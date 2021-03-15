@@ -24,6 +24,8 @@ namespace SPP_LegionV2_Management
 		public BindableCollection<Account> Accounts { get; set; } = new BindableCollection<Account>();
 		public BindableCollection<Character> Characters { get; set; } = new BindableCollection<Character>();
 		public BindableCollection<Character> OrphanedCharacters { get; set; } = new BindableCollection<Character>();
+		public BindableCollection<Character> TempCharacters { get; set; } = new BindableCollection<Character>();
+		public BindableCollection<Character> TempOrphanedCharacters { get; set; } = new BindableCollection<Character>();
 		public Character SelectedCharacter { get; set; } = new Character();
 		public Character OrphanedSelectedCharacter { get; set; } = new Character();
 		public Account SelectedAccount { get; set; }
@@ -556,6 +558,8 @@ namespace SPP_LegionV2_Management
 			//  We're re-using these, so clear before populating again
 			Characters.Clear();
 			OrphanedCharacters.Clear();
+			TempCharacters.Clear();
+			TempOrphanedCharacters.Clear();
 
 			// wrap this in a task, waiting for it to complete. This will let the UI update through progress
 			Task t = Task.Run(() =>
@@ -565,6 +569,10 @@ namespace SPP_LegionV2_Management
 
 			// Loop until it completes, awaiting each iteration to let the UI update
 			while (!t.IsCompleted) { await Task.Delay(1); }
+
+			// Move temp collections to the real ones now that it's finished
+			foreach (var character in TempCharacters) { Characters.Add(character); }
+			foreach (var character in TempOrphanedCharacters) { OrphanedCharacters.Add(character); }
 
 			CharactersTotal = Characters.Count;
 			OrphanedCharactersTotal = OrphanedCharacters.Count;
@@ -614,19 +622,19 @@ namespace SPP_LegionV2_Management
 				string response = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `id` FROM `legion_auth`.`account` WHERE `id`='{character.Account}'),\"-1\")");
 
 				if (response == "-1")
-					OrphanedCharacters.Add(character);
+					TempOrphanedCharacters.Add(character);
 				else
-					Characters.Add(character);
+					TempCharacters.Add(character);
 			}
 			catch (Exception e) { Console.WriteLine($"Error retrieving character info - {e.Message}"); }
 
 			// This checks if the count is divisible by this number, so every xx then it will let the UI update with count totals
 			// instead of every time. In the event of large number of accounts this cuts down on how often the UI pauses to update
-			if ((OrphanedCharacters.Count % 200 == 0 && OrphanedCharacters.Count > 0)
-				|| (Characters.Count % 200 == 0 && Characters.Count > 0))
+			if ((TempOrphanedCharacters.Count % 200 == 0 && TempOrphanedCharacters.Count > 0)
+				|| (TempCharacters.Count % 200 == 0 && TempCharacters.Count > 0))
 			{
-				CharactersTotal = Characters.Count;
-				OrphanedCharactersTotal = OrphanedCharacters.Count;
+				CharactersTotal = TempCharacters.Count;
+				OrphanedCharactersTotal = TempOrphanedCharacters.Count;
 				await Task.Delay(1);
 			}
 		}
