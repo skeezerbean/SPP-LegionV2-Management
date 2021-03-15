@@ -17,6 +17,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.7** - Lots of database handling updates, ability to limit number of database rows to update & removed alert when over 100k, fix guild table processing
+
 **0.0.2.6** - Sped up processing for gathering character data, removing characters/items, added cleanup for guild tables when guild ID no longer exists, increased SQL timeout to 1 hr in the event of extremely large cleanup processes on slow drives & notice for more than 100k orphaned data items
 
 **0.0.2.5** - Cleaned up some code. If you're currently executing a task within the account manager section then trying to start other tasks will be likely ignored until the original task is complete. Fixed exception when Backup Configs folder does not exist
@@ -214,6 +216,8 @@ You can change some character information, and remove orphaned characters, on th
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Account-Manager-OrphanedCharacters.PNG)
 
 
-Use this to search for and remove orphaned objects from the database. These are items belonging to a character that no longer exists in the database, and adds a lot of extra info to be stored that isn't needed. At the time of writing this, it also includes massive amounts of items from the AH Bot, as it doesn't remove items from here when they expire auctions, or when the AHBot buys items if that setting is enabled. On a test machine this was 1.9 million orphaned objects. On the Aurora partner server, it showed over 10 million objects orphaned. This should be corrected in a future patch, but in the mean time you can use this to potentially clean up your server and reduce memory usage. Note, if you have a lot of items it will take a LONG WHILE to finish.
+Use this to search for and remove orphaned objects from the database. These are items belonging to a character that no longer exists in the database, and adds a lot of extra info to be stored that isn't needed. At the time of writing this, it also includes massive amounts of items from the AH Bot, as it doesn't remove items from the item_instance table when auctions expire, or when the AHBot buys items if that setting is enabled. On a test machine this was 1.9 million orphaned objects. On the Aurora partner server, it showed over 10 million objects orphaned. This should be corrected in a future patch (to stop orphaning items), but in the mean time you can use this to potentially clean up your server and reduce memory usage. Note, if you have a lot of items it will take a LONG WHILE to finish.
+
+This tab has also been updated so that you can limit the number of rows being processed in case the query is taking too long (very possible on non-SSD drives). You can continue to re-run the removal of orphaned objects process another set of rows based on your limit. This may be easier to just run some over time to help clean up the database. The default 100,000 should be mostly ok to run, but if your drive/system is slow then this may take a while and need set to something lower.
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/Clean-Orphaned-Objects.PNG)
