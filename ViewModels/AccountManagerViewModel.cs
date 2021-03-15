@@ -52,6 +52,7 @@ namespace SPP_LegionV2_Management
 		// Orphaned Characters
 		public int OrphanedCharactersTotal { get; set; }
 		public int OrphanedOrphanedCharactersTotal { get; set; }
+		public int OrphanedRowsLimit { get; set; } = 500000;
 		public int OrphanedCurrentCharacterGUID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Guid; } }
 		public int OrphanedCurrentCharacterAccountID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Account; } set { OrphanedSelectedCharacter.Account = value; } }
 		public string OrphanedCurrentCharacterName { get { return (OrphanedSelectedCharacter == null) ? string.Empty : OrphanedSelectedCharacter.Name; } set { OrphanedSelectedCharacter.Name = value; } }
@@ -406,10 +407,6 @@ namespace SPP_LegionV2_Management
 			foreach (var entry in CharacterTableField.CharacterTableFields)
 				removalTasks.Add(Task.Run(() => RemoveObjectRows(entry.table, entry.field)));
 
-			// At least alert the user if there are a lot of objects, so they know what to expect
-			if (OrphanedObjectsTotal > 100000)
-				MessageBox.Show("Because you have a large number of orphaned objects, this query may take a while to finish running. Please be patient until it finishes. It could take 1 minute, or could take 30 minutes.");
-
 			// As long as a task hasn't finished, wait here for it
 			while (removalTasks.Count > 0)
 			{
@@ -421,6 +418,11 @@ namespace SPP_LegionV2_Management
 
 			// optimize the table. Not supported in InnoDB, but will perform the same sort of thing and shrink the table to release the now-empty space
 			MySqlManager.MySQLQueryToString("OPTIMIZE TABLE `legion_characters`.`item_instance`");
+
+			// Refresh our total objects
+			OrphanedObjectsTotal = 0;
+			foreach (var entry in CharacterTableField.CharacterTableFields)
+				OrphanedObjectsTotal += GetOrphanedTotalRows(entry.table, entry.field);
 
 			CharacterStatus = "Finished removing orphaned items";
 			_removingObjects = false;
@@ -446,7 +448,7 @@ namespace SPP_LegionV2_Management
 		// If our guid is -1 then it's removing orphaned objects. Otherwise it's targetting specific guid to remove
 		private async Task<int> RemoveObjectRows(string table, string field, int guid = -1)
 		{
-			string defaultQuery = $"DELETE FROM `{table}` WHERE `{((guid == -1) ? $"{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)" : $"{field}` = '{guid}'")}";
+			string defaultQuery = $"DELETE FROM `{table}` WHERE `{((guid == -1) ? $"{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)" : $"{field}` = '{guid}'")} LIMIT {((OrphanedRowsLimit > 0) ? $"{OrphanedRowsLimit}" : "100000")}";
 
 			// If the character ID matches a guild master, then we need to check if there's a replacement guild member available
 			// There could be multiple matches and need handled 1 at a time. This character ID will get removed from the guild_member
@@ -506,7 +508,8 @@ namespace SPP_LegionV2_Management
 				// The guid may be the same as the auctionhouse, so we need to make sure we're not removing any items that
 				// are listed in the auctionhouse table, otherwise they may be orphaned auctions that the AH code didn't clean up
 				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
-					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `owner_guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)" : $"= '{guid}'")}", true);
+					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `owner_guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)" : $"= '{guid}'")}"
+					+ $" LIMIT {((OrphanedRowsLimit > 0) ? $"{OrphanedRowsLimit}" : "100000")}", true);
 			}
 			else
 			{
