@@ -17,7 +17,9 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
-**0.0.2.5** - Cleaned up some code. If you're currently executing a task within the account manager section then trying to start other tasks will be likely ignored until the original task is complete.
+**0.0.2.6** - Sped up processing for gathering character data, removing characters/items, added cleanup for guild tables when guild ID no longer exists, increased SQL timeout to 1 hr in the event of extremely large cleanup processes on slow drives & notice for more than 100k orphaned data items
+
+**0.0.2.5** - Cleaned up some code. If you're currently executing a task within the account manager section then trying to start other tasks will be likely ignored until the original task is complete. Fixed exception when Backup Configs folder does not exist
 
 **0.0.2.4** - This is a massive change, finishing up the logic for handling orphaned objects in the characters table. Each character has an ID, and this searches for objects without a matching character associated with them. This enables you can cleanup much of the character database, remove orphaned characters (characters in the datbase that don't have a existing account), delete accounts. This also handles logic if the character being deleted is a guild master and tries to find a highest-ranking non-orphaned guild member to replace them, or to remove the guild entry if there are no available members. This resolves a crash if that isn't handled when starting the world server as it checks on guilds.
 
