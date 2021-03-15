@@ -19,6 +19,7 @@ namespace SPP_LegionV2_Management
 		private bool _deleteAccountRunning = false;
 		private bool _deleteCharacterRunning = false;
 		private bool _removingObjects = false;
+		private bool _gettingObjects = false;
 		private BindableCollection<int> _guildMasters = new BindableCollection<int>();
 
 		public BindableCollection<Account> Accounts { get; set; } = new BindableCollection<Account>();
@@ -379,21 +380,38 @@ namespace SPP_LegionV2_Management
 			_deleteAccountRunning = false;
 		}
 
-		// Check the DB against our list, see if any orphaned objects exist. If so, remove
-		public async void RemoveOrphanedItems()
+		public async Task GetOrphanedData()
 		{
-			if (!CheckSQL() || _removingObjects || _deleteAccountRunning || _deleteCharacterRunning)
+			if (!CheckSQL() || _removingObjects || _deleteAccountRunning || _deleteCharacterRunning || _gettingObjects)
 				return;
 
-			int completedItems = 0;
-			BindableCollection<Task<int>> removalTasks = new BindableCollection<Task<int>>();
-
-			_removingObjects = true;
+			_gettingObjects = true;
 			OrphanedObjectsTotal = 0;
 			CharacterStatus = "Gathering Data...";
 
 			foreach (var entry in CharacterTableField.CharacterTableFields)
+			{
 				OrphanedObjectsTotal += GetOrphanedTotalRows(entry.table, entry.field);
+				await Task.Delay(1);
+			}
+
+			CharacterStatus = "Finished";
+			_gettingObjects = false;
+
+			return;
+		}
+
+		// Check the DB against our list, see if any orphaned objects exist. If so, remove
+		public async void RemoveOrphanedItems()
+		{
+			if (!CheckSQL() || _removingObjects || _deleteAccountRunning || _deleteCharacterRunning || _gettingObjects)
+				return;
+
+			Task data = Task.Run(() => GetOrphanedData());
+			int completedItems = 0;
+			BindableCollection<Task<int>> removalTasks = new BindableCollection<Task<int>>();
+			while (!data.IsCompleted) { await Task.Delay(1); }
+			_removingObjects = true;
 
 			// If none, skip out
 			if (OrphanedObjectsTotal == 0)

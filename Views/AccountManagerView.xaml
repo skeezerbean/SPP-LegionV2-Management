@@ -215,7 +215,9 @@
 					</Grid.RowDefinitions>
 
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-
+						<Button x:Name="GetOrphanedData" Content="Check for Orphaned Objects" Margin="5" Padding="5"
+							ToolTip="Calculate the orphaned objects" />
+						
 						<Button x:Name="RemoveOrphanedItems" Content="Remove all Orphaned Objects" Margin="5" Padding="5"
 							ToolTip="Delete the orphaned objects (may take a while)" />
 					</StackPanel>
