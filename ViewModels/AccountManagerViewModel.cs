@@ -461,7 +461,9 @@ namespace SPP_LegionV2_Management
 			// If the orphaned items in item_instance match an item in the auctionhouse, then we need to ignore
 			if (table == "legion_characters`.`item_instance")
 				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` "
-					+ "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)"));
+					+ "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) "
+					+ "AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`) "
+					+ "AND `guid` NOT IN (SELECT `item_guid` FROM `legion_characters`.`guild_bank_item`)"));
 
 			// If we're dealing with any guild tables then check to make sure no orphaned entries pointing to non-existant Guild IDs
 			if (table.Contains("legion_characters`.`guild_") && (field.Contains("guild") || field.Contains("Guild")))
