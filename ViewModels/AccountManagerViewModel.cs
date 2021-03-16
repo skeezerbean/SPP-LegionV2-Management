@@ -536,7 +536,7 @@ namespace SPP_LegionV2_Management
 				// The guid may be the same as the auctionhouse, so we need to make sure we're not removing any items that
 				// are listed in the auctionhouse table, otherwise they may be orphaned auctions that the AH code didn't clean up
 				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
-					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `owner_guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`)" : $"= '{guid}'")}"
+					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`) AND `guid` NOT IN (SELECT `item_guid` FROM `legion_characters`.`guild_bank_item`)" : $"= '{guid}'")}"
 					+ $"{((OrphanedRowsLimit > 0) ? $" LIMIT {OrphanedRowsLimit}" : "")}", true);
 			}
 			else
