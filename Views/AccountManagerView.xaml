@@ -235,8 +235,17 @@
 						</StackPanel>
 						<StackPanel Margin="10">
 							<TextBlock x:Name="OrphanedObjectsTotal" />
-							<TextBox x:Name="OrphanedRowsLimit" Width="70" HorizontalAlignment="Left"
-								ToolTip="This limits how many database rows to process at once. Set to 0 to process all. If you have a large number of orphaned objects then you may want to set this to 500,000 or less to process smaller groups at a time, especially if you don't have an SSD" />
+							<TextBox x:Name="OrphanedRowsLimit" Width="70" HorizontalAlignment="Left">
+								<TextBox.ToolTip>
+									<TextBlock>
+										This limits how many database rows to process at once. Set to 0 to process all.
+										<LineBreak />
+										If you have a large number of orphaned objects then you may want to set this to 500,000
+										<LineBreak />
+										or less to process smaller groups at a time, especially if you don't have an SSD
+									</TextBlock>
+								</TextBox.ToolTip>
+							</TextBox>
 							<TextBlock x:Name="OrphanedObjectsStatus" />
 						</StackPanel>
 					</StackPanel>
