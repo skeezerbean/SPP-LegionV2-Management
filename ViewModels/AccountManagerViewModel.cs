@@ -409,9 +409,14 @@ namespace SPP_LegionV2_Management
 
 			Task data = Task.Run(() => GetOrphanedData());
 			int completedItems = 0;
-			BindableCollection<Task<int>> removalTasks = new BindableCollection<Task<int>>();
-			while (!data.IsCompleted) { await Task.Delay(1); }
+			// give a moment for GetOrphanedData to start, then set our flag to block other buttons until this is done
+			await Task.Delay(100);
 			_removingObjects = true;
+
+			BindableCollection<Task<int>> removalTasks = new BindableCollection<Task<int>>();
+
+			// Wait until GetOrphanedData returns
+			while (!data.IsCompleted) { await Task.Delay(1); }
 
 			// If none, skip out
 			if (OrphanedObjectsTotal == 0)
@@ -432,15 +437,18 @@ namespace SPP_LegionV2_Management
 				removalTasks.Remove(finishedTask);
 				completedItems++;
 				CharacterStatus = $"Removing orphaned database objects - {(int)(0.1f + ((100f * completedItems) / CharacterTableField.CharacterTableFields.Count))}%";
+				await Task.Delay(1);
 			}
-
-			// optimize the table. Not supported in InnoDB, but will perform the same sort of thing and shrink the table to release the now-empty space
-			MySqlManager.MySQLQueryToString("OPTIMIZE TABLE `legion_characters`.`item_instance`");
 
 			// Refresh our total objects
 			OrphanedObjectsTotal = 0;
 			foreach (var entry in CharacterTableField.CharacterTableFields)
 				OrphanedObjectsTotal += GetOrphanedTotalRows(entry.table, entry.field);
+
+			// optimize the table. Not supported in InnoDB, but will perform the same sort of thing and shrink the table to release the now-empty space
+			// Only handle this when the objects are fully cleaned, or will freeze the app while it does this if there is a lot of data
+			if (OrphanedObjectsTotal == 0)
+				MySqlManager.MySQLQueryToString("OPTIMIZE TABLE `legion_characters`.`item_instance`");
 
 			CharacterStatus = "Finished removing orphaned items";
 			_removingObjects = false;
@@ -558,7 +566,7 @@ namespace SPP_LegionV2_Management
 		// This creates a 'reader' to pull account data from the database, using GetAccountsFromSQL as it's processing function
 		public async Task<int> RetrieveAccounts()
 		{
-			if (!CheckSQL() || _accountRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning)
+			if (!CheckSQL() || _accountRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects)
 				return 0;
 
 			_accountRetrieveRunning = true;
@@ -584,7 +592,7 @@ namespace SPP_LegionV2_Management
 		// This creates a 'reader' to pull character data from the database, called from multiple functions
 		public async Task<int> RetrieveCharacters()
 		{
-			if (!CheckSQL() || _characterRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning)
+			if (!CheckSQL() || _characterRetrieveRunning || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects)
 				return 0;
 
 			_characterRetrieveRunning = true;
