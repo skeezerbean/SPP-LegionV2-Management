@@ -19,6 +19,7 @@ namespace SPP_LegionV2_Management
 	{
 		// IDialogCoordinator is for metro message boxes
 		private readonly IDialogCoordinator _dialogCoordinator;
+		private bool _exportRunning = false;
 
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
@@ -297,7 +298,7 @@ namespace SPP_LegionV2_Management
 		}
 
 		// Take a collection, parse it out and save to a file path
-		public async void BuildConfFile(BindableCollection<ConfigEntry> collection, string path)
+		public async Task BuildConfFile(BindableCollection<ConfigEntry> collection, string path)
 		{
 			int count = 0;
 			string tmpstr = string.Empty;
@@ -338,8 +339,15 @@ namespace SPP_LegionV2_Management
 		// We're going to take the WOW config file and save, as well as
 		// bnetserver.conf and worldserver.conf files based on our settings
 		// in the current collections
-		public void SaveConfig()
+		public async void SaveConfig()
 		{
+			// Don't run if already running
+			if (_exportRunning)
+				return;
+
+			_exportRunning = true;
+			Task build = null;
+
 			// Make sure our conf file locations are up to date in case folder changed in settings
 			FindConfigPaths();
 
@@ -356,7 +364,7 @@ namespace SPP_LegionV2_Management
 					//this if the bnet collection has something in it
 					Log("Updating WoW Client config portal entry");
 					UpdateWowConfig();
-					BuildConfFile(BnetCollection, BnetConfFile);
+					build = Task.Run( async () => await BuildConfFile(BnetCollection, BnetConfFile));
 
 					// Since we have a valid bnet collection, grab external address and
 					// build, push to DB realm entry while we're here
@@ -378,8 +386,10 @@ namespace SPP_LegionV2_Management
 				if (WorldCollection == null || WorldCollection.Count == 0)
 					Log("WORLD Export -> Current settings are empty");
 				else
-					BuildConfFile(WorldCollection, WorldConfFile);
+					build = Task.Run( async () => await BuildConfFile(WorldCollection, WorldConfFile));
 			}
+			while (!build.IsCompleted) { await Task.Delay(1); }
+			_exportRunning = false;
 		}
 
 		// Take our wow config.wtf file and update the SET portal entry
