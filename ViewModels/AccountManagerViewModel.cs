@@ -30,6 +30,15 @@ namespace SPP_LegionV2_Management
 		public Character SelectedCharacter { get; set; } = new Character();
 		public Character OrphanedSelectedCharacter { get; set; } = new Character();
 		public Account SelectedAccount { get; set; }
+		public string LimitRowsToolTip
+		{
+			get
+			{
+				return "This limits how many database rows to process at once. Set to 0 to process all.\n"
+					+ "If you have a large number of orphaned objects then you may want to set this to 500,000\n"
+					+ "or less to process smaller groups at a time, especially if you don't have an SSD";
+			}
+		}
 
 		// Accounts
 		public int AccountsTotal { get; set; }
