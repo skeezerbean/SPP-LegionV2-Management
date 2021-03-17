@@ -497,14 +497,20 @@ namespace SPP_LegionV2_Management
 					{
 						// Get a count of members for this guild, minus guildmaster, and has a match in characters table (non-orphaned)
 						int guildID = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `guildid` FROM `legion_characters`.`guild` WHERE `leaderguid` = '{guildmaster}'), \"-1\")"));
-						int membercount = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `legion_characters`.`guild_member` WHERE `guildid` = '{guildID}' AND NOT 'guid' = '{guildmaster}' AND `guid` IN (SELECT `guid` FROM `legion_characters`.`characters`)"));
+						int membercount = Int32.Parse(MySqlManager.MySQLQueryToString("SELECT COUNT(*) FROM `legion_characters`.`guild_member` "
+							+ $"WHERE `guildid` = '{guildID}' "
+							+ $"AND NOT 'guid' = '{guildmaster}' "
+							+ "AND `guid` IN (SELECT `guid` FROM `legion_characters`.`characters`)"));
 
 						if (membercount > 0)
 						{
 							// We need to find a replacement guildmaster, and this will return the first match for this guild ID
 							// in ranking order, so whatever guid returns first as the highest rank, congrats. You're the leader
 							// and Uncle Ben will lecture you about great power and responsbility.
-							int newGM = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `guid` FROM `legion_characters`.`guild_member` WHERE `guildid` = '{guildID}' AND NOT `guid` = '{guildmaster}' ORDER BY `rank` LIMIT 1), \"-1\")"));
+							int newGM = Int32.Parse(MySqlManager.MySQLQueryToString("SELECT IFNULL((SELECT `guid` FROM `legion_characters`.`guild_member` "
+								+ $"WHERE `guildid` = '{guildID}' "
+								+ $"AND NOT `guid` = '{guildmaster}' "
+								+ "ORDER BY `rank` LIMIT 1), \"-1\")"));
 
 							// Now update the guild leaderguid record with the new guildmaster
 							if (newGM == -1)
@@ -535,10 +541,15 @@ namespace SPP_LegionV2_Management
 			}
 			else if (table == "legion_characters`.`item_instance")
 			{
-				// The guid may be the same as the auctionhouse, so we need to make sure we're not removing any items that
-				// are listed in the auctionhouse table, otherwise they may be orphaned auctions that the AH code didn't clean up
+				// Setting up temp string to make changes/readability easier down the road
+				string tmpquery = "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) "
+					+ "AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`) "
+					+ "AND `guid` NOT IN (SELECT `item_guid` FROM `legion_characters`.`guild_bank_item`)";
+
+				// The guid may be the same as the auctionhouse or guild bank items, so we need to make sure we're not removing any items that
+				// are listed in the those tables. Otherwise they may be orphaned auctions that the AH code didn't clean up, need removed
 				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
-					+ $"{((guid == -1) ? "NOT IN (SELECT `guid` FROM `legion_characters`.`characters`) AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`) AND `guid` NOT IN (SELECT `item_guid` FROM `legion_characters`.`guild_bank_item`)" : $"= '{guid}'")}"
+					+ $"{((guid == -1) ? tmpquery : $"= '{guid}'")}"
 					+ $"{((OrphanedRowsLimit > 0) ? $" LIMIT {OrphanedRowsLimit}" : "")}", true);
 			}
 			else
