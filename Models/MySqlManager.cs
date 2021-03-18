@@ -75,7 +75,10 @@ namespace SPP_LegionV2_Management
 							using (var reader = cmd.ExecuteReader())
 							{
 								while (reader.Read()) { }
-								response = reader.GetString(0);
+								if (!reader.IsDBNull(0))
+									response = reader.GetString(0);
+								else
+									response = string.Empty;
 							}
 						}
 					}

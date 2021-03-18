@@ -64,7 +64,7 @@ namespace SPP_LegionV2_Management
 			new CharacterTableField() { table = "legion_characters`.`character_queststatus", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_queststatus_daily", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_queststatus_objectives", field = "guid" },
-			new CharacterTableField() { table = "legion_characters`.`character_queststatus_rewarded", field = "guid" },
+			new CharacterTableField() { table = "legion_characters`.`character_queststatus_rewarded", field = "account" },
 			new CharacterTableField() { table = "legion_characters`.`character_queststatus_seasonal", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_queststatus_weekly", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_queststatus_world", field = "guid" },
