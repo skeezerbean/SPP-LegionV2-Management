@@ -465,8 +465,8 @@ namespace SPP_LegionV2_Management
 					+ "AND `guid` NOT IN (SELECT `itemguid` FROM `legion_characters`.`auctionhouse`) "
 					+ "AND `guid` NOT IN (SELECT `item_guid` FROM `legion_characters`.`guild_bank_item`)"));
 
-			// Add handling for character_queststatus_rewarded
-			if (table == "legion_characters`.`character_queststatus_rewarded")
+			// Add handling for character_queststatus tables
+			if (table.Contains("legion_characters`.`character_queststatus"))
 				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)"));
 
 			// If we're dealing with any guild tables then check to make sure no orphaned entries pointing to non-existant Guild IDs
@@ -556,8 +556,8 @@ namespace SPP_LegionV2_Management
 					+ $"{((guid == -1) ? tmpquery : $"= '{guid}'")}"
 					+ $"{((OrphanedRowsLimit > 0) ? $" LIMIT {OrphanedRowsLimit}" : "")}", true);
 			}
-			// Add handling for character_queststatus_rewarded
-			else if (table == "legion_characters`.`character_queststatus_rewarded")
+			// Add handling for character_queststatus tables
+			else if (table.Contains("legion_characters`.`character_queststatus"))
 			{
 				// Some entries list id 0 for the whole account, this only removes if the account doesn't exist
 				return Int32.Parse(MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)"));
