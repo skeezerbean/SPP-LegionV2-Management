@@ -412,11 +412,14 @@ namespace SPP_LegionV2_Management
 						// and if there's something wrong with the file then nothing
 						// would change anyways
 						if (item.Contains("SET portal"))
+						{
+							Log($"WoW Client config.wtf existing entry is [{item}]");
 							foreach (var entry in BnetCollection)
 							{
 								if (entry.Name.Contains("LoginREST.ExternalAddress"))
 									tmpstr += $"SET portal \"{entry.Value}\"\n";
 							}
+						}
 						else
 							// otherwise pass it along, dump blank lines
 							if (item.Length > 2)
