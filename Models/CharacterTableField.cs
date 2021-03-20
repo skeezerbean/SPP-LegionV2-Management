@@ -42,7 +42,7 @@ namespace SPP_LegionV2_Management
 
 			// Disabling this until I know more
 			//new CharacterTableField() { table = "legion_characters`.`character_donate_service", field = "guid" },
-			//new CharacterTableField() { table = "legion_characters`.`character_equipmentsets", field = "guid" },
+			new CharacterTableField() { table = "legion_characters`.`character_equipmentsets", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_feed_log", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_garrison", field = "CharacterGuid" },
 			new CharacterTableField() { table = "legion_characters`.`character_garrison_blueprints", field = "guid" },
@@ -74,7 +74,7 @@ namespace SPP_LegionV2_Management
 			new CharacterTableField() { table = "legion_characters`.`character_rates", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_rename", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_reputation", field = "guid" },
-			new CharacterTableField() { table = "legion_characters`.`character_reward", field = "guid" },
+			new CharacterTableField() { table = "legion_characters`.`character_reward", field = "owner_guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_share", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_skills", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`character_social", field = "guid" },
@@ -117,7 +117,7 @@ namespace SPP_LegionV2_Management
 			new CharacterTableField() { table = "legion_characters`.`log_store_item", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`magazine", field = "guid" },
 			new CharacterTableField() { table = "legion_characters`.`mail", field = "receiver" },
-			new CharacterTableField() { table = "legion_characters`.`mailbox_queue", field = "sender_guid" },
+			new CharacterTableField() { table = "legion_characters`.`mailbox_queue", field = "receiver_guid" },
 			new CharacterTableField() { table = "legion_characters`.`mail_items", field = "receiver" },
 			new CharacterTableField() { table = "legion_characters`.`petition", field = "ownerguid" },
 			new CharacterTableField() { table = "legion_characters`.`petition_sign", field = "ownerguid" },
