@@ -17,6 +17,10 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.9** -  Some cleanup, add some orphaned account checks, fixed some potential crashes, add orpaned object detail list of items found
+
+**0.0.2.8** - Fix some SQL/exceptions, log previous config.wtf portal entry when exporting config, enable orphaned object removal
+
 **0.0.2.7** - Lots of database handling updates, ability to limit number of database rows to update & removed alert when over 100k, fix guild table processing
 
 **0.0.2.6** - Sped up processing for gathering character data, removing characters/items, added cleanup for guild tables when guild ID no longer exists, increased SQL timeout to 1 hr in the event of extremely large cleanup processes on slow drives & notice for more than 100k orphaned data items
