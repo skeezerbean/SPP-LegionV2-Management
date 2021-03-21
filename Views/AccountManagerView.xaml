@@ -205,29 +205,26 @@
 
 			<TabItem Header="Clean Up Tools" Margin="1">
 				<Grid>
-					<Grid.ColumnDefinitions>
+					<!--<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="auto" />
 						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="*" />
-					</Grid.ColumnDefinitions>
+					</Grid.ColumnDefinitions>-->
 					<Grid.RowDefinitions>
 						<RowDefinition Height="40" />
+						<RowDefinition Height="auto" />
 						<RowDefinition Height="*" />
 					</Grid.RowDefinitions>
 
-					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" >
 						<Button x:Name="GetOrphanedData" Content="Check for Orphaned Objects" Margin="5" Padding="5"
 							ToolTip="Calculate the orphaned objects" />
 						
 						<Button x:Name="RemoveOrphanedItems" Content="Remove all Orphaned Objects" Margin="5" Padding="5"
 							ToolTip="Delete the orphaned objects (may take a while)" />
-					</StackPanel>
+					</WrapPanel>
 
-					<!-- Buttons for top-right side -->
-					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
-					</StackPanel>
-
-					<!--Right side, list details of selected character-->
-					<StackPanel Orientation="Horizontal" Grid.Column="0" Grid.Row="1" Margin="10">
+					<!-- Orphaned Main -->
+					<StackPanel Orientation="Horizontal" Grid.Row="1" Margin="10">
 						<StackPanel Margin="10">
 							<TextBlock Text="Orphaned Objects:" />
 							<TextBlock Text="Limit Rows To Process:" />
@@ -249,6 +246,22 @@
 							<TextBlock x:Name="OrphanedObjectsStatus" />
 						</StackPanel>
 					</StackPanel>
+					
+					<!-- Orphaned Details -->
+					<Border BorderBrush="Black" BorderThickness="1" Margin="1" Grid.Row="2">
+						<Grid>
+							<Grid.RowDefinitions>
+								<RowDefinition Height="auto" />
+								<RowDefinition Height="*" />
+							</Grid.RowDefinitions>
+							<TextBlock Text="Orphaned Objects Details:" Margin="5" />
+							<Border BorderBrush="Black" BorderThickness="1" Grid.Row="1" >
+								<ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+									<TextBlock x:Name="OrphanedRowsDetail" Margin="5"/>
+								</ScrollViewer>
+							</Border>
+						</Grid>
+					</Border>
 				</Grid>
 			</TabItem>
 		</TabControl>

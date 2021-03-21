@@ -64,6 +64,7 @@ namespace SPP_LegionV2_Management
 		public BindableCollection<int> OrphanedIDs = new BindableCollection<int>();
 		public int OrphanedIDsTotal { get; set; }
 		public string OrphanedObjectsStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
+		public string OrphanedRowsDetail { get; set; }
 
 		// IDialogCoordinator is part of Metro, for dialog handling in the view model
 		public AccountManagerViewModel(IDialogCoordinator instance)
@@ -109,7 +110,7 @@ namespace SPP_LegionV2_Management
 					{
 						// Changing BattleNet Email means the password hash MUST be updated, or this account will no longer be able
 						// to login. The password box on the account page needed filled out. If not, we alert and ignore the
-						// BattleNet Email change. With the Controls/Externsions classes, we're able to keep the password in a
+						// BattleNet Email change. With the Controls/Extensions classes, we're able to keep the password in a
 						// SecureString until passing directly into the generation of the hash
 						if (account.SecurePassword != null && account.SecurePassword.Length > 0)
 						{
@@ -387,13 +388,35 @@ namespace SPP_LegionV2_Management
 
 			_gettingObjects = true;
 			OrphanedObjectsTotal = 0;
+			OrphanedRowsDetail = "";
 			CharacterStatus = "Gathering Data...";
+			string tmpStatus = "";
+			int tmpCount = 0;
 
+			// Get our total orphaned objects for each table
 			foreach (var entry in CharacterTableField.CharacterTableFields)
 			{
-				OrphanedObjectsTotal += GetOrphanedTotalRows(entry.table, entry.field);
+				tmpCount = GetOrphanedTotalRows(entry.table, entry.field);
+
+				// If we have at least 1 orphaned object, then we can update our total and status
+				if (tmpCount > 0)
+				{
+					// the table name will have 2 ` characters, split into 3 parts
+					// [first] [.] [third]
+					string[] phrase = entry.table.Split('`');
+
+					// This pulls the actual table name, minus database name
+					string table = phrase[2];
+
+					tmpStatus += $"Table: [{table}] -> {tmpCount} items\n";
+					OrphanedObjectsTotal += tmpCount;
+				}
+
 				await Task.Delay(1);
 			}
+
+			// push the tmpStatus to our status string, trim ending whitespace
+			OrphanedRowsDetail += tmpStatus.TrimEnd();
 
 			CharacterStatus = "Finished";
 			_gettingObjects = false;
@@ -440,10 +463,11 @@ namespace SPP_LegionV2_Management
 				await Task.Delay(1);
 			}
 
+			_removingObjects = false;
+
 			// Refresh our total objects
-			OrphanedObjectsTotal = 0;
-			foreach (var entry in CharacterTableField.CharacterTableFields)
-				OrphanedObjectsTotal += GetOrphanedTotalRows(entry.table, entry.field);
+			data = Task.Run(() => GetOrphanedData());
+			while (!data.IsCompleted) { await Task.Delay(1); }
 
 			// optimize the table. Not supported in InnoDB, but will perform the same sort of thing and shrink the table to release the now-empty space
 			// Only handle this when the objects are fully cleaned, or will freeze the app while it does this if there is a lot of data
@@ -451,7 +475,6 @@ namespace SPP_LegionV2_Management
 				MySqlManager.MySQLQueryToString("OPTIMIZE TABLE `legion_characters`.`item_instance`");
 
 			CharacterStatus = "Finished removing orphaned items";
-			_removingObjects = false;
 		}
 
 		// Get our of orphaned objects, anything belonging to a character ID that doesn't exist in the
@@ -472,6 +495,17 @@ namespace SPP_LegionV2_Management
 			// If we're dealing with any guild tables then check to make sure no orphaned entries pointing to non-existant Guild IDs
 			if (table.Contains("legion_characters`.`guild_") && (field.Contains("guild") || field.Contains("Guild")))
 				return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `guildId` FROM `legion_characters`.`guild`)"));
+
+			// Handle account related tables
+			if (table.Contains("legion_characters`.`account_"))
+			{
+				if (table.Contains("legion_characters`.`account_item_favorite_appearances"))
+					// This table refers to battlenet accounts rather than normal account id.
+					return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`battlenet_accounts`)"));
+				else
+					// All other account related check with auth accounts table for a match
+					return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)"));
+			}
 
 			// Return our default check if not one of the circumstances above
 			return Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT COUNT(*) FROM `{table}` WHERE `{field}` NOT IN (SELECT `guid` FROM `legion_characters`.`characters`)"));
@@ -560,7 +594,17 @@ namespace SPP_LegionV2_Management
 			else if (table.Contains("legion_characters`.`character_queststatus"))
 			{
 				// Some entries list id 0 for the whole account, this only removes if the account doesn't exist
-				return Int32.Parse(MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)"));
+				MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)", true);
+			}
+			// Handle account related tables
+			if (table.Contains("legion_characters`.`account_"))
+			{
+				if (table.Contains("legion_characters`.`account_item_favorite_appearances"))
+					// This table refers to battlenet accounts rather than normal account id.
+					MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`battlenet_accounts`)", true);
+				else
+					// All other account related check with auth accounts table for a match
+					MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)", true);
 			}
 			else
 			{

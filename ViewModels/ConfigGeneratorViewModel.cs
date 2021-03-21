@@ -24,14 +24,12 @@ namespace SPP_LegionV2_Management
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
 		public BindableCollection<ConfigEntry> WorldCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
-
 		public BindableCollection<ConfigEntry> BnetCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
 
 		// stores the filesystem path to the files
 		public string WowConfigFile { get; set; } = string.Empty;
-
 		public string BnetConfFile { get; set; } = string.Empty;
 		public string WorldConfFile { get; set; } = string.Empty;
 
@@ -43,7 +41,6 @@ namespace SPP_LegionV2_Management
 
 		// For search/filtering
 		public ICollectionView WorldView { get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
-
 		public ICollectionView BnetView { get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
 		private string _SearchBox = "";
 
@@ -80,8 +77,11 @@ namespace SPP_LegionV2_Management
 			GeneralSettingsManager.LoadGeneralSettings();
 
 			LoadSettings();
+
+			// Refreshes the view for the datagrids
 			RefreshViews();
 
+			// Sets up a view for the datagrids based on the filter/searchbox
 			WorldView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
 			BnetView.Filter = new Predicate<object>(o => Filter(o as ConfigEntry));
 		}
@@ -413,7 +413,7 @@ namespace SPP_LegionV2_Management
 						// would change anyways
 						if (item.Contains("SET portal"))
 						{
-							Log($"WoW Client config.wtf existing entry is [{item}]");
+							Log($"WoW Client config.wtf previous 'SET portal' entry is [{item}]");
 							foreach (var entry in BnetCollection)
 							{
 								if (entry.Name.Contains("LoginREST.ExternalAddress"))
