@@ -42,7 +42,8 @@ namespace SPP_LegionV2_Management
 		public int CurrentBattleNetID { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
 		public SecureString SecurePassword { get { return (SelectedAccount == null) ? new SecureString() : SelectedAccount.SecurePassword; } set { SelectedAccount.SecurePassword = value; } }
 		public string AccountStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
-		public bool CurrentRareBattlePets { get { return (SelectedAccount.RareBattlePets == null) ? false : SelectedAccount.RareBattlePets; } set { SelectedAccount.RareBattlePets = value; } }
+		public bool CurrentRareBattlePets { get { return (SelectedAccount == null) ? false : SelectedAccount.RareBattlePets; } set { SelectedAccount.RareBattlePets = value; } }
+		public bool CurrentXPBattlePets { get { return (SelectedAccount == null) ? false : SelectedAccount.XPBattlePets; } set { SelectedAccount.XPBattlePets = value; } }
 
 		// Characters
 		public int CharactersTotal { get; set; }
@@ -170,10 +171,16 @@ namespace SPP_LegionV2_Management
 				else if (response != "-1" && (account.GMLevel != Int32.Parse(response)))
 					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing GM status from {response} to {account.GMLevel} - "
 						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account_access` SET `gmlevel`='{account.GMLevel}' WHERE `id`='{account.ID}'", true));
+
 				// If BattlePets checkbox was selected, zap all BattlePets for this account to rare quality
 				if (account.RareBattlePets)
 					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing all BattlePets to rare quality - "
 						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`account_battlepet` SET `quality`='3' WHERE `account`='{account.ID}'", true));
+
+				// If BattlePets checkbox was selected, zap all BattlePets for this account to rare quality
+				if (account.XPBattlePets)
+					MessageBox.Show($"Account [{account.ID}({account.Username})] current XP to 2000 for all BattlePets - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`account_battlepet` SET `xp`='2000' WHERE `account`='{account.ID}'", true));
 			}
 
 			// now that things have been updated, refresh our list

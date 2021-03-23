@@ -38,13 +38,15 @@
 				<!-- Status boxes for server config, client config, SQL access -->
 				<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" DockPanel.Dock="Top">
 					<TextBlock Text="Server Config:" Margin="5" />
-					<TextBlock x:Name="ServerConfigStatus" Margin="0,5,15,5" />
+					<TextBlock x:Name="ServerConfigStatus" Margin="0,5,15,5" FontWeight="Bold" />
 					<TextBlock Text="Client Config:" Margin="5" />
-					<TextBlock x:Name="ClientConfigStatus" Margin="0,5,15,5" />
+					<TextBlock x:Name="ClientConfigStatus" Margin="0,5,15,5" FontWeight="Bold" />
 					<TextBlock Text="Database:" Margin="5" />
-					<TextBlock x:Name="SQLConnectionStatus" Margin="0,5,15,5" />
-					<TextBlock Text="MDic banged Thordekk's mom:" Margin="5" />
-					<TextBlock Text="True" Margin="0,5,5,5" />
+					<TextBlock x:Name="SQLConnectionStatus" Margin="0,5,15,5" FontWeight="Bold" />
+				</WrapPanel>
+				<WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
+					<TextBlock Text="MDic banged Varjgard/Thordekk/ZGN's mom:" Margin="5" />
+					<TextBlock Text="True" Margin="0,5,5,5" FontWeight="Bold" />
 				</WrapPanel>
 
 				<!-- ActiveItem is Caliburn, marks this as the active child form -->

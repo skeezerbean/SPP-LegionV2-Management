@@ -12,6 +12,7 @@ namespace SPP_LegionV2_Management
 		public int GMLevel { get; set; } // gmlevel in account_access
 		public SecureString SecurePassword { get; set; } // temporarily store encrypted password if being updated
 		public bool RareBattlePets { get; set; } // temp choice in selected account settings
+		public bool XPBattlePets { get; set; } // temp choice in selected account settings
 
 		public Account()
 		{

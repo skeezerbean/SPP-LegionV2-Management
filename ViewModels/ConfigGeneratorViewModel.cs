@@ -704,7 +704,7 @@ namespace SPP_LegionV2_Management
 					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n\n";
 				}
 				else
-					result += $"Game.Build.Version [{buildFromDB}] numbers match, this is good!\n\n";
+					result += $"Good - Game.Build.Version [{buildFromDB}] numbers match\n\n";
 
 				// Compare IP bindings for listening - these really never need to change
 				if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
@@ -714,7 +714,7 @@ namespace SPP_LegionV2_Management
 					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n\n";
 				}
 				else
-					result += $"BindIP settings match [{worldBindIP}] and are set properly.\n\n";
+					result += $"Good - BindIP settings match [{worldBindIP}] and are set properly.\n\n";
 
 				// Gather WoW portal IP from config.wtf
 				if (File.Exists(WowConfigFile) == false)
@@ -751,7 +751,7 @@ namespace SPP_LegionV2_Management
 					result += "Alert - All of these addresses should match. Use the \"Set IP\" button to set.\n\n";
 				}
 				else
-					result += $"IP settings for hosting all match [{addressFromDB}], this is good!\n\n";
+					result += $"Good - IP settings for hosting all match [{addressFromDB}]\n\n";
 
 				// Check the local (not external hosting) IP settings. These don't need to change from 127.0.0.1 (localhost)
 				if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))

@@ -65,6 +65,7 @@
 							<TextBlock Text="Selected BattleCoins:" Margin="1" />
 							<TextBlock Text="Selected Account GM Level:" Margin="1" />
 							<TextBlock Text="Account BattlePets to Rare?" Margin="1" />
+							<TextBlock Text="Account BattlePets XP bump?" Margin="1" />
 							<TextBlock Text="Status:" Margin="1" />
 						</StackPanel>
 						<StackPanel Margin="10">
@@ -82,6 +83,17 @@
 								ToolTip="GM Level set to -1 or 0 to disable, or between 1 and 6" />
 							<CheckBox x:Name="CurrentRareBattlePets" Margin="2" HorizontalAlignment="Left"
 								ToolTip="Checking this box, and hitting Apply, changes all CURRENT BattlePets on this account to rare quality"/>
+							<CheckBox x:Name="CurrentXPBattlePets" Margin="2" HorizontalAlignment="Left" >
+								<CheckBox.ToolTip>
+									<TextBlock>
+										Checking this box, and hitting Apply, changes all CURRENT BattlePets on this account
+										<LineBreak />
+										to have 2000 xp for their current level. Some will be boosted over for a few levels and
+										<LineBreak />
+										easy to level up through battles. The server system may cap the xp overflow for lower pets
+									</TextBlock>
+								</CheckBox.ToolTip>
+							</CheckBox>
 							<TextBlock x:Name="AccountStatus" />
 						</StackPanel>
 					</StackPanel>
