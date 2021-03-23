@@ -42,6 +42,7 @@ namespace SPP_LegionV2_Management
 		public int CurrentBattleNetID { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
 		public SecureString SecurePassword { get { return (SelectedAccount == null) ? new SecureString() : SelectedAccount.SecurePassword; } set { SelectedAccount.SecurePassword = value; } }
 		public string AccountStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
+		public bool CurrentRareBattlePets { get { return (SelectedAccount.RareBattlePets == null) ? false : SelectedAccount.RareBattlePets; } set { SelectedAccount.RareBattlePets = value; } }
 
 		// Characters
 		public int CharactersTotal { get; set; }
@@ -169,6 +170,10 @@ namespace SPP_LegionV2_Management
 				else if (response != "-1" && (account.GMLevel != Int32.Parse(response)))
 					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing GM status from {response} to {account.GMLevel} - "
 						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account_access` SET `gmlevel`='{account.GMLevel}' WHERE `id`='{account.ID}'", true));
+				// If BattlePets checkbox was selected, zap all BattlePets for this account to rare quality
+				if (account.RareBattlePets)
+					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing all BattlePets to rare quality - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`account_battlepet` SET `quality`='3' WHERE `account`='{account.ID}'", true));
 			}
 
 			// now that things have been updated, refresh our list
@@ -393,7 +398,8 @@ namespace SPP_LegionV2_Management
 			string tmpStatus = "";
 			int tmpCount = 0;
 
-			// Get our total orphaned objects for each table
+			// Get our total orphaned objects for each table. If there's a table with massive amounts of data
+			// then it may block the UI a bit (GB's of orphaned data in item_instance for example)
 			foreach (var entry in CharacterTableField.CharacterTableFields)
 			{
 				tmpCount = GetOrphanedTotalRows(entry.table, entry.field);
@@ -586,24 +592,20 @@ namespace SPP_LegionV2_Management
 
 				// The guid may be the same as the auctionhouse or guild bank items, so we need to make sure we're not removing any items that
 				// are listed in the those tables. Otherwise they may be orphaned auctions that the AH code didn't clean up, need removed
+				// If the guid is -1, apply tmpquery above, otherwise check for the incoming guid, then limit by rows if applicable
 				MySqlManager.MySQLQueryToString("DELETE FROM `legion_characters`.`item_instance` WHERE `owner_guid` "
 					+ $"{((guid == -1) ? tmpquery : $"= '{guid}'")}"
 					+ $"{((OrphanedRowsLimit > 0) ? $" LIMIT {OrphanedRowsLimit}" : "")}", true);
 			}
-			// Add handling for character_queststatus tables
-			else if (table.Contains("legion_characters`.`character_queststatus"))
-			{
-				// Some entries list id 0 for the whole account, this only removes if the account doesn't exist
-				MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)", true);
-			}
-			// Handle account related tables
-			if (table.Contains("legion_characters`.`account_"))
+			// Handle account or queststatus related tables
+			if (table.Contains("legion_characters`.`account_") || table.Contains("legion_characters`.`character_queststatus"))
 			{
 				if (table.Contains("legion_characters`.`account_item_favorite_appearances"))
 					// This table refers to battlenet accounts rather than normal account id.
 					MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`battlenet_accounts`)", true);
 				else
 					// All other account related check with auth accounts table for a match
+					// Note - some queststatus tables had guid 0 for the account, so we don't touch unless the account id doesn't exist
 					MySqlManager.MySQLQueryToString($"DELETE FROM `{table}` WHERE `{field}` NOT IN (SELECT `id` FROM `legion_auth`.`account`)", true);
 			}
 			else
