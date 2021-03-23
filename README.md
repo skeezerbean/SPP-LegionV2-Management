@@ -17,7 +17,9 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
-**0.0.2.10** - Add option to set all BattlePets to rare quality for selected account
+**0.0.2.11** - Added option to boost current xp for battlepets for selected account, helps boost leveling
+
+**0.0.2.10** - Added option to set all BattlePets to rare quality for selected account
 
 **0.0.2.9** -  Some cleanup, add some orphaned account checks, fixed some potential crashes, add orpaned object detail list of items found
 
