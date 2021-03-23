@@ -17,6 +17,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.10** - Add option to set all BattlePets to rare quality for selected account
+
 **0.0.2.9** -  Some cleanup, add some orphaned account checks, fixed some potential crashes, add orpaned object detail list of items found
 
 **0.0.2.8** - Fix some SQL/exceptions, log previous config.wtf portal entry when exporting config, enable orphaned object removal
