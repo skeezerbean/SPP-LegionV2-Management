@@ -4,7 +4,6 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Security;
 using System.Threading.Tasks;
-using System.Windows;
 
 namespace SPP_LegionV2_Management
 {
@@ -15,6 +14,7 @@ namespace SPP_LegionV2_Management
 
 		// block parallel tasks running of the same type
 		private bool _accountRetrieveRunning = false;
+
 		private bool _characterRetrieveRunning = false;
 		private bool _deleteAccountRunning = false;
 		private bool _deleteCharacterRunning = false;
@@ -33,6 +33,7 @@ namespace SPP_LegionV2_Management
 
 		// Accounts
 		public int AccountsTotal { get; set; }
+
 		public int CurrentID { get { return (SelectedAccount == null) ? -1 : SelectedAccount.ID; } }
 		public int CurrentBattleNetAccount { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
 		public string CurrentBattleNetEmail { get { return (SelectedAccount == null) ? string.Empty : SelectedAccount.BattleNetEmail; } set { SelectedAccount.BattleNetEmail = value; } }
@@ -47,6 +48,7 @@ namespace SPP_LegionV2_Management
 
 		// Characters
 		public int CharactersTotal { get; set; }
+
 		public int CurrentCharacterGUID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Guid; } }
 		public int CurrentCharacterAccountID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
 		public string CurrentCharacterName { get { return (SelectedCharacter == null) ? string.Empty : SelectedCharacter.Name; } set { SelectedCharacter.Name = value; } }
@@ -54,6 +56,7 @@ namespace SPP_LegionV2_Management
 
 		// Orphaned Characters
 		public int OrphanedCharactersTotal { get; set; }
+
 		public int OrphanedOrphanedCharactersTotal { get; set; }
 		public int OrphanedRowsLimit { get; set; } = 100000;
 		public int OrphanedCurrentCharacterGUID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Guid; } }
@@ -63,6 +66,7 @@ namespace SPP_LegionV2_Management
 
 		// Orphaned Objects
 		public int OrphanedObjectsTotal { get; set; }
+
 		public BindableCollection<int> OrphanedIDs = new BindableCollection<int>();
 		public int OrphanedIDsTotal { get; set; }
 		public string OrphanedObjectsStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
@@ -79,7 +83,7 @@ namespace SPP_LegionV2_Management
 		{
 			if (!GeneralSettingsManager.IsMySQLRunning)
 			{
-				MessageBox.Show("Database Engine is not running, cannot continue");
+				_dialogCoordinator.ShowMessageAsync(this, "Alert", "Database Engine is not running, cannot continue");
 				return false;
 			}
 
@@ -91,6 +95,8 @@ namespace SPP_LegionV2_Management
 			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
 				return;
 
+			string message = string.Empty;
+
 			foreach (var account in Accounts)
 			{
 				string userFromDB = MySqlManager.MySQLQueryToString($"SELECT `username` FROM `legion_auth`.`account` WHERE `id` = '{account.ID}'");
@@ -99,8 +105,8 @@ namespace SPP_LegionV2_Management
 
 				// Update our username
 				if (account.Username != userFromDB)
-					MessageBox.Show($"Updating Username from [{userFromDB}] to [{account.Username}] - "
-						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account` SET `username`='{account.Username}' WHERE `id`='{account.ID}'", true));
+					message += $"Updating Username from [{userFromDB}] to [{account.Username}] - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account` SET `username`='{account.Username}' WHERE `id`='{account.ID}'", true) + "\n";
 
 				// If this was -1 then the account didn't exist, so skip. Otherwise update the login/battlecoins
 				if (account.BattleNetAccount != -1)
@@ -120,8 +126,8 @@ namespace SPP_LegionV2_Management
 							// that hash + ":" and the password, then reverse order, uppercase the result and shove in the DB
 							passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail.ToUpper()).ToUpper()
 								+ ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword).ToUpper(), true).ToUpper();
-							MessageBox.Show($"Changing BattleNet Login for [{battlenetLoginFromDB}] to [{account.BattleNetEmail.ToUpper()}] - "
-							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail.ToUpper()}',`sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
+							message += $"Changing BattleNet Login for [{battlenetLoginFromDB}] to [{account.BattleNetEmail.ToUpper()}] - "
+							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail.ToUpper()}',`sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true) + "\n";
 
 							_updatedPassword = true;
 						}
@@ -130,7 +136,7 @@ namespace SPP_LegionV2_Management
 							string tmp = "ALERT - You're trying to change your BattleNet Email, but you didn't enter your account password. ";
 							tmp += "This is REQUIRED, as the SHA256 password hash MUST be updated in order to login afterwards. Note, this password ";
 							tmp += "can be either an old or new one. Update the BattleNet Email change again, AND the password on this account, and apply again.";
-							MessageBox.Show(tmp);
+							message += tmp + "\n";
 						}
 					}
 
@@ -140,13 +146,13 @@ namespace SPP_LegionV2_Management
 					{
 						passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(account.BattleNetEmail.ToUpper()).ToUpper()
 							+ ":" + Extensions.SecureStringExtensions.ToUnsecuredString(account.SecurePassword).ToUpper(), true).ToUpper();
-						MessageBox.Show($"Changing BattleNet Password for [{account.BattleNetEmail}] - "
-							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true));
+						message += $"Changing BattleNet Password for [{account.BattleNetEmail}] - "
+							+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `sha_pass_hash`='{passHash}' WHERE `id`='{account.BattleNetAccount}'", true) + "\n";
 					}
 
 					if (battlenetCoinsFromDB != account.BattleCoins)
-						MessageBox.Show($"Setting BattleNet Coins for [{account.BattleNetAccount}:{account.BattleNetEmail}] - "
-						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail}',`donate`='{account.BattleCoins}' WHERE `id`='{account.BattleNetAccount}'", true));
+						message += $"Setting BattleNet Coins for [{account.BattleNetAccount}:{account.BattleNetEmail}] - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`battlenet_accounts` SET `email`='{account.BattleNetEmail}',`donate`='{account.BattleCoins}' WHERE `id`='{account.BattleNetAccount}'", true) + "\n";
 				}
 
 				// If this account is not GM, it should resolve to -1
@@ -154,34 +160,38 @@ namespace SPP_LegionV2_Management
 
 				// If the value entered on the form was out of scope....
 				if (account.GMLevel < -1 || account.GMLevel > 6)
-					MessageBox.Show($"Account [{account.ID}({account.Username})] - entry for GMLevel must be from 1 to 6 only, or set to -1 or 0 to remove GM status");
+					message += $"Account [{account.ID}({account.Username})] - entry for GMLevel must be from 1 to 6 only, or set to -1 or 0 to remove GM status\n";
 
 				// If they're NOT a GM, and the GM level entered is higher than 0 then we need to add them
 				else if (response == "-1" && account.GMLevel > 0)
 				{
 					// perform insert to new gm access entry if default GMlevel also changed
-					MessageBox.Show($"Account [{account.ID}({account.Username})] Adding GM Entry - "
-						+ MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`account_access` (`id`,`gmlevel`,`RealmID`) VALUES ('{account.ID}','{account.GMLevel}','-1')", true));
+					message += $"Account [{account.ID}({account.Username})] Adding GM Entry - "
+						+ MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`account_access` (`id`,`gmlevel`,`RealmID`) VALUES ('{account.ID}','{account.GMLevel}','-1')", true) + "\n";
 				}
 				// If they ARE GM (response not -1), and the new value declares they shouldn't be...
 				else if (response != "-1" && (account.GMLevel == -1 || account.GMLevel == 0))
-					MessageBox.Show($"Account [{account.ID}({account.Username})] Removing from GM status - "
-						+ MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{account.ID}'", true));
+					message += $"Account [{account.ID}({account.Username})] Removing from GM status - "
+						+ MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{account.ID}'", true) + "\n";
 				// In case GM Level was changed for existing account
 				else if (response != "-1" && (account.GMLevel != Int32.Parse(response)))
-					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing GM status from {response} to {account.GMLevel} - "
-						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account_access` SET `gmlevel`='{account.GMLevel}' WHERE `id`='{account.ID}'", true));
+					message += $"Account [{account.ID}({account.Username})] Changing GM status from {response} to {account.GMLevel} - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_auth`.`account_access` SET `gmlevel`='{account.GMLevel}' WHERE `id`='{account.ID}'", true) + "\n";
 
 				// If BattlePets checkbox was selected, zap all BattlePets for this account to rare quality
 				if (account.RareBattlePets)
-					MessageBox.Show($"Account [{account.ID}({account.Username})] Changing all BattlePets to rare quality - "
-						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`account_battlepet` SET `quality`='3' WHERE `account`='{account.ID}'", true));
+					message += $"Account [{account.ID}({account.Username})] Changing all BattlePets to rare quality - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`account_battlepet` SET `quality`='3' WHERE `account`='{account.ID}'", true) + "\n";
 
 				// If BattlePets checkbox was selected, zap all BattlePets for this account to rare quality
 				if (account.XPBattlePets)
-					MessageBox.Show($"Account [{account.ID}({account.Username})] current XP to 2000 for all BattlePets - "
-						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`account_battlepet` SET `xp`='2000' WHERE `account`='{account.ID}'", true));
+					message += $"Account [{account.ID}({account.Username})] current XP to 2000 for all BattlePets - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`account_battlepet` SET `xp`='2000' WHERE `account`='{account.ID}'", true) + "\n";
 			}
+
+			// Only if anything was changed
+			if (message.Length > 1)
+				_ = _dialogCoordinator.ShowMessageAsync(this, "Account changes applied", message).ConfigureAwait(false);
 
 			// now that things have been updated, refresh our list
 			await RetrieveAccounts();
@@ -199,6 +209,10 @@ namespace SPP_LegionV2_Management
 			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || _deleteAccountRunning)
 				return 0;
 
+			string message = string.Empty;
+			CharacterStatus = "Processing Character changes...";
+			await Task.Delay(1);
+
 			// For either name or account, if they've changed then update the entry for them
 			foreach (var character in characters)
 			{
@@ -206,15 +220,24 @@ namespace SPP_LegionV2_Management
 				string nameFromDB = MySqlManager.MySQLQueryToString($"SELECT `name` FROM `legion_characters`.`characters` WHERE `guid`='{character.Guid}'");
 
 				if (character.Name != nameFromDB)
-					MessageBox.Show($"Changing name for character [{nameFromDB}] to [{character.Name}] - "
-						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`characters` SET `name`='{character.Name}' WHERE `guid`='{character.Guid}'", true));
+					message += $"Changing name for character [{nameFromDB}] to [{character.Name}] - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`characters` SET `name`='{character.Name}' WHERE `guid`='{character.Guid}'", true) + "\n";
 
 				if (character.Account != accountIDFromDB)
-					MessageBox.Show($"Changing account for character [{character.Name}] from [{accountIDFromDB}] to [{character.Account}] - "
-						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`characters` SET `account`='{character.Account}' WHERE `guid`='{character.Guid}'", true));
+					message += $"Changing account for character [{character.Name}] from [{accountIDFromDB}] to [{character.Account}] - "
+						+ MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`characters` SET `account`='{character.Account}' WHERE `guid`='{character.Guid}'", true) + "\n";
 			}
 
-			return await RetrieveCharacters();
+			// If any change, alert and refresh
+			if (message.Length > 1)
+			{
+				await _dialogCoordinator.ShowMessageAsync(this, "Character Changes", message);
+				CharacterStatus = "Refreshing character list";
+				await RetrieveCharacters();
+			}
+
+			CharacterStatus = "";
+			return 0;
 		}
 
 		public async void AddAccount()
@@ -229,15 +252,18 @@ namespace SPP_LegionV2_Management
 			{
 				// This should run through the process of adding an account with the login name,
 				// to uppercase, the rest happens at account list screen to manage password/GM level
-				loginName = Microsoft.VisualBasic.Interaction.InputBox("Enter the login name for the account", "Login Account Name").ToUpper();
+				string tmp = await _dialogCoordinator.ShowInputAsync(this, "Create Account", "Enter the login name for the account");
 
-				// If they hit cancel
-				if (loginName.Length == 0)
+				// Hit cancel/escape
+				if (tmp == null || tmp.Length == 0)
 					return;
+
+				// Move account name to uppercase
+				loginName = tmp.ToUpper();
 
 				result = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `email` FROM `legion_auth`.`battlenet_accounts` WHERE `email` = '{loginName}'), \"-1\")");
 				if (result != "-1")
-					MessageBox.Show($"BattleNet Login \"{loginName}\" already exists. Please try again.");
+					await _dialogCoordinator.ShowMessageAsync(this, "Alert", $"⚠ BattleNet Login \"{loginName}\" already exists. Please try again.");
 			}
 
 			// Create the DB entries, battle_net first, then we can pull the ID it creates and add to account table after
@@ -247,7 +273,7 @@ namespace SPP_LegionV2_Management
 
 			// Pop up to let user know to create a password on the account page once the list is refreshed.
 			// this lets us used the existing more-secure method than simply taking text input
-			MessageBox.Show("Note - once the account list refreshes, you will need to set a password for this account before it can be used.", "Note");
+			await _dialogCoordinator.ShowMessageAsync(this, "Account added", "Note - once the account list refreshes, you will need to set a password for this account before it can be used.");
 			await RetrieveAccounts();
 			return;
 		}
@@ -338,19 +364,16 @@ namespace SPP_LegionV2_Management
 			if (!CheckSQL() || _deleteAccountRunning || _deleteCharacterRunning || _removingObjects || SelectedAccount == null)
 				return;
 
+			// Get a fresh character list, or populate a new one
+			CharacterStatus = $"Collecting character info for Account:{SelectedAccount.BattleNetEmail}";
+			Task getChars = Task.Run(() => RetrieveCharacters());
+			while (!getChars.IsCompleted) { await Task.Delay(1); }
+
 			_deleteAccountRunning = true;
 			_deleteCharacterRunning = true;
-
-			// Get a fresh character list, or populate a new one
-			Task<int> getChars = RetrieveCharacters();
-
-			CharacterStatus = $"Collecting character info for Account:{SelectedAccount.BattleNetAccount}";
 			BindableCollection<Character> charactersToDelete = new BindableCollection<Character>();
 			charactersToDelete.Clear();
-			string msg = "ARE YOU SURE??\n\nCharacters in this account to be deleted:\n";
-
-			// wait for our character retrieval to finish
-			await getChars;
+			string msg = $"⚠ ARE YOU SURE?? Deleting Account: [{SelectedAccount.BattleNetEmail}]\n\nCharacters in this account to be deleted:\n";
 
 			// Getting our list of characters for this account
 			foreach (var character in Characters)
@@ -363,34 +386,32 @@ namespace SPP_LegionV2_Management
 			}
 
 			// Prompt with character list, verify to continue
-			MessageBoxResult mbr = MessageBox.Show(msg, $"Deleting Account: {SelectedAccount.BattleNetAccount}", MessageBoxButton.YesNo);
+			MessageDialogResult result = await _dialogCoordinator.ShowMessageAsync(this, "Confirm", msg, MessageDialogStyle.AffirmativeAndNegative);
 
-			if (mbr.ToString() == "Yes")
+			if (result == MessageDialogResult.Canceled || result == MessageDialogResult.Negative)
 			{
-				// Send the collection to be deleted
-				Task delete = Task.Run(() => DeleteCharacters(charactersToDelete));
-				while(!delete.IsCompleted) { await Task.Delay(1); }
-
-				// Delete account, bnet, gm entry if exists from SQL then retrieve accounts/characters again to refresh from DB directly, verify account is gone
-				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{SelectedAccount.ID}'", true);
-				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`battlenet_accounts` WHERE `id`='{SelectedAccount.BattleNetAccount}'", true);
-				MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account` WHERE `id`='{SelectedAccount.ID}'", true);
-
-				_deleteCharacterRunning = false;
 				_deleteAccountRunning = false;
-
-				delete = Task.Run(() =>
-				{
-					RetrieveAccounts();
-					RetrieveCharacters();
-				});
-				while (!delete.IsCompleted) { await Task.Delay(1); }
-
-				CharacterStatus = "Finished removing account";
+				_deleteCharacterRunning = false;
+				CharacterStatus = "Account deletion canceled";
+				return;
 			}
+
+			// Send the collection to be deleted
+			Task delete = Task.Run(() => DeleteCharacters(charactersToDelete));
+			while (!delete.IsCompleted) { await Task.Delay(1); }
+
+			// Delete account, bnet, gm entry if exists from SQL then retrieve accounts/characters again to refresh from DB directly, verify account is gone
+			MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account_access` WHERE `id`='{SelectedAccount.ID}'", true);
+			MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`battlenet_accounts` WHERE `id`='{SelectedAccount.BattleNetAccount}'", true);
+			MySqlManager.MySQLQueryToString($"DELETE FROM `legion_auth`.`account` WHERE `id`='{SelectedAccount.ID}'", true);
 
 			_deleteCharacterRunning = false;
 			_deleteAccountRunning = false;
+			CharacterStatus = "Refreshing account/character lists";
+
+			await RetrieveCharacters();
+			await RetrieveAccounts();
+			CharacterStatus = "Finished removing account";
 		}
 
 		public async Task GetOrphanedData()
@@ -538,8 +559,8 @@ namespace SPP_LegionV2_Management
 				_guildMasters.Clear();
 
 				// Either grabbing all orphaned guildmasters, or checking for specific one
-				MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT IFNULL((SELECT `leaderguid` FROM `legion_characters`.`guild` WHERE `leaderguid` "
-					+ $"{((guid == -1) ? "NOT IN(SELECT `guid` FROM `legion_characters`.`characters`)" : $"= '{guid}'")}), \"-1\")", GetGuildMasters);
+				MySqlDataReader reader = MySqlManager.MySQLQuery("SELECT `leaderguid` FROM `legion_characters`.`guild` WHERE `leaderguid` "
+					+ $"{((guid == -1) ? "NOT IN(SELECT `guid` FROM `legion_characters`.`characters`)" : $"= '{guid}'")}", GetGuildMasters);
 
 				// now our _guildMasters collection is populated
 				if (_guildMasters.Count > 0)

@@ -1,14 +1,14 @@
-﻿using System.Diagnostics;
+﻿using MahApps.Metro.Controls;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Navigation;
 
 namespace SPP_LegionV2_Management
 {
 	/// <summary>
 	/// Interaction logic for ShellView.xaml
 	/// </summary>
-	public partial class ShellView : Window
+	public partial class ShellView : MetroWindow
 	{
 		public ShellView()
 		{
@@ -16,11 +16,11 @@ namespace SPP_LegionV2_Management
 			ToolTipService.ShowDurationProperty.OverrideMetadata(typeof(DependencyObject), new FrameworkPropertyMetadata(System.Int32.MaxValue));
 		}
 
-		private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+		private void HelpAbout(object sender, RoutedEventArgs e)
 		{
 			// for .NET Core you need to add UseShellExecute = true
 			// see https://docs.microsoft.com/dotnet/api/system.diagnostics.processstartinfo.useshellexecute#property-value
-			Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+			Process.Start(new ProcessStartInfo("https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/README.md"));
 			e.Handled = true;
 		}
 	}

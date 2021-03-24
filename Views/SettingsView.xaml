@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SPP_LegionV2_Management"
-	    Background="DimGray"
+	    Background="#252525"
         mc:Ignorable="d">
 	<Grid>
 
@@ -14,8 +14,8 @@
 				<Button x:Name="WowConfigBrowse" Content="Set Wow Client Location" Margin="5" />
 			</StackPanel>
 			<StackPanel Margin="5">
-				<TextBlock x:Name="SPPFolderLocation" Margin="-5,7" VerticalAlignment="Center" />
-				<TextBlock x:Name="WOWConfigLocation" Margin="-5,7" VerticalAlignment="Center" />
+				<TextBlock x:Name="SPPFolderLocation" Margin="-5,11" VerticalAlignment="Center" />
+				<TextBlock x:Name="WOWConfigLocation" Margin="-5,9" VerticalAlignment="Center" />
 			</StackPanel>
 		</WrapPanel>
 	</Grid>

@@ -12,10 +12,5 @@ namespace SPP_LegionV2_Management
 		{
 			InitializeComponent();
 		}
-
-		private void Storyboard_Completed(object sender, System.EventArgs e)
-		{
-			this.Close();
-		}
 	}
 }

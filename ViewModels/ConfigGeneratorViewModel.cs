@@ -10,7 +10,6 @@ using System.Security.Permissions;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Data;
 
 namespace SPP_LegionV2_Management
@@ -19,17 +18,20 @@ namespace SPP_LegionV2_Management
 	{
 		// IDialogCoordinator is for metro message boxes
 		private readonly IDialogCoordinator _dialogCoordinator;
+
 		private bool _exportRunning = false;
 
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
 		public BindableCollection<ConfigEntry> WorldCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
+
 		public BindableCollection<ConfigEntry> BnetCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
 
 		// stores the filesystem path to the files
 		public string WowConfigFile { get; set; } = string.Empty;
+
 		public string BnetConfFile { get; set; } = string.Empty;
 		public string WorldConfFile { get; set; } = string.Empty;
 
@@ -41,6 +43,7 @@ namespace SPP_LegionV2_Management
 
 		// For search/filtering
 		public ICollectionView WorldView { get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
+
 		public ICollectionView BnetView { get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
 		private string _SearchBox = "";
 
@@ -121,18 +124,20 @@ namespace SPP_LegionV2_Management
 
 		// We want to set the external/hosting IP setting for the DB listing in the realm,
 		// for the ExternalAddress setting in bnet, and in the WOW config portal entry
-		public void SetIP()
+		public async void SetIP()
 		{
 			// Check if there are valid targets for spp/wow config, sql - report if any missing
 			// As long as we set Bnet REST IP first, then WoW config will be updated as well
 			string tmp = "Enter the Listening/Hosted IP Address to set. If this is to be hosted for local network then use the LAN ipv4 address.\n\n";
 			tmp += "If external hosting, use the WAN address. Note this entry will not be validated to accuracy.\n\n";
 			tmp += "Note - this will not update the database realm entry until clicking save/export";
-			string input = Microsoft.VisualBasic.Interaction.InputBox(tmp, "Set IP", "127.0.0.1");
+
+			MetroDialogSettings dialogSettings = new MetroDialogSettings() { DefaultText = "127.0.0.1" };
+			string input = await _dialogCoordinator.ShowInputAsync(this, "Set IP", tmp, dialogSettings);
 
 			// If user hit didn't cancel or enter something stupid...
 			// length > 6 is at least 4 numbers for an IP, and 3 . within an IP
-			if (input.Length > 6)
+			if (input != null && input.Length > 6)
 				BnetCollection = UpdateConfigCollection(BnetCollection, "LoginREST.ExternalAddress", input);
 
 			// For whatever reason, this quick pause helps refresh visually as the collection changed
@@ -141,12 +146,14 @@ namespace SPP_LegionV2_Management
 		}
 
 		// We need the realm build entry, and both .conf build settings to be the same
-		public void SetBuild()
+		public async void SetBuild()
 		{
 			// Grab the input
 			string tmp = "Enter the 7.3.5 (xxxxx) build from your client. Available builds: 26124, 26365, 26654, 26822, 26899, or 26972\n\n";
 			tmp += "Note - the build will not be updated in the database until clicking save/export";
-			string input = Microsoft.VisualBasic.Interaction.InputBox(tmp, "Set Build", "26972");
+
+			MetroDialogSettings dialogSettings = new MetroDialogSettings() { DefaultText = "26972" };
+			string input = await _dialogCoordinator.ShowInputAsync(this, "Set Build", tmp, dialogSettings);
 
 			if (input == "26124" || input == "26365" || input == "26654" || input == "26822" || input == "26899" || input == "26972")
 			{
@@ -157,8 +164,8 @@ namespace SPP_LegionV2_Management
 				WorldCollection = UpdateConfigCollection(WorldCollection, "Game.Build.Version", input);
 			}
 			else // If not cancelled input, then alert to invalid entry
-				if (input != "")
-				MessageBox.Show("Build input invalid, ignoring");
+				if (input != null)
+				await _dialogCoordinator.ShowMessageAsync(this, "Build input invalid, ignoring", null);
 
 			// For whatever reason, this quick pause helps refresh visually as the collection changed
 			Thread.Sleep(1);
@@ -291,7 +298,7 @@ namespace SPP_LegionV2_Management
 			foreach (var item in collection)
 			{
 				if (item.Value.Contains("#"))
-					result += $"\nWarning - Entry [{item.Name}] has a \"#\" character in the value field. Best practices are to keep comments in their own line, separate from values.\n";
+					result += $"\n⚠Warning - Entry [{item.Name}] has a \"#\" character in the value field. Best practices are to keep comments in their own line, separate from values.\n";
 			}
 
 			return result;
@@ -341,6 +348,12 @@ namespace SPP_LegionV2_Management
 		// in the current collections
 		public async void SaveConfig()
 		{
+			if (!GeneralSettingsManager.IsMySQLRunning)
+			{
+				_dialogCoordinator.ShowMessageAsync(this, "Alert", "The Database Server needs to be running in order to export. Please start it and try again.");
+				return;
+			}
+
 			// Don't run if already running
 			if (_exportRunning)
 				return;
@@ -364,7 +377,7 @@ namespace SPP_LegionV2_Management
 					//this if the bnet collection has something in it
 					Log("Updating WoW Client config portal entry");
 					UpdateWowConfig();
-					build = Task.Run( async () => await BuildConfFile(BnetCollection, BnetConfFile));
+					build = Task.Run(async () => await BuildConfFile(BnetCollection, BnetConfFile));
 
 					// Since we have a valid bnet collection, grab external address and
 					// build, push to DB realm entry while we're here
@@ -386,7 +399,7 @@ namespace SPP_LegionV2_Management
 				if (WorldCollection == null || WorldCollection.Count == 0)
 					Log("WORLD Export -> Current settings are empty");
 				else
-					build = Task.Run( async () => await BuildConfFile(WorldCollection, WorldConfFile));
+					build = Task.Run(async () => await BuildConfFile(WorldCollection, WorldConfFile));
 			}
 			while (!build.IsCompleted) { await Task.Delay(1); }
 			_exportRunning = false;
@@ -602,7 +615,7 @@ namespace SPP_LegionV2_Management
 
 		public void Alert(string message)
 		{
-			MessageBox.Show(message);
+			_dialogCoordinator.ShowMessageAsync(this, "Alert", message);
 		}
 
 		// If we're calling this, then we'll gather up info on settings that are related to
@@ -611,7 +624,7 @@ namespace SPP_LegionV2_Management
 		{
 			if (!GeneralSettingsManager.IsMySQLRunning)
 			{
-				MessageBox.Show("Alert - The Database Server needs to be running in order to check for issues. Please start it and try again.");
+				_dialogCoordinator.ShowMessageAsync(this, "Alert", "The Database Server needs to be running in order to check for issues. Please start it and try again.");
 				return;
 			}
 
@@ -662,7 +675,7 @@ namespace SPP_LegionV2_Management
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
-				Log("Alert - There's an issue with collection(s) being empty.. possibly missing template files");
+				Log("⚠ Alert - There's an issue with collection(s) being empty.. possibly missing template files");
 			else
 			{
 				// Compare bnet to default - any missing/extra items?
@@ -670,7 +683,7 @@ namespace SPP_LegionV2_Management
 				{
 					if (CheckCollectionForMatch(BnetCollection, item.Name) == false)
 					{
-						result += $"Warning - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to export afterwards to save)\n\n";
+						result += $"⚠ Warning - [{item.Name}] exists in Bnet-Template, but not in current settings. Adding entry (will need to export afterwards to save)\n\n";
 						BnetCollection.Add(item);
 					}
 				}
@@ -678,14 +691,14 @@ namespace SPP_LegionV2_Management
 				// Check existing bnet entries, and see if the template has it. If not, could be an issue
 				foreach (var item in BnetCollection)
 					if (CheckCollectionForMatch(BnetCollectionTemplate, item.Name) == false)
-						result += $"Warning - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
+						result += $"⚠ Warning - [{item.Name}] exists in current Bnet settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
 
 				// Compare world to default - any missing/extra items
 				foreach (var item in WorldCollectionTemplate)
 				{
 					if (CheckCollectionForMatch(WorldCollection, item.Name) == false)
 					{
-						result += $"Warning - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to export afterwards to save)\n\n";
+						result += $"⚠ Warning - [{item.Name}] exists in World-Template, but not in current settings. Adding entry (will need to export afterwards to save)\n\n";
 						WorldCollection.Add(item);
 					}
 				}
@@ -693,7 +706,7 @@ namespace SPP_LegionV2_Management
 				// Check existing world entries, see if anything exists that isn't in the template.
 				foreach (var item in WorldCollection)
 					if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
-						result += $"Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
+						result += $"⚠ Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
 
 				// Compare build# between bnet/world/realm
 				if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
@@ -701,26 +714,26 @@ namespace SPP_LegionV2_Management
 					result += $"Build from DB Realm - {buildFromDB}\n";
 					result += $"Build from WorldConfig - {buildFromWorld}\n";
 					result += $"Build from BnetConfig - {buildFromBnet}\n";
-					result += "Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n\n";
+					result += "⚠ Alert - There is a [Game.Build.Version] mismatch between configs and database. Please use the \"Set Build\" button to fix, then save/export.\n\n";
 				}
 				else
-					result += $"Good - Game.Build.Version [{buildFromDB}] numbers match\n\n";
+					result += $"✓ - Game.Build.Version [{buildFromDB}] numbers match\n\n";
 
 				// Compare IP bindings for listening - these really never need to change
 				if (!worldBindIP.Contains("0.0.0.0") || !bnetBindIP.Contains("0.0.0.0"))
 				{
 					result += $"World BindIP - {worldBindIP}\n";
 					result += $"Bnet BindIP - {bnetBindIP}\n";
-					result += "Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n\n";
+					result += "⚠ Alert - Both World and Bnet BindIP setting should be \"0.0.0.0\"\n\n";
 				}
 				else
-					result += $"Good - BindIP settings match [{worldBindIP}] and are set properly.\n\n";
+					result += $"✓ - BindIP settings match [{worldBindIP}] and are set properly.\n\n";
 
 				// Gather WoW portal IP from config.wtf
 				if (File.Exists(WowConfigFile) == false)
 				{
 					Log("WOW Config File cannot be found - cannot parse SET portal entry");
-					result += "Alert - WOW Config file not found, cannot check [SET portal] entry to compare.\n\n";
+					result += "⚠ Alert - WOW Config file not found, cannot check [SET portal] entry to compare.\n\n";
 				}
 				else
 				{
@@ -728,7 +741,7 @@ namespace SPP_LegionV2_Management
 					List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
 
 					if (allLinesText.Count < 2)
-						Log($"Warning - WoW Client config file [{WowConfigFile}] may be empty.");
+						Log($"⚠ Warning - WoW Client config file [{WowConfigFile}] may be empty.");
 
 					foreach (var item in allLinesText)
 					{
@@ -748,17 +761,17 @@ namespace SPP_LegionV2_Management
 					result += $"LoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
 					result += $"Address from DB Realm - {addressFromDB}\n";
 					result += $"Wow config PORTAL entry - {wowConfigPortal}\n";
-					result += "Alert - All of these addresses should match. Use the \"Set IP\" button to set.\n\n";
+					result += "⚠ Alert - All of these addresses should match. Use the \"Set IP\" button to set.\n\n";
 				}
 				else
-					result += $"Good - IP settings for hosting all match [{addressFromDB}]\n\n";
+					result += $"✓ - IP settings for hosting all match [{addressFromDB}]\n\n";
 
 				// Check the local (not external hosting) IP settings. These don't need to change from 127.0.0.1 (localhost)
 				if (!loginRESTLocalAddress.Contains("127.0.0.1") || !localAddressFromDB.Contains("127.0.0.1"))
 				{
 					result += $"LoginREST.LocalAddress - {loginRESTLocalAddress}\n";
 					result += $"local Address from DB - {localAddressFromDB}\n";
-					result += "Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n\n";
+					result += "⚠ Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n\n";
 				}
 
 				// Check our solocraft settings compared to FlexCraft entries
@@ -766,41 +779,41 @@ namespace SPP_LegionV2_Management
 				if (solocraft)
 				{
 					if (flexcraftHealth)
-						result += "Alert - Solocraft and HealthCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
+						result += "⚠ Alert - Solocraft and HealthCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
 
 					if (flexcraftUnitMod)
-						result += "Alert - Solocraft and UnitModCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
+						result += "⚠ Alert - Solocraft and UnitModCraft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
 
 					if (flexcraftCombatRating)
-						result += "Alert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
+						result += "⚠ Alert - Solocraft and Combat.Rating.Craft are both enabled! This will cause conflicts. Disabling Solocraft recommended.\n\n";
 				}
 
 				// Check for battle shop entries
 				if (bpay != purchaseShop)
-					result += $"Alert - Bpay.Enabled and Purchase.Shop.Enabled should BOTH either be disabled or enabled together in the world config.\n\n";
+					result += $"⚠ Alert - Bpay.Enabled and Purchase.Shop.Enabled should BOTH either be disabled or enabled together in the world config.\n\n";
 
 				// check for both battlecoin.vendor.enable and battlecoin.vendor.custom.enable (should only be 1 enabled)
 				if (battleCoinVendor && battleCoinVendorCustom)
-					result += $"Alert - Battle.Coin.Vendor.Enable and Battle.Coin.Vendor.CUSTOM.Enable are both enabled - only one needs enabled in the world config.\n\n";
+					result += $"⚠ Alert - Battle.Coin.Vendor.Enable and Battle.Coin.Vendor.CUSTOM.Enable are both enabled - only one needs enabled in the world config.\n\n";
 
 				// Character Template doesn't work with client build 26972
 				if (characterTemplate && buildFromWorld == "26972")
-					result += "Warning - Character Template does not work with client build 26972. Please set Character.Template to 0 if using this build for best results.\n\n";
+					result += "⚠ Warning - Character Template does not work with client build 26972. Please set Character.Template to 0 if using this build for best results.\n\n";
 
 				// World Chat, can crash if disabled
 				if (!worldChat)
-					result += "Warning - WorldChat.Enable = 0. You may want to enable this option, or it could crash the server when using any commands. This will also disable all commands, including for GM.\n\n";
+					result += "⚠ Warning - WorldChat.Enable = 0. You may want to enable this option, or it could crash the server when using any commands. This will also disable all commands, including for GM.\n\n";
 
 				// Warn about grid related settings
 				if (baseMapLoadAllGrids || instanceMapLoadAllGrids)
-					result += "Warning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n\n";
+					result += "⚠ Warning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n\n";
 				if (gridUnload == false)
-					result += $"Warning - GridUnload may need set to 1 to unload unused map grids and release memory. If the server runs out of memory, or crashes with high usage, this may be why.\n\n";
+					result += $"⚠ Warning - GridUnload may need set to 1 to unload unused map grids and release memory. If the server runs out of memory, or crashes with high usage, this may be why.\n\n";
 
 				// Notify if Disallow.Multiple.Client is enabled
 				if (disallowMultipleClients)
 				{
-					result += "Warning - You have Disallow.Multiple.Client set to 1. This will disable multiple client connections from your local network, so if you plan on ";
+					result += "⚠ Warning - You have Disallow.Multiple.Client set to 1. This will disable multiple client connections from your local network, so if you plan on ";
 					result += "playing multiple client sessions at once, or multiple users on the same network, then this needs set to 0.\n\n";
 				}
 
@@ -818,9 +831,9 @@ namespace SPP_LegionV2_Management
 
 				// If there were duplicates, list them
 				if (tmp1 != string.Empty)
-					result += $"Alert - Duplicate entries found in [BnetConfig] for [{tmp1}]\n\n";
+					result += $"⚠ Alert - Duplicate entries found in [BnetConfig] for [{tmp1}]\n\n";
 				if (tmp2 != string.Empty)
-					result += $"Alert - Duplicate entries found in [WorldConfig] for [{tmp2}]\n\n";
+					result += $"⚠ Alert - Duplicate entries found in [WorldConfig] for [{tmp2}]\n\n";
 
 				// Check if any settings have a value field containing comments. It won't break anything
 				// but can definitely make it harder to parse through and is not a good practice
@@ -834,14 +847,14 @@ namespace SPP_LegionV2_Management
 
 				// Build our final response based on any alert/warnings found
 				if (result.Contains("Alert"))
-					result += "\n\nAlert - Issues were found!";
+					result += "\n\n⚠ Alert - Issues were found!";
 				else if (result.Contains("Warning"))
-					result += "\n\nWarnings were found, this could impact server stability or performance and those settings may need changed.\n\n";
+					result += "\n\n⚠ Warnings were found, this could impact server stability or performance and those settings may need changed.\n\n";
 				else
 					result += "\n\nNo known problems were found!";
 
 				// Take our final list of results and send to the user
-				MessageBox.Show(result);
+				_dialogCoordinator.ShowMessageAsync(this, "Check Config Results", result);
 			}
 		}
 	}

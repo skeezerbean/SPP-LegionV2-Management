@@ -15,19 +15,22 @@ namespace SPP_LegionV2_Management
 
 		// declare individual VMs, lets us always show the same one as we switch tabs
 		public ConfigGeneratorViewModel ConfigGeneratorVM = new ConfigGeneratorViewModel(DialogCoordinator.Instance);
+
 		public AccountManagerViewModel AccountManagerVM = new AccountManagerViewModel(DialogCoordinator.Instance);
 		public SettingsViewModel SettingsVM = new SettingsViewModel(DialogCoordinator.Instance);
 
 		// This holds the values for the window position/size to be pulled from saved settings
 		public double WindowTop { get { return GeneralSettingsManager.GeneralSettings.WindowTop; } set { GeneralSettingsManager.GeneralSettings.WindowTop = value; } }
+
 		public double WindowLeft { get { return GeneralSettingsManager.GeneralSettings.WindowLeft; } set { GeneralSettingsManager.GeneralSettings.WindowLeft = value; } }
 		public double WindowHeight { get { return GeneralSettingsManager.GeneralSettings.WindowHeight; } set { GeneralSettingsManager.GeneralSettings.WindowHeight = value; } }
 		public double WindowWidth { get { return GeneralSettingsManager.GeneralSettings.WindowWidth; } set { GeneralSettingsManager.GeneralSettings.WindowWidth = value; } }
 
 		// Status display at the top section of the app
-		public string ServerConfigStatus { get; set; } = "Not Found";
-		public string ClientConfigStatus { get; set; } = "Not Found";
-		public string SQLConnectionStatus { get; set; } = "Not Found";
+		public string ServerConfigStatus { get; set; } = "⚠";
+
+		public string ClientConfigStatus { get; set; } = "⚠";
+		public string SQLConnectionStatus { get; set; } = "⚠";
 
 		public ShellViewModel()
 		{
@@ -46,24 +49,24 @@ namespace SPP_LegionV2_Management
 				{
 					if ((File.Exists($"{ GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\worldserver.conf") && File.Exists($"{ GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\bnetserver.conf"))
 						|| (File.Exists($"{ GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\worldserver.conf") && File.Exists($"{ GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\bnetserver.conf")))
-						ServerConfigStatus = "Found";
+						ServerConfigStatus = "✓";
 					else
-						ServerConfigStatus = "Not Found";
+						ServerConfigStatus = "⚠";
 
 					if (File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\config.wtf")
 						|| File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF\\config.wtf"))
-						ClientConfigStatus = "Found";
+						ClientConfigStatus = "✓";
 					else
-						ClientConfigStatus = "Not Found";
+						ClientConfigStatus = "⚠";
 
 					if (await CheckSQLStatus())
 					{
-						SQLConnectionStatus = "Connected";
+						SQLConnectionStatus = "✓";
 						GeneralSettingsManager.IsMySQLRunning = true;
 					}
 					else
 					{
-						SQLConnectionStatus = "Not Found";
+						SQLConnectionStatus = "⚠";
 						GeneralSettingsManager.IsMySQLRunning = false;
 					}
 

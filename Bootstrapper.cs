@@ -7,7 +7,8 @@ namespace SPP_LegionV2_Management
 {
 	public class Bootstrapper : BootstrapperBase
 	{
-		DateTime time = DateTime.Now;
+		private DateTime time = DateTime.Now;
+
 		public Bootstrapper()
 		{
 			Initialize();
@@ -17,11 +18,14 @@ namespace SPP_LegionV2_Management
 		{
 			SplashScreenView ss = new SplashScreenView();
 
-			// Show our splash screen, wait a bit before popping up main window
+			// Show our splash screen, wait to fade before popping up main window
 			ss.Show();
-			while (time.AddMilliseconds(4300) > DateTime.Now) { await Task.Delay(1); }
+			await Task.Delay(1000);
+			while (ss.Opacity > 0.01) { await Task.Delay(1); }
 
+			// Pop up our main view, and close splash screen
 			DisplayRootViewFor<ShellViewModel>();
+			ss.Close();
 		}
 	}
 }

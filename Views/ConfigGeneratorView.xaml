@@ -3,10 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		xmlns:controls="clr-namespace:SPP_LegionV2_Management.Controls"
+		xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+		Dialog:DialogParticipation.Register="{Binding}"
         xmlns:local="clr-namespace:SPP_LegionV2_Management"
-        Background="DimGray"
+		xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
+        Background="#252525"
         mc:Ignorable="d">
-	<Grid>
+	<Grid Background="#252525">
 		<Grid.ColumnDefinitions>
 			<!-- Whole app, probably not needed -->
 			<ColumnDefinition Width="*" />
@@ -19,39 +23,22 @@
 		<!-- Stackpanel contains the buttons, searchbox -->
 		<StackPanel>
 			<StackPanel>
-				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="0.5*" />
-						<ColumnDefinition Width="*" MinWidth="60" />
-						<ColumnDefinition Width="*" MinWidth="70" />
-						<ColumnDefinition Width="*" MinWidth="150" />
-						<ColumnDefinition Width="*" MinWidth="110" />
-						<ColumnDefinition Width="*" MinWidth="100" />
-						<ColumnDefinition Width="*" MinWidth="100" />
-						<ColumnDefinition Width="0.5*" />
-						<ColumnDefinition Width="*" />
-					</Grid.ColumnDefinitions>
+				<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
 					<!-- Top row of buttons -->
-					<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5"  Background="AliceBlue" Grid.Column="1"
-							HorizontalAlignment="Center"
-					ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the server config, DB and WoW Legion client config if able." />
-					<Button x:Name="SetBuild" Content="Set Build" Padding="5" Margin="5" Background="AliceBlue"
-							HorizontalAlignment="Center"
-					ToolTip="Sets the Game.Build.Version in the config/database" Grid.Column="2" />
-					<Button x:Name="SetDefaults" Content="Set Configs to Default" Padding="5" Margin="5" Background="AliceBlue" Grid.Column="3"
-							HorizontalAlignment="Center"
-					ToolTip="Sets default entries in the SPP config. This will overwrite current settings from the local default template file." />
-					<Button x:Name="LoadSettings" Content="Reload Configs" Padding="5" Margin="5" Background="AliceBlue"
-							Grid.Column="4" HorizontalAlignment="Center"
-					ToolTip="This reloads the Settings file, default templates and SPP world/bnet files from disk. This is helpful to undo any changes in the current session instead of restarting the app." />
-					<Button x:Name="CheckSPPConfig" Content="Check Config" Padding="5" Margin="5" Background="AliceBlue"
-							Grid.Column="5" HorizontalAlignment="Center"
-					ToolTip="This will check the current SPP config for some potential issues." />
-					<Button x:Name="SaveConfig" Content="Export Config" Padding="5" Margin="5" Background="AliceBlue"
-							Grid.Column="6" HorizontalAlignment="Center"
-					ToolTip="Save settings and generate configs to SPP installation and database." />
-				</Grid>
+					<Button x:Name="SetIP" Content="Set IP" Padding="5" Margin="5" HorizontalAlignment="Center"
+						ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the server config, DB and WoW Legion client config if able." />
+					<Button x:Name="SetBuild" Content="Set Build" Padding="5" Margin="5" HorizontalAlignment="Center"
+						ToolTip="Sets the Game.Build.Version in the config/database" />
+					<Button x:Name="SetDefaults" Content="Set Configs to Default" Padding="5" Margin="5" HorizontalAlignment="Center"
+						ToolTip="Sets default entries in the SPP config. This will overwrite current settings from the local default template file." />
+					<Button x:Name="LoadSettings" Content="Reload Configs" Padding="5" Margin="5" HorizontalAlignment="Center"
+						ToolTip="This reloads the Settings file, default templates and SPP world/bnet files from disk. This is helpful to undo any changes in the current session instead of restarting the app." />
+					<Button x:Name="CheckSPPConfig" Content="Check Config" Padding="5" Margin="5" HorizontalAlignment="Center"
+						ToolTip="This will check the current SPP config for some potential issues." />
+					<Button x:Name="SaveConfig" Content="Export Config" Padding="5" Margin="5" HorizontalAlignment="Center"
+						ToolTip="Save settings and generate configs to SPP installation and database." />
+				</WrapPanel>
 			</StackPanel>
 
 			<!-- Search box and status box, above tabs -->
@@ -78,7 +65,13 @@
 
 				<!-- Main Window -->
 				<Grid Grid.Column="0">
-					<TabControl Background="DarkGray" Margin="1">
+					<TabControl Background="#353535" Margin="1" Style="{DynamicResource MahApps.Styles.TabControl.Animated}">
+						<TabControl.Resources>
+							<Style TargetType="TabItem" BasedOn="{StaticResource MahApps.Styles.TabItem}">
+								<Setter Property="mah:HeaderedControlHelper.HeaderFontSize" Value="18" />
+								<Setter Property="mah:HeaderedControlHelper.HeaderFontWeight" Value="Bold" />
+							</Style>
+						</TabControl.Resources>
 						<TabItem Header="World Config" Margin="1">
 							<!-- Datagrid for World settings -->
 							<DataGrid
@@ -123,7 +116,7 @@
 				<!-- Log -->
 				<Border Grid.Column="2" BorderThickness="2" BorderBrush="AliceBlue">
 					<ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-						<TextBlock Text="{Binding LogText}" Margin="5" TextWrapping="Wrap"/>
+						<TextBlock Text="{Binding LogText}" Margin="5" TextWrapping="Wrap" />
 					</ScrollViewer>
 				</Border>
 			</Grid>
