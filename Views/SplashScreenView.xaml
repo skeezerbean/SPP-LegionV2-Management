@@ -1,0 +1,27 @@
+﻿<Window x:Class="SPP_LegionV2_Management.SplashScreenView"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SPP_LegionV2_Management"
+		WindowStyle="None" WindowStartupLocation="CenterScreen" 
+		ResizeMode="NoResize" ShowInTaskbar="False" Topmost="True"
+        mc:Ignorable="d" Opacity="0" AllowsTransparency="True"
+        Title="SplashScreen">
+	<Window.Triggers>
+		<EventTrigger RoutedEvent="Window.Loaded">
+			<BeginStoryboard>
+				<Storyboard Completed="Storyboard_Completed">
+					<DoubleAnimation Duration="00:00:0.9" Storyboard.TargetProperty="Opacity" To="0.9" />
+					<DoubleAnimation BeginTime="00:00:03" Duration="00:00:01.5" Storyboard.TargetProperty="Opacity" To="0" />
+				</Storyboard>
+			</BeginStoryboard>
+		</EventTrigger>
+	</Window.Triggers>
+	<Window.Background>
+		<ImageBrush ImageSource="/Resources/SPP-Config-Splash.png"></ImageBrush>
+	</Window.Background>
+	<Grid Background="{x:Null}" Opacity="0">
+        
+    </Grid>
+</Window>
