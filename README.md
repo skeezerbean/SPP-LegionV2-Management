@@ -5,6 +5,7 @@
 ## Configuration and Management for SPP LegionV2 Servers
 
 THANK YOU to Serithul of SPP discord for helping with SQL. This project wouldn't be half of what it is without you :)
+Also special thanks for m1#2698 for splash/logo image!
 
 ### Usage
 
