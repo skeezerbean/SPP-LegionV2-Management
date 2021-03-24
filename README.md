@@ -1,3 +1,6 @@
+![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/SPP-Config-Splash.png)
+
+
 # SPP-LegionV2-Management
 ## Configuration and Management for SPP LegionV2 Servers
 
