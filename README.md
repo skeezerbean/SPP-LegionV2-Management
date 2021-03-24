@@ -17,7 +17,7 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
-**0.0.2.11** - Added option to boost current xp for battlepets for selected account, helps boost leveling
+**0.0.2.11** - Added option to boost current xp for battlepets for selected account, helps boost leveling. Amazing splash screen made by Discord user m1#2698
 
 **0.0.2.10** - Added option to set all BattlePets to rare quality for selected account
 
