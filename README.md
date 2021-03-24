@@ -21,6 +21,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.12** - Massive GUI changes to look much more like a real app, small code fixes
+
 **0.0.2.11** - Added option to boost current xp for battlepets for selected account, helps boost leveling. Amazing splash screen made by Discord user m1#2698
 
 **0.0.2.10** - Added option to set all BattlePets to rare quality for selected account
@@ -181,11 +183,11 @@ To use this, click on the **Account Manager** button
 
 On the Account Manager screen, in the **Accounts** tab - 
 
-**1** - Pulls the list of accounts from the database.
+**1** - Pulls the list of accounts from the database
 
 **2** - You can select an account and see/change the settings on the right side
 
-**3** - Change settings here for an account. If the BattleNet ID or Login is -1, then chances are that BattleNet account doesn't exist. Leave it alone. The account may have not been fully created. Otherwise you can change the number of Battle Coins for an account, change the BattleNet Email or Account Username. **Note - if you change the BattleNet Email for login, you will need to enter a password as well as they are tied together in how the password hash is created (TrinityCore). This can be the original password for this account, or you can set a new one.**
+**3** - Change settings here for an account. If the BattleNet ID or Login is -1, then chances are that BattleNet account doesn't exist. Leave it alone. The account may have not been fully created. Otherwise you can change the number of Battle Coins for an account, change the BattleNet Email or Account Username. **Note - if you change the BattleNet Email for login, you will need to enter a password as well as they are tied together in how the password hash is created (TrinityCore). This can be the original password for this account, or you can set a new one.**  You can also check the box to upgrade all BattleNet pets for the selected account to be rare quality (may break some pets if not all can be upgraded), as well as set their current xp amount to 2000 which should set them all ready for level up
 
 **4** - Click this when done editing characters and it will push changes to the database. 
 
