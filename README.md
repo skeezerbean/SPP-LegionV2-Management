@@ -7,6 +7,8 @@
 THANK YOU to Serithul of SPP discord for helping with SQL. This project wouldn't be half of what it is without you :)
 Also special thanks for m1#2698 for splash/logo image!
 
+**Backing up your database** - use [THIS!](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/How_to_use_HeidiSQL_to_backup_your_databases.pdf) for directions how to do that
+
 ### Usage
 
 This application requires .net framework 4.8. 
