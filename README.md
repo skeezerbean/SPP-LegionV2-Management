@@ -23,6 +23,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes -
 
+**0.0.2.13** - Introduced more massive GUI updates, customized buttons/graphics created by SPP discord user m1
+
 **0.0.2.12** - Massive GUI changes to look much more like a real app, small code fixes
 
 **0.0.2.11** - Added option to boost current xp for battlepets for selected account, helps boost leveling. Amazing splash screen made by Discord user m1#2698
