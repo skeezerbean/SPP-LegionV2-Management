@@ -24,7 +24,6 @@ namespace SPP_LegionV2_Management
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
 		public BindableCollection<ConfigEntry> WorldCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
-
 		public BindableCollection<ConfigEntry> BnetCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
@@ -43,7 +42,6 @@ namespace SPP_LegionV2_Management
 
 		// For search/filtering
 		public ICollectionView WorldView { get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
-
 		public ICollectionView BnetView { get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
 		private string _SearchBox = "";
 

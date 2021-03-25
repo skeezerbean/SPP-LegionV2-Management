@@ -83,13 +83,11 @@
 									<DataGridTextColumn Header="Setting" Binding="{Binding Name}" />
 									<DataGridTextColumn Header="Value" Binding="{Binding Value}" MaxWidth="300" />
 								</DataGrid.Columns>
-								<DataGrid.Resources>
-									<Style TargetType="{x:Type DataGridRow}">
-										<!-- Bind our description to the tooltip for whatever cell
-											is being hovered over -->
+								<DataGrid.RowStyle>
+									<Style TargetType="DataGridRow" BasedOn="{StaticResource MahApps.Styles.DataGridRow}">
 										<Setter Property="ToolTip" Value="{Binding Description}" />
 									</Style>
-								</DataGrid.Resources>
+								</DataGrid.RowStyle>
 							</DataGrid>
 						</TabItem>
 
@@ -102,11 +100,11 @@
 									<DataGridTextColumn Header="Setting" Binding="{Binding Name}" />
 									<DataGridTextColumn Header="Value" Binding="{Binding Value}" />
 								</DataGrid.Columns>
-								<DataGrid.Resources>
-									<Style TargetType="{x:Type DataGridRow}">
+								<DataGrid.RowStyle>
+									<Style TargetType="DataGridRow" BasedOn="{StaticResource MahApps.Styles.DataGridRow}">
 										<Setter Property="ToolTip" Value="{Binding Description}" />
 									</Style>
-								</DataGrid.Resources>
+								</DataGrid.RowStyle>
 							</DataGrid>
 						</TabItem>
 					</TabControl>
