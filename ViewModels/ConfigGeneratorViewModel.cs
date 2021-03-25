@@ -18,7 +18,6 @@ namespace SPP_LegionV2_Management
 	{
 		// IDialogCoordinator is for metro message boxes
 		private readonly IDialogCoordinator _dialogCoordinator;
-
 		private bool _exportRunning = false;
 
 		// These are the collections we'll be using, pulled from the Default Templates folder,
@@ -30,7 +29,6 @@ namespace SPP_LegionV2_Management
 
 		// stores the filesystem path to the files
 		public string WowConfigFile { get; set; } = string.Empty;
-
 		public string BnetConfFile { get; set; } = string.Empty;
 		public string WorldConfFile { get; set; } = string.Empty;
 

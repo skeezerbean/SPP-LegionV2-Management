@@ -3,17 +3,25 @@
 		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		Background="#252525"
 		xmlns:mah="http://metro.mahapps.com/winfx/xaml/controls"
 		GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
 		BorderThickness="0" Icon="/Resources/spp.jpg"
-		mc:Ignorable="d" FontSize="12" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
-        Title="{Binding AppTitle}"
+		mc:Ignorable="d" FontSize="14" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
+		xmlns:local="clr-namespace:SPP_LegionV2_Management" 
+		xmlns:spp_legionv2_management="clr-namespace:SPP_LegionV2_Management"
+		Closing="MetroWindow_Closing"
+		Title="{Binding AppTitle}"
 		Height="{Binding WindowHeight, Mode=TwoWay}"
 		Width="{Binding WindowWidth, Mode=TwoWay}"
 		Top="{Binding WindowTop, Mode=TwoWay}"
 		Left="{Binding WindowLeft, Mode=TwoWay}">
-
+	
+	<!-- Set our background image -->
+	<mah:MetroWindow.Background>
+		<ImageBrush ImageSource="/Resources/Background/Project-BG.png" Opacity="0.7" />
+	</mah:MetroWindow.Background>
+	
+	<!-- Right side of title bar -->
 	<mah:MetroWindow.RightWindowCommands>
 		<mah:WindowCommands>
 			<Button Click="HelpAbout" Content="Help / About">
@@ -29,20 +37,23 @@
 			</Button>
 		</mah:WindowCommands>
 	</mah:MetroWindow.RightWindowCommands>
-
+	
 	<Grid>
 		<Border Margin="5" BorderBrush="Black" BorderThickness="3">
-			<DockPanel>
+			<DockPanel >
 
 				<!-- Top buttons for switching pages -->
 				<StackPanel DockPanel.Dock="Top">
 					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-						<Button x:Name="LoadPageConfigGenerator" Content="Config Generator"
-							Width="120" Height="30" Margin="5,5,15,5" />
-						<Button x:Name="LoadPageAccountManager" Content="Account Manager"
-							Width="120" Height="30" Margin="5,5,15,5" />
-						<Button x:Name="LoadPageSettings" Content="Settings"
-							Width="120" Height="30" Margin="5,5,5,5" />
+						<Button x:Name="LoadPageConfigGenerator" Width="180" Margin="5,5,15,5" 
+							local:EyeCandyForeGround.Image="/Resources/Buttons/Config_Generator.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent" />
+						<Button x:Name="LoadPageAccountManager" Width="180" Margin="5,5,15,5"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/Account_Manager.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent" />
+						<Button x:Name="LoadPageSettings" Width="180" Margin="5,5,5,5"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/Settings.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent" />
 					</WrapPanel>
 				</StackPanel>
 
@@ -52,19 +63,18 @@
 					<TextBlock x:Name="ServerConfigStatus" Margin="0,5,15,5" FontWeight="Bold" />
 					<TextBlock Text="Client Config:" Margin="5" FontWeight="Bold" />
 					<TextBlock x:Name="ClientConfigStatus" Margin="0,5,15,5" FontWeight="Bold" />
-					<TextBlock Text="Database:" Margin="5" FontWeight="Bold" />
+					<TextBlock Text="Database Connection:" Margin="5" FontWeight="Bold" />
 					<TextBlock x:Name="SQLConnectionStatus" Margin="0,5,15,5" FontWeight="Bold" />
 				</WrapPanel>
-				<WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center">
-					<TextBlock Text="MDic banged Varjgard/Thordekk/ZGN's mom:" Margin="5" />
-					<TextBlock Text="True" Margin="0,5,5,5" FontWeight="Bold" />
+				<WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="50,0">
+					<Button MaxWidth="850" MaxHeight="60"
+						local:EyeCandyForeGround.Image="/Resources/Background/MdicBangsMoms.png"
+						local:EyeCandyBackGround.ImageBackGround="/Resources/Background/MdicYourMom.png"
+						Style="{DynamicResource DualImageButtonStyle}" Background="Transparent"/>
 				</WrapPanel>
 
 				<!-- ActiveItem is Caliburn, marks this as the active child form -->
-				<Border Padding="5" Margin="5"
-						Background="#111111ff" BorderBrush="Black" BorderThickness="2">
-						<ContentControl x:Name="ActiveItem" />
-				</Border>
+					<ContentControl x:Name="ActiveItem" Margin="35,30,35,60" />
 			</DockPanel>
 		</Border>
 	</Grid>

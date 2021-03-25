@@ -4,19 +4,23 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SPP_LegionV2_Management"
-	    Background="#252525"
+	    Background="Transparent" FontSize="16"
         mc:Ignorable="d">
 	<Grid>
+		<StackPanel Margin="10">
+			<WrapPanel Orientation="Horizontal" Margin="10">
+				<Button x:Name="SPPFolderBrowse" Margin="5" Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
+				local:EyeCandyForeGround.Image="/Resources/Buttons/SetSPPFolder.png" MaxWidth="400" MaxHeight="47" />
 
-		<WrapPanel Orientation="Horizontal">
-			<StackPanel Margin="5">
-				<Button x:Name="SPPFolderBrowse" Content="Set SPP Folder Location" Margin="5" />
-				<Button x:Name="WowConfigBrowse" Content="Set Wow Client Location" Margin="5" />
-			</StackPanel>
-			<StackPanel Margin="5">
-				<TextBlock x:Name="SPPFolderLocation" Margin="-5,11" VerticalAlignment="Center" />
-				<TextBlock x:Name="WOWConfigLocation" Margin="-5,9" VerticalAlignment="Center" />
-			</StackPanel>
-		</WrapPanel>
+				<TextBlock x:Name="SPPFolderLocation" Margin="5,11" VerticalAlignment="Center" />
+			</WrapPanel>
+
+			<WrapPanel Orientation="Horizontal" Margin="10">
+				<Button x:Name="WowConfigBrowse" Margin="5" local:EyeCandyForeGround.Image="/Resources/Buttons/SetClientFolder.png"
+				Style="{DynamicResource ImageButtonStyle}" Background="Transparent" MaxWidth="400" MaxHeight="47" />
+
+				<TextBlock x:Name="WOWConfigLocation" Margin="5,9" VerticalAlignment="Center" />
+			</WrapPanel>
+		</StackPanel>
 	</Grid>
 </UserControl>

@@ -23,5 +23,11 @@ namespace SPP_LegionV2_Management
 			Process.Start(new ProcessStartInfo("https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/README.md"));
 			e.Handled = true;
 		}
+
+		// Save the window size/location when exiting
+		private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+		{
+			GeneralSettingsManager.SaveSettings(GeneralSettingsManager.SettingsPath, GeneralSettingsManager.GeneralSettings);
+		}
 	}
 }

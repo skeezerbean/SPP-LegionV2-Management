@@ -6,44 +6,51 @@
 			 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
 			 xmlns:controls="clr-namespace:SPP_LegionV2_Management.Controls"
+			 xmlns:local="clr-namespace:SPP_LegionV2_Management"
 			 Dialog:DialogParticipation.Register="{Binding}"
-			 Background="#252525" x:Name="root"
+			 Background="Transparent" x:Name="root"
         mc:Ignorable="d">
 
 	<Grid>
-		<TabControl Background="#353535" Margin="1" Grid.Row="2" Style="{DynamicResource MahApps.Styles.TabControl.Animated}">
+		<TabControl Background="Transparent" Margin="1" Grid.Row="2" Style="{DynamicResource MahApps.Styles.TabControl.Animated}">
 			<TabControl.Resources>
 				<Style TargetType="TabItem" BasedOn="{StaticResource MahApps.Styles.TabItem}">
 					<Setter Property="mah:HeaderedControlHelper.HeaderFontSize" Value="18" />
 					<Setter Property="mah:HeaderedControlHelper.HeaderFontWeight" Value="Bold" />
 				</Style>
 			</TabControl.Resources>
-			<TabItem Header="Accounts" Margin="1">
-				<Grid>
+			<TabItem Header="Accounts" Margin="1" Background="#353535">
+				<Grid >
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<Grid.RowDefinitions>
-						<RowDefinition Height="40" />
+						<RowDefinition Height="auto" />
 						<RowDefinition Height="*" />
 					</Grid.RowDefinitions>
 
 					<!-- Buttons for left side -->
-					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
+					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" >
 
-						<Button x:Name="RetrieveAccounts" Content="Show Accounts" Margin="5" Padding="5"
+						<Button x:Name="RetrieveAccounts" Margin="5" MaxWidth="265"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/ShowAccounts.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Retreives Legion Account/BNET account info from the database" />
 
-						<Button x:Name="AddAccount" Content="Create Account" Margin="5" Padding="5"
+						<Button x:Name="AddAccount" Margin="5" MaxWidth="265"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/CreateAccount.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Open Dialog to create an account and BNET account" />
 
-						<Button x:Name="DeleteSelectedAccount" Content="Delete Selected Account" Margin="5" Padding="5"
+						<Button x:Name="DeleteSelectedAccount" Margin="5" MaxWidth="265"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/DeleteAccount.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Delete the selected account, may take a while if there are a lot of database objects" />
 					</WrapPanel>
 
 					<DataGrid ItemsSource="{Binding Accounts}" AutoGenerateColumns="False" IsReadOnly="True"
-							  ScrollViewer.CanContentScroll="True"
+							  ScrollViewer.CanContentScroll="True" Background="Transparent"
 						Grid.Column="0" Grid.Row="1" SelectedItem="{Binding SelectedAccount}" SelectionMode="Single"
 						EnableColumnVirtualization="True" EnableRowVirtualization="True">
 
@@ -53,12 +60,30 @@
 							<DataGridTextColumn Header="BattleNet Login" Binding="{Binding BattleNetEmail}" MinWidth="180" />
 							<DataGridTextColumn Header="GM Level" Binding="{Binding GMLevel}" MinWidth="50" />
 						</DataGrid.Columns>
+						<DataGrid.ColumnHeaderStyle>
+							<Style TargetType="DataGridColumnHeader"  BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}">
+								<Setter Property="Background" Value="Transparent" />
+								<Setter Property="FontWeight" Value="Bold" />
+							</Style>
+						</DataGrid.ColumnHeaderStyle>
+						<DataGrid.RowHeaderStyle>
+							<Style TargetType="DataGridRowHeader"  BasedOn="{StaticResource MahApps.Styles.DataGridRowHeader}">
+								<Setter Property="Background" Value="Transparent" />
+							</Style>
+						</DataGrid.RowHeaderStyle>
+						<DataGrid.RowStyle>
+							<Style TargetType="DataGridRow" BasedOn="{StaticResource MahApps.Styles.DataGridRow}">
+								<Setter Property="Background" Value="Transparent" />
+							</Style>
+						</DataGrid.RowStyle>
 					</DataGrid>
 
 					<!-- Buttons for top-right side -->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
 
-						<Button x:Name="ApplyAccountChanges" Content="Apply Changes To Database" Margin="5" Padding="5"
+						<Button x:Name="ApplyAccountChanges" Margin="5"  MaxWidth="450"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/ApplyChangesToDatabase.png" MaxHeight="60"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Save any account changes to the database" />
 					</StackPanel>
 
@@ -69,10 +94,10 @@
 							<TextBlock Text="Selected Account ID:" />
 							<TextBlock Text="Selected BattleNet ID:" />
 							<TextBlock Text="Selected BattleNet Login:" Margin="0,5" />
-							<TextBlock Text="Password for BattleNet:" Margin="0,5" />
-							<TextBlock Text="Selected Account Username:" Margin="0,5" />
-							<TextBlock Text="Selected BattleCoins:" Margin="0,5" />
-							<TextBlock Text="Selected Account GM Level:" Margin="0,5" />
+							<TextBlock Text="Password for BattleNet:" Margin="0,4" />
+							<TextBlock Text="Selected Account Username:" Margin="0,3" />
+							<TextBlock Text="Selected BattleCoins:" Margin="0,3" />
+							<TextBlock Text="Selected Account GM Level:" Margin="0,3" />
 							<TextBlock Text="Account BattlePets to Rare?" Margin="0,1" />
 							<TextBlock Text="Account BattlePets XP bump?" Margin="0,5" />
 							<TextBlock Text="Status:" Margin="1" />
@@ -87,7 +112,8 @@
 								UpdateSourceTrigger=PropertyChanged, ValidatesOnDataErrors=True}"  Width="125" HorizontalAlignment="Left"
 								ToolTip="Password required when changing Bnet login, or can update a password if needed" />
 							<TextBox x:Name="CurrentUsername"  Width="125" HorizontalAlignment="Left" />
-							<TextBox x:Name="CurrentBattleCoins"  Width="125" HorizontalAlignment="Left" />
+							<TextBox x:Name="CurrentBattleCoins"  Width="125" HorizontalAlignment="Left"
+								ToolTip="Set this account's amount of Battle Coins"/>
 							<TextBox x:Name="CurrentGMLevel"  Width="125" HorizontalAlignment="Left"
 								ToolTip="GM Level set to -1 or 0 to disable, or between 1 and 6" />
 							<CheckBox x:Name="CurrentRareBattlePets" Margin="2" HorizontalAlignment="Left"
@@ -109,54 +135,77 @@
 				</Grid>
 			</TabItem>
 
-			<TabItem Header="Characters" Margin="1">
+			<TabItem Header="Characters" Margin="1" Background="#353535">
 				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<Grid.RowDefinitions>
-						<RowDefinition Height="40" />
+						<RowDefinition Height="auto" />
 						<RowDefinition Height="*" />
 					</Grid.RowDefinitions>
 
-					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
-						<Button x:Name="RetrieveCharacters" Content="Show Characters" Margin="5" Padding="5"
+						<Button x:Name="RetrieveCharacters" Margin="5" MaxWidth="265"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/ShowCharacters.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Retreives character info from the database" />
 
-						<Button x:Name="DeleteSelectedCharacter" Content="Delete Selected Character" Margin="5" Padding="5"
+						<Button x:Name="DeleteSelectedCharacter" Margin="5" MaxWidth="265"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/DeleteCharacter.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Delete the selected account" />
-					</StackPanel>
+					</WrapPanel>
 
 					<DataGrid ItemsSource="{Binding Characters}" AutoGenerateColumns="False" IsReadOnly="True"
 						ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
 						Grid.Column="0" Grid.Row="1" SelectedItem="{Binding SelectedCharacter}" SelectionMode="Single"
-						EnableColumnVirtualization="True" EnableRowVirtualization="True">
+						EnableColumnVirtualization="True" EnableRowVirtualization="True"
+						Background="Transparent">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="GUID" Binding="{Binding Guid}" MinWidth="60" />
 							<DataGridTextColumn Header="Account" Binding="{Binding Account}" MinWidth="60" />
 							<DataGridTextColumn Header="Character Name" Binding="{Binding Name}" MinWidth="100" />
 						</DataGrid.Columns>
+						<DataGrid.ColumnHeaderStyle>
+							<Style TargetType="DataGridColumnHeader"  BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}">
+								<Setter Property="Background" Value="Transparent" />
+								<Setter Property="FontWeight" Value="Bold" />
+							</Style>
+						</DataGrid.ColumnHeaderStyle>
+						<DataGrid.RowHeaderStyle>
+							<Style TargetType="DataGridRowHeader"  BasedOn="{StaticResource MahApps.Styles.DataGridRowHeader}">
+								<Setter Property="Background" Value="Transparent" />
+							</Style>
+						</DataGrid.RowHeaderStyle>
+						<DataGrid.RowStyle>
+							<Style TargetType="DataGridRow" BasedOn="{StaticResource MahApps.Styles.DataGridRow}">
+								<Setter Property="Background" Value="Transparent" />
+							</Style>
+						</DataGrid.RowStyle>
 					</DataGrid>
 
 					<!-- Buttons for top-right side -->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
 
-						<Button x:Name="ApplyCharacterChanges" Content="Apply Changes To Database" Margin="5" Padding="5"
+						<Button x:Name="ApplyCharacterChanges" Margin="5" MaxWidth="450"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/ApplyChangesToDatabase.png" MaxHeight="60"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Save any character changes to the database" />
 					</StackPanel>
 
 					<!--Right side, list details of selected character-->
 					<StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Margin="10">
-						<StackPanel Margin="10">
+						<StackPanel Margin="1">
 							<TextBlock Text="Total Characters:" />
 							<TextBlock Text="Selected Character GUID:" />
-							<TextBlock Text="Selected Character Account ID:" Margin="1" />
-							<TextBlock Text="Selected Character Name:" Margin="1" />
-							<TextBlock Text="Status:" Margin="1" />
+							<TextBlock Text="Selected Character Account ID:" Margin="2" />
+							<TextBlock Text="Selected Character Name:" Margin="3" />
+							<TextBlock Text="Status:" Margin="2" />
 						</StackPanel>
-						<StackPanel Margin="10">
+						<StackPanel Margin="0,1">
 							<TextBlock x:Name="CharactersTotal" />
 							<TextBlock x:Name="CurrentCharacterGUID" />
 							<TextBox x:Name="CurrentCharacterAccountID"  Width="125" HorizontalAlignment="Left"
@@ -169,52 +218,74 @@
 				</Grid>
 			</TabItem>
 
-			<TabItem Header="Orphaned Characters" Margin="1">
+			<TabItem Header="Orphaned Characters" Margin="1" Background="#353535">
 				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
 					</Grid.ColumnDefinitions>
 					<Grid.RowDefinitions>
-						<RowDefinition Height="40" />
+						<RowDefinition Height="auto" />
 						<RowDefinition Height="*" />
 					</Grid.RowDefinitions>
 
-					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
-						<Button x:Name="RetrieveOrphanedCharacters" Content="Show Characters" Margin="5" Padding="5"
+						<Button x:Name="RetrieveOrphanedCharacters" Margin="5" MaxWidth="265"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/ShowCharacters.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Retreives character info from the database" />
 
-						<Button x:Name="DeleteOrphanedCharacters" Content="Remove all Orphaned Characters" Margin="5" Padding="5"
+						<Button x:Name="DeleteOrphanedCharacters" Margin="5" MaxWidth="265" MaxHeight="35"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/DeleteOrphanedCharacters.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Delete the orphaned characters (may take a while)" />
-					</StackPanel>
+					</WrapPanel>
 
 					<DataGrid ItemsSource="{Binding OrphanedCharacters}" AutoGenerateColumns="False" IsReadOnly="True"
 						ScrollViewer.CanContentScroll="True" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
 						Grid.Column="0" Grid.Row="1" SelectionMode="Single" SelectedItem="{Binding OrphanedSelectedCharacter}"
-						EnableColumnVirtualization="True" EnableRowVirtualization="True">
+						EnableColumnVirtualization="True" EnableRowVirtualization="True" Background="Transparent">
 						<DataGrid.Columns>
 							<DataGridTextColumn Header="GUID" Binding="{Binding Guid}" MinWidth="60" />
 							<DataGridTextColumn Header="Character Name" Binding="{Binding Name}" MinWidth="100" />
 						</DataGrid.Columns>
+						<DataGrid.ColumnHeaderStyle>
+							<Style TargetType="DataGridColumnHeader"  BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}">
+								<Setter Property="Background" Value="Transparent" />
+								<Setter Property="FontWeight" Value="Bold" />
+							</Style>
+						</DataGrid.ColumnHeaderStyle>
+						<DataGrid.RowHeaderStyle>
+							<Style TargetType="DataGridRowHeader"  BasedOn="{StaticResource MahApps.Styles.DataGridRowHeader}">
+								<Setter Property="Background" Value="Transparent" />
+							</Style>
+						</DataGrid.RowHeaderStyle>
+						<DataGrid.RowStyle>
+							<Style TargetType="DataGridRow" BasedOn="{StaticResource MahApps.Styles.DataGridRow}">
+								<Setter Property="Background" Value="Transparent" />
+							</Style>
+						</DataGrid.RowStyle>
 					</DataGrid>
 
 					<!-- Buttons for top-right side -->
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Grid.Column="1">
-						<Button x:Name="ApplyOrphanedCharacterChanges" Content="Apply Changes To Database" Margin="5" Padding="5"
+						<Button x:Name="ApplyOrphanedCharacterChanges" Margin="5" MaxWidth="450" MaxHeight="60"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/ApplyChangesToDatabase.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Save any character changes to the database" />
 					</StackPanel>
 
 					<!--Right side, list details of selected character-->
 					<StackPanel Orientation="Horizontal" Grid.Column="1" Grid.Row="1" Margin="10">
-						<StackPanel Margin="10">
+						<StackPanel Margin="1">
 							<TextBlock Text="Total Orphaned Characters:" />
 							<TextBlock Text="Selected Character GUID:" />
-							<TextBlock Text="Selected Character Account ID:" Margin="1" />
-							<TextBlock Text="Selected Character Name:" Margin="1" />
-							<TextBlock Text="Status:" Margin="1" />
+							<TextBlock Text="Selected Character Account ID:" Margin="2" />
+							<TextBlock Text="Selected Character Name:" Margin="3" />
+							<TextBlock Text="Status:" Margin="2" />
 						</StackPanel>
-						<StackPanel Margin="10">
+						<StackPanel Margin="0,1">
 							<TextBlock x:Name="OrphanedCharactersTotal" />
 							<TextBlock x:Name="OrphanedCurrentCharacterGUID" />
 							<TextBox x:Name="OrphanedCurrentCharacterAccountID" Width="125" HorizontalAlignment="Left"
@@ -227,23 +298,23 @@
 				</Grid>
 			</TabItem>
 
-			<TabItem Header="Clean Up Tools" Margin="1">
+			<TabItem Header="Clean Up Tools" Margin="1" Background="#353535">
 				<Grid>
-					<!--<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="auto" />
-						<ColumnDefinition Width="*" />
-					</Grid.ColumnDefinitions>-->
 					<Grid.RowDefinitions>
-						<RowDefinition Height="40" />
+						<RowDefinition Height="auto" />
 						<RowDefinition Height="auto" />
 						<RowDefinition Height="*" />
 					</Grid.RowDefinitions>
 
 					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-						<Button x:Name="GetOrphanedData" Content="Check for Orphaned Objects" Margin="5" Padding="5"
+						<Button x:Name="GetOrphanedData" Margin="5" MaxWidth="537"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/ListOrphanedObjects.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Calculate the orphaned objects" />
 
-						<Button x:Name="RemoveOrphanedItems" Content="Remove all Orphaned Objects" Margin="5" Padding="5"
+						<Button x:Name="RemoveOrphanedItems" Margin="5" MaxWidth="537"
+							local:EyeCandyForeGround.Image="/Resources/Buttons/RemoveOrphanedObjects.png"
+							Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 							ToolTip="Delete the orphaned objects (may take a while)" />
 					</WrapPanel>
 
@@ -251,10 +322,10 @@
 					<StackPanel Orientation="Horizontal" Grid.Row="1" Margin="10">
 						<StackPanel Margin="10">
 							<TextBlock Text="Orphaned Objects:" />
-							<TextBlock Text="Limit Rows To Process:" />
-							<TextBlock Text="Status:" />
+							<TextBlock Text="Limit Rows To Process:" Margin="1" />
+							<TextBlock Text="Status:" Margin="1" />
 						</StackPanel>
-						<StackPanel Margin="10">
+						<StackPanel Margin="1">
 							<TextBlock x:Name="OrphanedObjectsTotal" />
 							<TextBox x:Name="OrphanedRowsLimit" Width="70" HorizontalAlignment="Left">
 								<TextBox.ToolTip>

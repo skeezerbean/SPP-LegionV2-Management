@@ -63,11 +63,9 @@ namespace SPP_LegionV2_Management
 						// Split based on = sign
 						string[] strArray = item.Split('=');
 
-						// Now we should have 2 parts, the setting[0] and the value[1]
-						// and strip janky whitespace from the start/end so that we're
-						// left with a value and setting without extra space. This helps
-						// both comparing strings later, as well as the export of this
-						// collection back to disk
+						// Now we should have 2 parts, the setting[0] and the value[1] and strip janky whitespace from the start/end
+						// so that we're left with a value and setting without extra space. This helps both comparing strings later,
+						// as well as the export of this collection back to disk
 						ConfigEntry entry = new ConfigEntry
 						{
 							// Set our name (setting) without the whitespace

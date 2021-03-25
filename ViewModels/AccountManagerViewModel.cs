@@ -14,7 +14,6 @@ namespace SPP_LegionV2_Management
 
 		// block parallel tasks running of the same type
 		private bool _accountRetrieveRunning = false;
-
 		private bool _characterRetrieveRunning = false;
 		private bool _deleteAccountRunning = false;
 		private bool _deleteCharacterRunning = false;
@@ -22,6 +21,7 @@ namespace SPP_LegionV2_Management
 		private bool _gettingObjects = false;
 		private BindableCollection<int> _guildMasters = new BindableCollection<int>();
 
+		// General public models
 		public BindableCollection<Account> Accounts { get; set; } = new BindableCollection<Account>();
 		public BindableCollection<Character> Characters { get; set; } = new BindableCollection<Character>();
 		public BindableCollection<Character> OrphanedCharacters { get; set; } = new BindableCollection<Character>();
@@ -33,7 +33,6 @@ namespace SPP_LegionV2_Management
 
 		// Accounts
 		public int AccountsTotal { get; set; }
-
 		public int CurrentID { get { return (SelectedAccount == null) ? -1 : SelectedAccount.ID; } }
 		public int CurrentBattleNetAccount { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
 		public string CurrentBattleNetEmail { get { return (SelectedAccount == null) ? string.Empty : SelectedAccount.BattleNetEmail; } set { SelectedAccount.BattleNetEmail = value; } }
@@ -48,7 +47,6 @@ namespace SPP_LegionV2_Management
 
 		// Characters
 		public int CharactersTotal { get; set; }
-
 		public int CurrentCharacterGUID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Guid; } }
 		public int CurrentCharacterAccountID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
 		public string CurrentCharacterName { get { return (SelectedCharacter == null) ? string.Empty : SelectedCharacter.Name; } set { SelectedCharacter.Name = value; } }
@@ -56,7 +54,6 @@ namespace SPP_LegionV2_Management
 
 		// Orphaned Characters
 		public int OrphanedCharactersTotal { get; set; }
-
 		public int OrphanedOrphanedCharactersTotal { get; set; }
 		public int OrphanedRowsLimit { get; set; } = 100000;
 		public int OrphanedCurrentCharacterGUID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Guid; } }
@@ -66,7 +63,6 @@ namespace SPP_LegionV2_Management
 
 		// Orphaned Objects
 		public int OrphanedObjectsTotal { get; set; }
-
 		public BindableCollection<int> OrphanedIDs = new BindableCollection<int>();
 		public int OrphanedIDsTotal { get; set; }
 		public string OrphanedObjectsStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
@@ -284,6 +280,17 @@ namespace SPP_LegionV2_Management
 			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects || SelectedCharacter == null || SelectedCharacter.Guid == 0)
 				return;
 
+			string msg = $"⚠ ARE YOU SURE?? Deleting Character: [{SelectedCharacter.Name}]\n";
+
+			// Prompt, verify to continue
+			MessageDialogResult result = await _dialogCoordinator.ShowMessageAsync(this, "Confirm", msg, MessageDialogStyle.AffirmativeAndNegative);
+
+			if (result == MessageDialogResult.Canceled || result == MessageDialogResult.Negative)
+			{
+				CharacterStatus = "Character deletion canceled";
+				return;
+			}
+
 			_deleteCharacterRunning = true;
 			BindableCollection<Character> characters = new BindableCollection<Character>();
 			characters.Add(SelectedCharacter);
@@ -302,6 +309,17 @@ namespace SPP_LegionV2_Management
 		{
 			if (!CheckSQL() || _deleteCharacterRunning || _removingObjects)
 				return;
+
+			string msg = $"⚠ ARE YOU SURE you want to delete all orphaned characters??\n";
+
+			// Prompt, verify to continue
+			MessageDialogResult result = await _dialogCoordinator.ShowMessageAsync(this, "Confirm", msg, MessageDialogStyle.AffirmativeAndNegative);
+
+			if (result == MessageDialogResult.Canceled || result == MessageDialogResult.Negative)
+			{
+				CharacterStatus = "Character deletion canceled";
+				return;
+			}
 
 			// refresh our list
 			Task refresh = Task.Run(() => RetrieveCharacters());

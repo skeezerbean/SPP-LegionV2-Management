@@ -13,6 +13,146 @@
 				<ResourceDictionary>
 					<local:Bootstrapper x:Key="Bootstrapper" />
 				</ResourceDictionary>
+				<ResourceDictionary>
+					<!-- Set up button image style to use attached property from EyeCandy -->
+						<Style x:Key="ImageButtonStyle" TargetType="{x:Type Button}">
+							<Setter Property="Template">
+								<Setter.Value>
+									<ControlTemplate TargetType="{x:Type Button}">
+										<Grid>
+											
+										<Image Source="{Binding Path=(local:EyeCandyForeGround.Image),
+												RelativeSource={RelativeSource FindAncestor,
+												AncestorType={x:Type Button}}}" Stretch="Fill" Opacity="1" >
+											<Image.OpacityMask>
+												<RadialGradientBrush GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="1.0" RadiusY="1.0">
+													<GradientStop Color="Transparent" Offset="1.5"/>
+													<GradientStop Color="Transparent" Offset="0.0"/>
+													<GradientStop Color="Black" Offset="1.0"/>
+													<GradientStop Color="Black" Offset="0.0"/>
+												</RadialGradientBrush>
+											</Image.OpacityMask>
+											<Image.Style>
+												<Style TargetType="Image">
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType=Button}}" Value="true">
+															<DataTrigger.EnterActions>
+																<BeginStoryboard>
+																	<Storyboard>
+																		<DoubleAnimation Storyboard.TargetProperty="OpacityMask.(RadialGradientBrush.GradientStops)[1].(GradientStop.Offset)"
+																			From="0" To="1" Duration="0:0:0.5"/>
+																	</Storyboard>
+																</BeginStoryboard>
+															</DataTrigger.EnterActions>
+															<DataTrigger.ExitActions>
+																<BeginStoryboard>
+																	<Storyboard>
+																		<DoubleAnimation Storyboard.TargetProperty="OpacityMask.(RadialGradientBrush.GradientStops)[1].(GradientStop.Offset)"
+																			From="1" To="0" Duration="0:0:0.5"/>
+																	</Storyboard>
+																</BeginStoryboard>
+															</DataTrigger.ExitActions>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</Image.Style>
+										</Image>
+									</Grid>
+									</ControlTemplate>
+								</Setter.Value>
+							</Setter>
+						</Style>
+				</ResourceDictionary>
+				<ResourceDictionary>
+					<!-- Set up button DUAL image style to use attached property from EyeCandy, for fade-in of background image to be exposed -->
+					<Style x:Key="DualImageButtonStyle" TargetType="{x:Type Button}">
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="{x:Type Button}">
+									<Grid>
+
+										<Image Source="{Binding Path=(local:EyeCandyBackGround.ImageBackGround),
+												RelativeSource={RelativeSource FindAncestor,
+												AncestorType={x:Type Button}}}" Stretch="Fill" Opacity="0" >
+											<Image.OpacityMask>
+												<RadialGradientBrush GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="1.0" RadiusY="1.0">
+													<GradientStop Color="Transparent" Offset="1.5"/>
+													<GradientStop Color="Transparent" Offset="0.0"/>
+													<GradientStop Color="Black" Offset="1.0"/>
+													<GradientStop Color="Black" Offset="0.0"/>
+												</RadialGradientBrush>
+											</Image.OpacityMask>
+											<Image.Style>
+												<Style TargetType="Image">
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType=Button}}" Value="false">
+															<DataTrigger.EnterActions>
+																<BeginStoryboard>
+																	<Storyboard >
+																		<DoubleAnimation
+																			Storyboard.TargetProperty="Opacity"
+																			From="1" To="0" Duration="0:0:1" />
+																	</Storyboard>
+																</BeginStoryboard>
+															</DataTrigger.EnterActions>
+															<DataTrigger.ExitActions>
+																<BeginStoryboard>
+																	<Storyboard >
+																		<DoubleAnimation
+																			Storyboard.TargetProperty="Opacity"
+																			From="0" To="1" Duration="0:0:1" />
+																	</Storyboard>
+																</BeginStoryboard>
+															</DataTrigger.ExitActions>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</Image.Style>
+										</Image>
+										<Image Source="{Binding Path=(local:EyeCandyForeGround.Image),
+												RelativeSource={RelativeSource FindAncestor,
+												AncestorType={x:Type Button}}}" Stretch="Fill" Opacity="1" >
+											<Image.OpacityMask>
+												<RadialGradientBrush GradientOrigin="0.5,0.5" Center="0.5,0.5" RadiusX="1.0" RadiusY="1.0">
+													<GradientStop Color="Transparent" Offset="1.5"/>
+													<GradientStop Color="Transparent" Offset="0.0"/>
+													<GradientStop Color="Black" Offset="1.0"/>
+													<GradientStop Color="Black" Offset="0.0"/>
+												</RadialGradientBrush>
+											</Image.OpacityMask>
+											<Image.Style>
+												<Style TargetType="Image">
+													<Style.Triggers>
+														<DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType=Button}}" Value="true">
+															<DataTrigger.EnterActions>
+																<BeginStoryboard>
+																	<Storyboard >
+																		<DoubleAnimation
+																			Storyboard.TargetProperty="Opacity"
+																			From="1" To="0" Duration="0:0:1" />
+																	</Storyboard>
+																</BeginStoryboard>
+															</DataTrigger.EnterActions>
+															<DataTrigger.ExitActions>
+																<BeginStoryboard>
+																	<Storyboard >
+																		<DoubleAnimation
+																			Storyboard.TargetProperty="Opacity"
+																			From="0" To="1" Duration="0:0:1" />
+																	</Storyboard>
+																</BeginStoryboard>
+															</DataTrigger.ExitActions>
+														</DataTrigger>
+													</Style.Triggers>
+												</Style>
+											</Image.Style>
+										</Image>
+									</Grid>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+					</Style>
+				</ResourceDictionary>
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 	</Application.Resources>

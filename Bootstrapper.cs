@@ -21,7 +21,7 @@ namespace SPP_LegionV2_Management
 			// Show our splash screen, wait to fade before popping up main window
 			ss.Show();
 			await Task.Delay(1000);
-			while (ss.Opacity > 0.01) { await Task.Delay(1); }
+			while (ss.Opacity > 0) { await Task.Delay(1); }
 
 			// Pop up our main view, and close splash screen
 			DisplayRootViewFor<ShellViewModel>();
