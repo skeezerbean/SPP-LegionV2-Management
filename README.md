@@ -15,8 +15,6 @@ This application requires .net framework 4.8.
 
 (screenshots for setup and usage at the bottom) - Make sure the **SPP Database** engine is running.
 
-You can use the **[Set IP]** button to set the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
-
 ### Updating
 
 To update your current app to the latest, you just download the latest release and extract. Overwrite your existing app. The release doesn't contain a settings file, so it won't overwrite your existing settings or your backups.
@@ -51,7 +49,7 @@ To update your current app to the latest, you just download the latest release a
 
 -- Working - listing/changing current account/character information
 
--- Not working - creating new account, cleanup/deletion of accounts/characters/orphaned objects
+-- Not working - creating new account, cleanup/deletion of accounts/characters/orphaned objects (added in 0.0.2.4)
 
 **0.0.2.0** - Prep work for adding additional modules for management, renaming project
 
@@ -80,7 +78,7 @@ This tool helps build working World and Bnet server config files without duplica
 The MySQL server will probably error connecting unless you're running this on the same server. You should **keep the MySQL server set to 127.0.0.1** and user/password should be left to defaults in the config file. Delete the settings.json file to reset them.
 
 
-This tool can also update the **config.wtf** file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server. These addresses can be changed by using the **[Set IP]** button, and it can update the entries automatically. If you have your wow client on a machine other than the server, you can copy a 'fake' wow config.wtf to the server and set the location in the tool to bypass any errors for it. Just make sure you update your wow config manually if the portal address needs changed.
+This tool can also update the **config.wtf** file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server. These addresses can be changed by using the **[Set IP]** button, and it can update the entries automatically. If you have your wow client on a machine other than the server, you can copy a 'fake' wow config.wtf to the server and set the location in the tool to bypass any errors for it. Just make sure you update your wow config manually if the portal address needs changed. When use the **[Set IP]** button, it sets the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
 
 
 If there is a problem, you can use the **[Set Defaults]** button to pull the wow config fresh from the local template files. **This will overwrite all previous settings** for the Bnet and World config files. 
@@ -89,7 +87,7 @@ If there is a problem, you can use the **[Set Defaults]** button to pull the wow
 If you see an error similar to **[not allowed to connect to this MySQL server]** then you're probably running this on a different computer or the database isn't running. Run it from the SPP server (while the database server is running).
 
 
-To begin - Make sure the SPP Database is running
+To begin - **Make sure** the SPP Database is running
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/database-started.PNG)
 
