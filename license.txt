@@ -1,0 +1,9 @@
+You automatically agree to the license of this software by using, downloading, opening or viewing the SPP LegionV2 Management application or its predecessors in full or in part.
+This acknowledges that you -
+1 - Are purely an end user of SPP LegionV2
+2 - Are not offended by it's content in any way
+3 - Have no rights to complaints or objections of the software
+4 - Are not part of a governmental or corporate entity in any way, shape or form
+5 - Are not using it for any reason other than to manage an instance of SPP LegionV2
+
+Any lack of compliance or disagreement with the above terms requires you to remove any and all parts of the software. This license is retroactive to all installations.
