@@ -6,4 +6,4 @@ This acknowledges that you -
 4 - Are not part of a governmental or corporate entity in any way, shape or form
 5 - Are not using it for any reason other than to manage an instance of SPP LegionV2
 
-Any lack of compliance or disagreement with the above terms requires you to remove any and all parts of the software. This license is retroactive to all installations.
+Any disagreement, or lack of compliance, with the above terms requires you to remove any and all parts of the software. This license is retroactive to all installations.
