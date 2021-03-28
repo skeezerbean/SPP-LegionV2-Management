@@ -1,5 +1,6 @@
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/SPP-Config-Splash.png)
 
+Use of this software in any way must be in agreement with the license listed in the license.txt file
 
 # SPP-LegionV2-Management
 ## Configuration and Management for SPP LegionV2 Servers
