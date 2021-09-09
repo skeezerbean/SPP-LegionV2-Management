@@ -652,6 +652,9 @@ namespace SPP_LegionV2_Management
 			string wowConfigPortal = string.Empty;
 			string bnetBindIP = GetValueFromCollection(BnetCollection, "BindIP");
 			string worldBindIP = GetValueFromCollection(WorldCollection, "BindIP");
+			string worldServerPort = GetValueFromCollection(WorldCollection, "WorldServerPort");
+			string DBServerPort = MySqlManager.MySQLQueryToString(@"SELECT `port` FROM `legion_auth`.`realmlist` WHERE id = '1'");
+			string DBGamePort = MySqlManager.MySQLQueryToString(@"SELECT `gamePort` FROM `legion_auth`.`realmlist` WHERE id = '1'");
 			bool solocraft = IsOptionEnabled(WorldCollection, "Solocraft.Enable");
 			bool flexcraftHealth = IsOptionEnabled(WorldCollection, "HealthCraft.Enable");
 			bool flexcraftUnitMod = IsOptionEnabled(WorldCollection, "UnitModCraft.Enable");
@@ -768,6 +771,24 @@ namespace SPP_LegionV2_Management
 					result += $"LoginREST.LocalAddress - {loginRESTLocalAddress}\n";
 					result += $"local Address from DB - {localAddressFromDB}\n";
 					result += "⚠ Alert - both of these addresses should match, and probably both be set to 127.0.0.1\n\n";
+				}
+
+				// Check the port setting in config vs DB
+				if (worldServerPort != DBServerPort)
+				{
+					result += $"WorldServerPort - {worldServerPort}\n";
+					result += $"Server Port from DB - {DBServerPort}\n";
+					result += "⚠ Alert - both of these ports should match or you won't be able to connect\n\n";
+				}
+
+				// Check ports vs defaults
+				if (worldServerPort != "8198")
+				{
+					result += "⚠ Warning - WorldServerPort is not 8198, which is the default. This may lead to unexpected issues\n\n";
+				}
+				if (DBGamePort != "8086")
+				{
+					result += "⚠ Warning - Database realm gamePort is not 8086, which is the default. This may lead to unexpected issues\n\n";
 				}
 
 				// Check our solocraft settings compared to FlexCraft entries

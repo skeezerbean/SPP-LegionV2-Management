@@ -644,7 +644,7 @@ namespace SPP_LegionV2_Management
 					+ $"{((OrphanedRowsLimit > 0) ? $" LIMIT {OrphanedRowsLimit}" : "")}", true);
 			}
 			// Handle account or queststatus related tables
-			if (table.Contains("legion_characters`.`account_") || table.Contains("legion_characters`.`character_queststatus"))
+			else if (table.Contains("legion_characters`.`account_") || table.Contains("legion_characters`.`character_queststatus"))
 			{
 				if (table.Contains("legion_characters`.`account_item_favorite_appearances"))
 					// This table refers to battlenet accounts rather than normal account id.

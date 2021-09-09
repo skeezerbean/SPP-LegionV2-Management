@@ -10,14 +10,14 @@
 		<StackPanel Margin="10">
 			<WrapPanel Orientation="Horizontal" Margin="10">
 				<Button x:Name="SPPFolderBrowse" Margin="5" Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
-				local:EyeCandyForeGround.Image="/Resources/Buttons/SetSPPFolder.png" MaxWidth="400" MaxHeight="47" />
+				local:EyeCandyForeGround.Image="/Resources/Buttons/SetSPPFolder.png" MaxWidth="300" MaxHeight="47" />
 
 				<TextBlock x:Name="SPPFolderLocation" Margin="5,11" VerticalAlignment="Center" />
 			</WrapPanel>
 
 			<WrapPanel Orientation="Horizontal" Margin="10">
 				<Button x:Name="WowConfigBrowse" Margin="5" local:EyeCandyForeGround.Image="/Resources/Buttons/SetClientFolder.png"
-				Style="{DynamicResource ImageButtonStyle}" Background="Transparent" MaxWidth="400" MaxHeight="47" />
+				Style="{DynamicResource ImageButtonStyle}" Background="Transparent" MaxWidth="300" MaxHeight="47" />
 
 				<TextBlock x:Name="WOWConfigLocation" Margin="5,9" VerticalAlignment="Center" />
 			</WrapPanel>

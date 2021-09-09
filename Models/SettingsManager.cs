@@ -50,6 +50,7 @@ namespace SPP_LegionV2_Management
 		public static BindableCollection<ConfigEntry> CreateCollectionFromConfigFile(string inFile)
 		{
 			string tmpDescription = string.Empty;
+			string errors = string.Empty;
 			BindableCollection<ConfigEntry> tempCollection = new BindableCollection<ConfigEntry>();
 
 			try
@@ -82,6 +83,17 @@ namespace SPP_LegionV2_Management
 						tempCollection.Add(entry);
 						tmpDescription = string.Empty; // reset our description
 					}
+					// If the entry doesn't start with # (comment), and doesn't contain '=' (setting)
+					// then it needs to be either the world or bnet config file declaration at the top
+					// otherwise this is an invalid entry
+					else if (!item.StartsWith("#")
+						&& !item.Contains("=")
+						&& item != "[worldserver]"
+						&& item != "[bnetserver]"
+						&& !string.IsNullOrWhiteSpace(item))
+					{
+						errors += $"Invalid row -> {item} \n";
+					}
 					else
 					{
 						// If we're here, then the line is part of the description or other line
@@ -96,6 +108,15 @@ namespace SPP_LegionV2_Management
 					tempCollection.Add(new ConfigEntry { Name = "", Value = "", Description = tmpDescription });
 			}
 			catch { return new BindableCollection<ConfigEntry>(); } // if something failed, then return a default blank collection
+
+			// If there were errors caught, alert user
+			if (errors != string.Empty)
+			{
+				MessageBox.Show($"Alert! The following entries in {inFile} were found, and need fixed manually or there will be problems\n{errors}");
+
+				// Reset for the next file, if any
+				errors = string.Empty;
+			}
 
 			return tempCollection;
 		}

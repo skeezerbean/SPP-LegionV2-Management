@@ -25,27 +25,27 @@
 				<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
 					<!-- Top row of buttons -->
-					<Button x:Name="SetIP" Margin="5" MaxWidth="250"
+					<Button x:Name="SetIP" Margin="5" MaxWidth="200"
 						local:EyeCandyForeGround.Image="/Resources/Buttons/SetIP.png"
 						Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 						ToolTip="Set the listening/realm IP for the repack. This is for playing on a separate machine on the LAN or setting up the pack for internet connectivity. This will update the server config, DB and WoW Legion client config if able." />
-					<Button x:Name="SetBuild" Margin="5" MaxWidth="250"
+					<Button x:Name="SetBuild" Margin="5" MaxWidth="200"
 						local:EyeCandyForeGround.Image="/Resources/Buttons/SetBuild.png"
 						Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 						ToolTip="Sets the Game.Build.Version in the config/database" />
-					<Button x:Name="SetDefaults" Margin="5" MaxWidth="350"
+					<Button x:Name="SetDefaults" Margin="5" MaxWidth="200"
 						local:EyeCandyForeGround.Image="/Resources/Buttons/SetConfigsToDefault.png"
 						Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 						ToolTip="Sets default entries in the SPP config. This will overwrite current settings from the local default template file." />
-					<Button x:Name="LoadSettings" Margin="5" MaxWidth="250"
+					<Button x:Name="LoadSettings" Margin="5" MaxWidth="200"
 						local:EyeCandyForeGround.Image="/Resources/Buttons/ReloadConfigs.png"
 						Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 						ToolTip="This reloads the Settings file, default templates and SPP world/bnet files from disk. This is helpful to undo any changes in the current session instead of restarting the app." />
-					<Button x:Name="CheckSPPConfig" Margin="5" MaxWidth="250"
+					<Button x:Name="CheckSPPConfig" Margin="5" MaxWidth="200"
 						local:EyeCandyForeGround.Image="/Resources/Buttons/CheckConfig.png"
 						Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 						ToolTip="This will check the current SPP config for some potential issues." />
-					<Button x:Name="SaveConfig" Margin="5" MaxWidth="250"
+					<Button x:Name="SaveConfig" Margin="5" MaxWidth="200"
 						local:EyeCandyForeGround.Image="/Resources/Buttons/ExportConfigs.png"
 						Style="{DynamicResource ImageButtonStyle}" Background="Transparent"
 						ToolTip="Save settings and generate configs to SPP installation and database." />

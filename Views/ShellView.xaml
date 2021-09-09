@@ -45,13 +45,13 @@
 				<!-- Top buttons for switching pages -->
 				<StackPanel DockPanel.Dock="Top">
 					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-						<Button x:Name="LoadPageConfigGenerator" Width="180" Margin="5,5,15,5" 
+						<Button x:Name="LoadPageConfigGenerator" Width="200" Margin="5,5,15,5" 
 							local:EyeCandyForeGround.Image="/Resources/Buttons/Config_Generator.png"
 							Style="{DynamicResource ImageButtonStyle}" Background="Transparent" />
-						<Button x:Name="LoadPageAccountManager" Width="180" Margin="5,5,15,5"
+						<Button x:Name="LoadPageAccountManager" Width="200" Margin="5,5,15,5"
 							local:EyeCandyForeGround.Image="/Resources/Buttons/Account_Manager.png"
 							Style="{DynamicResource ImageButtonStyle}" Background="Transparent" />
-						<Button x:Name="LoadPageSettings" Width="180" Margin="5,5,5,5"
+						<Button x:Name="LoadPageSettings" Width="200" Margin="5,5,5,5"
 							local:EyeCandyForeGround.Image="/Resources/Buttons/Settings.png"
 							Style="{DynamicResource ImageButtonStyle}" Background="Transparent" />
 					</WrapPanel>
@@ -66,12 +66,12 @@
 					<TextBlock Text="Database Connection:" Margin="5" FontWeight="Bold" />
 					<TextBlock x:Name="SQLConnectionStatus" Margin="0,5,15,5" FontWeight="Bold" />
 				</WrapPanel>
-				<WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="50,0">
+				<!--<WrapPanel DockPanel.Dock="Top" HorizontalAlignment="Center" Margin="50,0">
 					<Button MaxWidth="850" MaxHeight="60"
 						local:EyeCandyForeGround.Image="/Resources/Background/MdicBangsMoms.png"
 						local:EyeCandyBackGround.ImageBackGround="/Resources/Background/MdicYourMom.png"
 						Style="{DynamicResource DualImageButtonStyle}" Background="Transparent"/>
-				</WrapPanel>
+				</WrapPanel>-->
 
 				<!-- ActiveItem is Caliburn, marks this as the active child form -->
 					<ContentControl x:Name="ActiveItem" Margin="35,30,35,60" />
