@@ -24,59 +24,13 @@ This application requires .net framework 4.8.
 
 To update your current app to the latest, you just download the latest release and extract. Overwrite your existing app. The release doesn't contain a settings file, so it won't overwrite your existing settings or your backups.
 
-### Changes -
+### Changes for the last few updates -
 
 **0.0.2.14** - Fixed an issue with guild tables being wiped when clearing orphaned objects, port checks and updated buttons are easier to read
 
 **0.0.2.13** - Introduced more massive GUI updates, customized buttons/graphics created by SPP discord user m1
 
 **0.0.2.12** - Massive GUI changes to look much more like a real app, small code fixes
-
-**0.0.2.11** - Added option to boost current xp for battlepets for selected account, helps boost leveling. Amazing splash screen made by Discord user m1#2698
-
-**0.0.2.10** - Added option to set all BattlePets to rare quality for selected account
-
-**0.0.2.9** -  Some cleanup, add some orphaned account checks, fixed some potential crashes, add orpaned object detail list of items found
-
-**0.0.2.8** - Fix some SQL/exceptions, log previous config.wtf portal entry when exporting config, enable orphaned object removal
-
-**0.0.2.7** - Lots of database handling updates, ability to limit number of database rows to update & removed alert when over 100k, fix guild table processing
-
-**0.0.2.6** - Sped up processing for gathering character data, removing characters/items, added cleanup for guild tables when guild ID no longer exists, increased SQL timeout to 1 hr in the event of extremely large cleanup processes on slow drives & notice for more than 100k orphaned data items
-
-**0.0.2.5** - Cleaned up some code. If you're currently executing a task within the account manager section then trying to start other tasks will be likely ignored until the original task is complete. Fixed exception when Backup Configs folder does not exist
-
-**0.0.2.4** - This is a massive change, finishing up the logic for handling orphaned objects in the characters table. Each character has an ID, and this searches for objects without a matching character associated with them. This enables you can cleanup much of the character database, remove orphaned characters (characters in the datbase that don't have a existing account), delete accounts. This also handles logic if the character being deleted is a guild master and tries to find a highest-ranking non-orphaned guild member to replace them, or to remove the guild entry if there are no available members. This resolves a crash if that isn't handled when starting the world server as it checks on guilds.
-
-**0.0.2.3** - Fixed bug in setting passwords, adding account creation logic
-
-**0.0.2.2** - Added ability to set BattleNet password, which is also required if changing BattleNet login because of how the password hash is created in TrinityCore
-
-**0.0.2.1** - **PLEASE NOTE** The .exe file name has changed and the old one should be deleted. Revamped GUI, added some account/character management
-
--- Working - listing/changing current account/character information
-
--- Not working - creating new account, cleanup/deletion of accounts/characters/orphaned objects (added in 0.0.2.4)
-
-**0.0.2.0** - Prep work for adding additional modules for management, renaming project
-
-**0.0.1.8** - Massive internal changes to virtualize datagrid -> loading/filtering should be MUCH faster, code cleanup
-
-**0.0.1.7** - building/exporting the .conf files will be quicker, clean up the alert box for "Check Config", added check for WorldChat.Enable and also Character.Template when using client build 26972
-
-**0.0.1.6** - Added few more config checks, fixed an sql issue and some code cleanup
-
-**0.0.1.5** - Changed some parsing to better check for issues, including values with comments on the same line as a configuration entry (and give a warning)
-
-**0.0.1.4** - Extra checks, moved description to tooltips for each row (shorter launch/import time), general cleanup, added button to reload config so that you don't have to close and open the app again to reload if any mistakes were made.
-
-**0.0.1.3** - search box added, enabled highlight of matching rows, and semi-working auto-scroll to first matches
-
-**0.0.1.2** - introduced backups of existing configs to a backup folder (within app folder), pulls in existing bnet/worldserver.conf to check
-
-**0.0.1.1** - introduced pulling/parsing template configs from worldserver.conf and bnetserver.conf default files, added/fixed some checks
-
-**0.0.1.0** - base release, more proof of concept than anything
 
 ### About
 This tool helps build working World and Bnet server config files without duplicate entries, check your configuration for any potential issues, manage accounts/characters as well as potentially clean up the database of orphaned characters/objects. There are some things to be aware of -
@@ -112,7 +66,7 @@ When browsing for the SPP folder, it will be the one that has these items where 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/SPP-server-folder.PNG)
 
 
-Browsing for the Wow Config Location will be your WoW Legion **Client** folder, which will look more or less like this
+Browsing for the Wow Config Location will be your WoW Legion **Client** folder, which will look more or less like this. Please note that you need to run the client at least once to generate the config file so that the app can find it. No need to login, just run the client and then exit
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/wow-client-folder.PNG)
 
