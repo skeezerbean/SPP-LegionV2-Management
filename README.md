@@ -26,6 +26,8 @@ To update your current app to the latest, you just download the latest release a
 
 ### Changes for the last few updates -
 
+**0.0.2.15** - Added some client config file checking
+
 **0.0.2.14** - Fixed an issue with guild tables being wiped when clearing orphaned objects, port checks and updated buttons are easier to read
 
 **0.0.2.13** - Introduced more massive GUI updates, customized buttons/graphics created by SPP discord user m1
