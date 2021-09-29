@@ -21,6 +21,8 @@
 
 				<TextBlock x:Name="WOWConfigLocation" Margin="5,9" VerticalAlignment="Center" />
 			</WrapPanel>
+			<TextBlock Text="Please Note - If your client folder doesn't have a config.wtf file, you need to run and exit the client at least once to create it, or this tool won't be able to edit/set the IP"
+				TextWrapping="Wrap" />
 		</StackPanel>
 	</Grid>
 </UserControl>

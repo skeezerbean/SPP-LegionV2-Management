@@ -407,6 +407,7 @@ namespace SPP_LegionV2_Management
 			FindConfigPaths();
 
 			string tmpstr = string.Empty;
+			bool foundEntry = false;
 
 			if (WowConfigFile == string.Empty)
 				Log("WOW Config File cannot be found - cannot update SET portal entry");
@@ -422,7 +423,9 @@ namespace SPP_LegionV2_Management
 						// would change anyways
 						if (item.Contains("SET portal"))
 						{
+							foundEntry = true;
 							Log($"WoW Client config.wtf previous 'SET portal' entry is [{item}]");
+
 							foreach (var entry in BnetCollection)
 							{
 								if (entry.Name.Contains("LoginREST.ExternalAddress"))
@@ -435,13 +438,22 @@ namespace SPP_LegionV2_Management
 							tmpstr += item + "\n";
 					}
 
-					// flush the temp string to file, overwrite
-					ExportToFile(WowConfigFile, tmpstr, false);
-					StatusBox = "";
+					if (foundEntry)
+					{
+						// flush the temp string to file, overwrite
+						ExportToFile(WowConfigFile, tmpstr, false);
+						StatusBox = "";
+					}
+					else
+					{
+						string msg = $"⚠Error updating file {WowConfigFile},\nThe WOW Client Config may be empty, near-empty, doesn't contain a portal entry, or doesn't exist.\nRun the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly";
+						Log(msg);
+						Alert(msg);
+					}
 				}
 				catch (Exception e)
 				{
-					string msg = $"Error accessing file {WowConfigFile},\nthere is a permissions problem.\nThe detailed exception is -\n{e.ToString()}";
+					string msg = $"⚠Error accessing file {WowConfigFile},\nthere is a permissions problem.\nThe WOW Client Config may be empty or near-empty, or doesn't exist.\nRun the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly";
 					Log(msg);
 					Alert(msg);
 				}
@@ -740,7 +752,12 @@ namespace SPP_LegionV2_Management
 					List<string> allLinesText = File.ReadAllLines(WowConfigFile).ToList();
 
 					if (allLinesText.Count < 2)
+					{
 						Log($"⚠ Warning - WoW Client config file [{WowConfigFile}] may be empty.");
+						
+						// Alert the user to run Wow client at least once to populate the config
+						_dialogCoordinator.ShowMessageAsync(this, "Client Config Issue", "The WOW Client Config is empty or near-empty, run the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly");
+					}
 
 					foreach (var item in allLinesText)
 					{
