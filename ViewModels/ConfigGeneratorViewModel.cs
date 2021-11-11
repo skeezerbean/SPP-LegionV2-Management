@@ -683,6 +683,7 @@ namespace SPP_LegionV2_Management
 			bool customNoCastTime = IsOptionEnabled(WorldCollection, "Custom.NoCastTime");
 			bool worldChat = IsOptionEnabled(WorldCollection, "WorldChat.Enable");
 			bool characterTemplate = IsOptionEnabled(WorldCollection, "Character.Template");
+			bool garrisonDisableUpgrade = IsOptionEnabled(WorldCollection, "Garrisone.DisableUpgrade");
 
 			// If we just applied defaults, and there's still nothing, then something went wrong... missing templates?
 			if (BnetCollection.Count == 0 || WorldCollection.Count == 0)
@@ -856,6 +857,10 @@ namespace SPP_LegionV2_Management
 
 				if (customNoCastTime)
 					result += "Note - you have Custom.NoCastTime = 1 and may cause unintended effects when casting. Set entry to 0 if you need that to change\n\n";
+
+				// Check if Garrisons upgrade is disabled
+				if (garrisonDisableUpgrade)
+					result += "⚠ Warning - Garrisone.DisableUpgrade is set to 1, this will cause issues upgrading a Garrison. Set to 0 to enable\n\n";
 
 				// Check collections for duplicate entries, and strip out the &
 				// at the end of the string. This will leave the final as listing
