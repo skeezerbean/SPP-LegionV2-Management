@@ -745,7 +745,7 @@ namespace SPP_LegionV2_Management
 				if (File.Exists(WowConfigFile) == false)
 				{
 					Log("WOW Config File cannot be found - cannot parse SET portal entry");
-					result += "⚠ Alert - WOW Config file not found, cannot check [SET portal] entry to compare.\n\n";
+					result += "⚠ Alert - WOW Config file not found, cannot check [SET portal] entry to compare\n\n";
 				}
 				else
 				{
@@ -755,9 +755,10 @@ namespace SPP_LegionV2_Management
 					if (allLinesText.Count < 2)
 					{
 						Log($"⚠ Warning - WoW Client config file [{WowConfigFile}] may be empty.");
-						
+
 						// Alert the user to run Wow client at least once to populate the config
-						_dialogCoordinator.ShowMessageAsync(this, "Client Config Issue", "The WOW Client Config is empty or near-empty, run the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly");
+						//_dialogCoordinator.ShowMessageAsync(this, "Client Config Issue", "The WOW Client Config is empty or near-empty, run the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly");
+						result += "⚠ Warning - The WOW Client Config is empty or near-empty, run the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly\n\n";
 					}
 
 					foreach (var item in allLinesText)
@@ -773,13 +774,17 @@ namespace SPP_LegionV2_Management
 				}
 
 				// List our external/hosting IP settings
-				if ((loginRESTExternalAddress != addressFromDB) || (loginRESTExternalAddress != wowConfigPortal))
+				if ((loginRESTExternalAddress != addressFromDB) || ((loginRESTExternalAddress != wowConfigPortal) && (File.Exists(WowConfigFile) == true)))
 				{
 					result += $"LoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
 					result += $"Address from DB Realm - {addressFromDB}\n";
 					result += $"Wow config PORTAL entry - {wowConfigPortal}\n";
-					result += "⚠ Alert - All of these addresses should match. Use the \"Set IP\" button to set.\n\n";
+					result += "⚠ Alert - All of these addresses should match. Use the \"Set IP\" button to set. Ignore if client config is the issue and doesn't need to be updated\n\n";
 				}
+				else if ((loginRESTExternalAddress == addressFromDB) && (File.Exists(WowConfigFile) == false))
+					result += $"⚠ Warning - IP settings for DB and Bnet config match [{addressFromDB}], but client config could not be verified, may be missing\n\n";
+				else if (File.Exists(WowConfigFile) == false)
+					result += $"⚠ Warning - IP settings for client config cannot be verified\n\n";
 				else
 					result += $"✓ - IP settings for hosting all match [{addressFromDB}]\n\n";
 
