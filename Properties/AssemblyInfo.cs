@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("SPP-LegionV2-Management")]
-[assembly: AssemblyCopyright("Copyright Skeezix ©  2021")]
+[assembly: AssemblyCopyright("Copyright Skeezix ©  2023")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -47,5 +47,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("0.0.2.17")]
-[assembly: AssemblyFileVersion("0.0.2.17")]
+[assembly: AssemblyVersion("0.0.2.18")]
+[assembly: AssemblyFileVersion("0.0.2.18")]

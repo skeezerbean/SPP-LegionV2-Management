@@ -203,7 +203,9 @@
 							<TextBlock Text="Selected Character GUID:" />
 							<TextBlock Text="Selected Character Account ID:" Margin="2" />
 							<TextBlock Text="Selected Character Name:" Margin="3" />
-							<TextBlock Text="Status:" Margin="2" />
+							<TextBlock Text="Selected Character Artifacts" Margin="2,7,2,2" />
+							<TextBlock Text="Selected Artifact Power" Margin="2,7,2,2" />
+							<TextBlock Text="Status:" Margin="2,7,2,2" />
 						</StackPanel>
 						<StackPanel Margin="0,1">
 							<TextBlock x:Name="CharactersTotal" />
@@ -212,6 +214,21 @@
 								ToolTip="You can change this to another account if you want to move this character to another (possibly unsafe), apply changes button when done" />
 							<TextBox x:Name="CurrentCharacterName"  Width="125" HorizontalAlignment="Left"
 								ToolTip="Use this to change the character name, apply changes button when done" />
+							<ComboBox x:Name="Artifacts" Width="189" Margin="2" Height="4"
+								ItemsSource="{Binding Artifacts}" SelectedItem="{Binding SelectedArtifact}"
+								DisplayMemberPath="ItemGUID"
+								ToolTip="Select an artifact for the selected character"/>
+							<TextBox x:Name="CurrentArtifactPower" Width="125" HorizontalAlignment="Left">
+								<TextBox.ToolTip>
+									<TextBlock>
+										WARNING: CHANGES HAPPEN IMMEDIATELY!
+										<LineBreak />
+										Set the Artifact Power to be used for Artifact Traits - Max value is 9223372036854775808
+										<LineBreak />
+										Relog character to see changes
+									</TextBlock>
+								</TextBox.ToolTip>
+							</TextBox>
 							<TextBlock x:Name="CharacterStatus" />
 						</StackPanel>
 					</StackPanel>

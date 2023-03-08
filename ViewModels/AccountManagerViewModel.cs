@@ -27,6 +27,7 @@ namespace SPP_LegionV2_Management
 		public BindableCollection<Character> OrphanedCharacters { get; set; } = new BindableCollection<Character>();
 		public BindableCollection<Character> TempCharacters { get; set; } = new BindableCollection<Character>();
 		public BindableCollection<Character> TempOrphanedCharacters { get; set; } = new BindableCollection<Character>();
+		public BindableCollection<Artifact> TempArtifacts { get; set; } = new BindableCollection<Artifact>();
 		public Character SelectedCharacter { get; set; } = new Character();
 		public Character OrphanedSelectedCharacter { get; set; } = new Character();
 		public Account SelectedAccount { get; set; }
@@ -46,6 +47,9 @@ namespace SPP_LegionV2_Management
 		public bool CurrentXPBattlePets { get { return (SelectedAccount == null) ? false : SelectedAccount.XPBattlePets; } set { SelectedAccount.XPBattlePets = value; } }
 
 		// Characters
+		public BindableCollection<Artifact> Artifacts { get { return (SelectedCharacter == null) ? new BindableCollection<Artifact>() : GetSelectedCharacterArtifacts(SelectedCharacter); } }
+		public Artifact SelectedArtifact { get; set; } = new Artifact();
+		public long CurrentArtifactPower { get { return (SelectedArtifact == null) ? -1 : GetArtifactPower(SelectedArtifact); } set { SetArtifactPower(SelectedArtifact, value); } }
 		public int CharactersTotal { get; set; }
 		public int CurrentCharacterGUID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Guid; } }
 		public int CurrentCharacterAccountID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
@@ -432,6 +436,37 @@ namespace SPP_LegionV2_Management
 			CharacterStatus = "Finished removing account";
 		}
 
+		public BindableCollection<Artifact> GetSelectedCharacterArtifacts(Character character)
+		{
+			// Return if no real character sent (app init bugs?)
+			if (character == null || character.Name == null)
+				return new BindableCollection<Artifact>();
+
+			// Wipe our current list, set temp variable
+			TempArtifacts.Clear();
+			BindableCollection<Artifact> tempArtifacts = new BindableCollection<Artifact>();
+
+			// Get Artifacts from DB
+			MySqlDataReader reader = MySqlManager.MySQLQuery($"SELECT `char_guid`,`itemGuid`,`xp` FROM `legion_characters`.`item_instance_artifact` WHERE `char_guid`={character.Guid}", GetArtifactsFromSQL);
+
+			return TempArtifacts;
+		}
+
+		public long GetArtifactPower(Artifact artifact)
+		{
+			return Int64.Parse(MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `xp` FROM `legion_characters`.`item_instance_artifact` WHERE `char_guid`={artifact.CharacterGUID} and `itemGuid`={artifact.ItemGUID}), \"-1\")"));
+		}
+
+		public void SetArtifactPower(Artifact artifact, long power)
+		{
+			// Do nothing if the artifact is invalid
+			if (artifact == null)
+				return;
+
+			// Push our update to the DB
+			MySqlManager.MySQLQueryToString($"UPDATE `legion_characters`.`item_instance_artifact` SET `xp`={power} WHERE `char_guid`={artifact.CharacterGUID} and `itemGuid`={artifact.ItemGUID}");
+		}
+
 		public async Task GetOrphanedData()
 		{
 			if (!CheckSQL() || _removingObjects || _deleteAccountRunning || _deleteCharacterRunning || _gettingObjects)
@@ -735,6 +770,26 @@ namespace SPP_LegionV2_Management
 			OrphanedCharactersTotal = OrphanedCharacters.Count;
 			_characterRetrieveRunning = false;
 			return 0;
+		}
+
+		// Incoming reader is from GetSelectedCharacterArtifacts
+		private async void GetArtifactsFromSQL(MySqlDataReader reader)
+		{
+			Artifact artifact = new Artifact();
+
+			try
+			{
+				artifact.CharacterGUID = reader.GetInt32(0);
+				artifact.ItemGUID = reader.GetInt32(1);
+				artifact.Power = reader.GetInt64(2);
+
+				// This should only add if there wasn't an exception causing a problem
+				TempArtifacts.Add(artifact);
+			}
+			catch (Exception e) { Console.WriteLine($"Error retrieving Artifact Info"); }
+
+			// Let the UI update
+			await Task.Delay(1);
 		}
 
 		// Incoming reader is from the RetrieveAccounts task
