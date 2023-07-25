@@ -159,8 +159,8 @@ namespace SPP_LegionV2_Management
 				string response = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `gmlevel` FROM `legion_auth`.`account_access` WHERE `id` = '{account.ID}'), \"-1\")");
 
 				// If the value entered on the form was out of scope....
-				if (account.GMLevel < -1 || account.GMLevel > 6)
-					message += $"Account [{account.ID}({account.Username})] - entry for GMLevel must be from 1 to 6 only, or set to -1 or 0 to remove GM status\n";
+				if (account.GMLevel < -1 || account.GMLevel > 20)
+					message += $"Account [{account.ID}({account.Username})] - entry for GMLevel must be from 1 to 6 only for SPP unless customized in DB, or set to -1 or 0 to remove GM status\n";
 
 				// If they're NOT a GM, and the GM level entered is higher than 0 then we need to add them
 				else if (response == "-1" && account.GMLevel > 0)

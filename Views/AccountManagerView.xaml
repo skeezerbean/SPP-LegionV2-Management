@@ -115,7 +115,7 @@
 							<TextBox x:Name="CurrentBattleCoins"  Width="125" HorizontalAlignment="Left"
 								ToolTip="Set this account's amount of Battle Coins"/>
 							<TextBox x:Name="CurrentGMLevel"  Width="125" HorizontalAlignment="Left"
-								ToolTip="GM Level set to -1 or 0 to disable, or between 1 and 6" />
+								ToolTip="GM Level set to -1 or 0 to disable, or between 1 and 6 normally" />
 							<CheckBox x:Name="CurrentRareBattlePets" Margin="2" HorizontalAlignment="Left"
 								ToolTip="Checking this box, and hitting Apply, changes all CURRENT BattlePets on this account to rare quality" />
 							<CheckBox x:Name="CurrentXPBattlePets" Margin="2" HorizontalAlignment="Left">
