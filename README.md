@@ -24,16 +24,6 @@ This application requires .net framework 4.8.
 
 To update your current app to the latest, you just download the latest release and extract. Overwrite your existing app. The release doesn't contain a settings file, so it won't overwrite your existing settings or your backups.
 
-### Changes for the last few updates -
-
-**0.0.2.15** - Added some client config file checking
-
-**0.0.2.14** - Fixed an issue with guild tables being wiped when clearing orphaned objects, port checks and updated buttons are easier to read
-
-**0.0.2.13** - Introduced more massive GUI updates, customized buttons/graphics created by SPP discord user m1
-
-**0.0.2.12** - Massive GUI changes to look much more like a real app, small code fixes
-
 ### About
 This tool helps build working World and Bnet server config files without duplicate entries, check your configuration for any potential issues, manage accounts/characters as well as potentially clean up the database of orphaned characters/objects. There are some things to be aware of -
 
