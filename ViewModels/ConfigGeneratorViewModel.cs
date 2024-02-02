@@ -681,7 +681,6 @@ namespace SPP_LegionV2_Management
 			bool purchaseShop = IsOptionEnabled(WorldCollection, "Purchase.Shop.Enabled");
 			bool battleCoinVendor = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Enable");
 			bool battleCoinVendorCustom = IsOptionEnabled(WorldCollection, "Battle.Coin.Vendor.Custom.Enable");
-			bool gridUnload = IsOptionEnabled(WorldCollection, "GridUnload");
 			bool baseMapLoadAllGrids = IsOptionEnabled(WorldCollection, "BaseMapLoadAllGrids");
 			bool instanceMapLoadAllGrids = IsOptionEnabled(WorldCollection, "InstanceMapLoadAllGrids");
 			bool disallowMultipleClients = IsOptionEnabled(WorldCollection, "Disallow.Multiple.Client");
@@ -853,9 +852,7 @@ namespace SPP_LegionV2_Management
 				// Warn about grid related settings
 				if (baseMapLoadAllGrids || instanceMapLoadAllGrids)
 					result += "⚠ Warning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n\n";
-				if (gridUnload == false)
-					result += $"⚠ Warning - GridUnload may need set to 1 to unload unused map grids and release memory. If the server runs out of memory, or crashes with high usage, this may be why.\n\n";
-
+				
 				// Notify if Disallow.Multiple.Client is enabled
 				if (disallowMultipleClients)
 				{
