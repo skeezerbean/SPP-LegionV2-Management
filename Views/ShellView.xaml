@@ -7,7 +7,7 @@
 		GlowBrush="{DynamicResource MahApps.Brushes.Accent}"
 		BorderThickness="0" Icon="/Resources/spp.jpg"
 		mc:Ignorable="d" FontSize="14" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen"
-		xmlns:local="clr-namespace:SPP_LegionV2_Management" 
+		xmlns:local="clr-namespace:SPP_LegionV2_Management"
 		xmlns:spp_legionv2_management="clr-namespace:SPP_LegionV2_Management"
 		Closing="MetroWindow_Closing"
 		Title="{Binding AppTitle}"
@@ -15,12 +15,12 @@
 		Width="{Binding WindowWidth, Mode=TwoWay}"
 		Top="{Binding WindowTop, Mode=TwoWay}"
 		Left="{Binding WindowLeft, Mode=TwoWay}">
-	
+
 	<!-- Set our background image -->
 	<mah:MetroWindow.Background>
 		<ImageBrush ImageSource="/Resources/Background/Project-BG.png" Opacity="0.7" />
 	</mah:MetroWindow.Background>
-	
+
 	<!-- Right side of title bar -->
 	<mah:MetroWindow.RightWindowCommands>
 		<mah:WindowCommands>
@@ -37,15 +37,15 @@
 			</Button>
 		</mah:WindowCommands>
 	</mah:MetroWindow.RightWindowCommands>
-	
+
 	<Grid>
 		<Border Margin="5" BorderBrush="Black" BorderThickness="3">
-			<DockPanel >
+			<DockPanel>
 
 				<!-- Top buttons for switching pages -->
 				<StackPanel DockPanel.Dock="Top">
 					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
-						<Button x:Name="LoadPageConfigGenerator" Width="200" Margin="5,5,15,5" 
+						<Button x:Name="LoadPageConfigGenerator" Width="200" Margin="5,5,15,5"
 							local:EyeCandyForeGround.Image="/Resources/Buttons/Config_Generator.png"
 							Style="{DynamicResource ImageButtonStyle}" Background="Transparent" />
 						<Button x:Name="LoadPageAccountManager" Width="200" Margin="5,5,15,5"
@@ -70,7 +70,7 @@
 					<Button MaxWidth="850" MaxHeight="60"
 						local:EyeCandyForeGround.Image="/Resources/Background/MdicBangsMoms.png"
 						local:EyeCandyBackGround.ImageBackGround="/Resources/Background/MdicYourMom.png"
-						Style="{DynamicResource DualImageButtonStyle}" Background="Transparent"/>
+						Style="{DynamicResource DualImageButtonStyle}" Background="Transparent" />
 				</WrapPanel>-->
 
 				<!-- ActiveItem is Caliburn, marks this as the active child form -->

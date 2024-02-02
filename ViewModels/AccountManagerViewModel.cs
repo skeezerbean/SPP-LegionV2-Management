@@ -14,6 +14,7 @@ namespace SPP_LegionV2_Management
 
 		// block parallel tasks running of the same type
 		private bool _accountRetrieveRunning = false;
+
 		private bool _characterRetrieveRunning = false;
 		private bool _deleteAccountRunning = false;
 		private bool _deleteCharacterRunning = false;
@@ -23,6 +24,7 @@ namespace SPP_LegionV2_Management
 
 		// General public models
 		public BindableCollection<Account> Accounts { get; set; } = new BindableCollection<Account>();
+
 		public BindableCollection<Character> Characters { get; set; } = new BindableCollection<Character>();
 		public BindableCollection<Character> OrphanedCharacters { get; set; } = new BindableCollection<Character>();
 		public BindableCollection<Character> TempCharacters { get; set; } = new BindableCollection<Character>();
@@ -34,42 +36,67 @@ namespace SPP_LegionV2_Management
 
 		// Accounts
 		public int AccountsTotal { get; set; }
-		public int CurrentID { get { return (SelectedAccount == null) ? -1 : SelectedAccount.ID; } }
-		public int CurrentBattleNetAccount { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
-		public string CurrentBattleNetEmail { get { return (SelectedAccount == null) ? string.Empty : SelectedAccount.BattleNetEmail; } set { SelectedAccount.BattleNetEmail = value; } }
-		public string CurrentUsername { get { return (SelectedAccount == null) ? string.Empty : SelectedAccount.Username; } set { SelectedAccount.Username = value; } }
-		public int CurrentBattleCoins { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleCoins; } set { SelectedAccount.BattleCoins = value; } }
-		public int CurrentGMLevel { get { return (SelectedAccount == null) ? -1 : SelectedAccount.GMLevel; } set { SelectedAccount.GMLevel = value; } }
-		public int CurrentBattleNetID { get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
-		public SecureString SecurePassword { get { return (SelectedAccount == null) ? new SecureString() : SelectedAccount.SecurePassword; } set { SelectedAccount.SecurePassword = value; } }
-		public string AccountStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
-		public bool CurrentRareBattlePets { get { return (SelectedAccount == null) ? false : SelectedAccount.RareBattlePets; } set { SelectedAccount.RareBattlePets = value; } }
-		public bool CurrentXPBattlePets { get { return (SelectedAccount == null) ? false : SelectedAccount.XPBattlePets; } set { SelectedAccount.XPBattlePets = value; } }
+
+		public int CurrentID
+		{ get { return (SelectedAccount == null) ? -1 : SelectedAccount.ID; } }
+		public int CurrentBattleNetAccount
+		{ get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
+		public string CurrentBattleNetEmail
+		{ get { return (SelectedAccount == null) ? string.Empty : SelectedAccount.BattleNetEmail; } set { SelectedAccount.BattleNetEmail = value; } }
+		public string CurrentUsername
+		{ get { return (SelectedAccount == null) ? string.Empty : SelectedAccount.Username; } set { SelectedAccount.Username = value; } }
+		public int CurrentBattleCoins
+		{ get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleCoins; } set { SelectedAccount.BattleCoins = value; } }
+		public int CurrentGMLevel
+		{ get { return (SelectedAccount == null) ? -1 : SelectedAccount.GMLevel; } set { SelectedAccount.GMLevel = value; } }
+		public int CurrentBattleNetID
+		{ get { return (SelectedAccount == null) ? -1 : SelectedAccount.BattleNetAccount; } }
+		public SecureString SecurePassword
+		{ get { return (SelectedAccount == null) ? new SecureString() : SelectedAccount.SecurePassword; } set { SelectedAccount.SecurePassword = value; } }
+		public string AccountStatus
+		{ get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
+		public bool CurrentRareBattlePets
+		{ get { return (SelectedAccount == null) ? false : SelectedAccount.RareBattlePets; } set { SelectedAccount.RareBattlePets = value; } }
+		public bool CurrentXPBattlePets
+		{ get { return (SelectedAccount == null) ? false : SelectedAccount.XPBattlePets; } set { SelectedAccount.XPBattlePets = value; } }
 
 		// Characters
-		public BindableCollection<Artifact> Artifacts { get { return (SelectedCharacter == null) ? new BindableCollection<Artifact>() : GetSelectedCharacterArtifacts(SelectedCharacter); } }
+		public BindableCollection<Artifact> Artifacts
+		{ get { return (SelectedCharacter == null) ? new BindableCollection<Artifact>() : GetSelectedCharacterArtifacts(SelectedCharacter); } }
+
 		public Artifact SelectedArtifact { get; set; } = new Artifact();
-		public long CurrentArtifactPower { get { return (SelectedArtifact == null) ? -1 : GetArtifactPower(SelectedArtifact); } set { SetArtifactPower(SelectedArtifact, value); } }
+		public long CurrentArtifactPower
+		{ get { return (SelectedArtifact == null) ? -1 : GetArtifactPower(SelectedArtifact); } set { SetArtifactPower(SelectedArtifact, value); } }
 		public int CharactersTotal { get; set; }
-		public int CurrentCharacterGUID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Guid; } }
-		public int CurrentCharacterAccountID { get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
-		public string CurrentCharacterName { get { return (SelectedCharacter == null) ? string.Empty : SelectedCharacter.Name; } set { SelectedCharacter.Name = value; } }
+		public int CurrentCharacterGUID
+		{ get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Guid; } }
+		public int CurrentCharacterAccountID
+		{ get { return (SelectedCharacter == null) ? -1 : SelectedCharacter.Account; } set { SelectedCharacter.Account = value; } }
+		public string CurrentCharacterName
+		{ get { return (SelectedCharacter == null) ? string.Empty : SelectedCharacter.Name; } set { SelectedCharacter.Name = value; } }
 		public string CharacterStatus { get; set; }
 
 		// Orphaned Characters
 		public int OrphanedCharactersTotal { get; set; }
+
 		public int OrphanedOrphanedCharactersTotal { get; set; }
 		public int OrphanedRowsLimit { get; set; } = 100000;
-		public int OrphanedCurrentCharacterGUID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Guid; } }
-		public int OrphanedCurrentCharacterAccountID { get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Account; } set { OrphanedSelectedCharacter.Account = value; } }
-		public string OrphanedCurrentCharacterName { get { return (OrphanedSelectedCharacter == null) ? string.Empty : OrphanedSelectedCharacter.Name; } set { OrphanedSelectedCharacter.Name = value; } }
-		public string OrphanedCharacterStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
+		public int OrphanedCurrentCharacterGUID
+		{ get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Guid; } }
+		public int OrphanedCurrentCharacterAccountID
+		{ get { return (OrphanedSelectedCharacter == null) ? -1 : OrphanedSelectedCharacter.Account; } set { OrphanedSelectedCharacter.Account = value; } }
+		public string OrphanedCurrentCharacterName
+		{ get { return (OrphanedSelectedCharacter == null) ? string.Empty : OrphanedSelectedCharacter.Name; } set { OrphanedSelectedCharacter.Name = value; } }
+		public string OrphanedCharacterStatus
+		{ get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
 
 		// Orphaned Objects
 		public int OrphanedObjectsTotal { get; set; }
+
 		public BindableCollection<int> OrphanedIDs = new BindableCollection<int>();
 		public int OrphanedIDsTotal { get; set; }
-		public string OrphanedObjectsStatus { get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
+		public string OrphanedObjectsStatus
+		{ get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
 		public string OrphanedRowsDetail { get; set; }
 
 		// IDialogCoordinator is part of Metro, for dialog handling in the view model
@@ -198,10 +225,12 @@ namespace SPP_LegionV2_Management
 		}
 
 		// Button for Character changes calls this
-		public async void ApplyCharacterChanges() { await ApplyCharacterChangesProcess(Characters); }
+		public async void ApplyCharacterChanges()
+		{ await ApplyCharacterChangesProcess(Characters); }
 
 		// Button for Orphaned Character changes calls this
-		public async void ApplyOrphanedCharacterChanges() { await ApplyCharacterChangesProcess(OrphanedCharacters); }
+		public async void ApplyOrphanedCharacterChanges()
+		{ await ApplyCharacterChangesProcess(OrphanedCharacters); }
 
 		// Work to actually change character settings
 		public async Task<int> ApplyCharacterChangesProcess(BindableCollection<Character> characters)
@@ -700,7 +729,8 @@ namespace SPP_LegionV2_Management
 		}
 
 		// Only here for the sake of button unique name
-		public async void RetrieveOrphanedCharacters() { await RetrieveCharacters(); }
+		public async void RetrieveOrphanedCharacters()
+		{ await RetrieveCharacters(); }
 
 		// Incoming reader is from the RemoveOrphanedRows function
 		private void GetGuildMasters(MySqlDataReader reader)

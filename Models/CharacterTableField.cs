@@ -8,7 +8,7 @@ namespace SPP_LegionV2_Management
 		public string field;
 
 		// Static collection of tables and fields used when deleting objects related to a character ID
-		public readonly static BindableCollection<CharacterTableField> CharacterTableFields = new BindableCollection<CharacterTableField>()
+		public static readonly BindableCollection<CharacterTableField> CharacterTableFields = new BindableCollection<CharacterTableField>()
 		{
 			new CharacterTableField() { table = "legion_characters`.`account_achievement", field = "account" },
 			new CharacterTableField() { table = "legion_characters`.`account_achievement_progress", field = "account" },

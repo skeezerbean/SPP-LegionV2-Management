@@ -85,7 +85,7 @@
 						</TabControl.Resources>
 						<TabItem Header="World Config" Margin="1" Background="#353535">
 							<!-- Datagrid for World settings -->
-							<DataGrid Background="Transparent" 
+							<DataGrid Background="Transparent"
 									ItemsSource="{Binding WorldView}" AutoGenerateColumns="False"
 									EnableColumnVirtualization="True" EnableRowVirtualization="True">
 								<!-- This sets up columns with the names we want,

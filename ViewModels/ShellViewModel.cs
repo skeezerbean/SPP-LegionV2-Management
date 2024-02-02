@@ -15,17 +15,24 @@ namespace SPP_LegionV2_Management
 
 		// declare individual VMs, lets us always show the same one as we switch tabs
 		public ConfigGeneratorViewModel ConfigGeneratorVM = new ConfigGeneratorViewModel(DialogCoordinator.Instance);
+
 		public AccountManagerViewModel AccountManagerVM = new AccountManagerViewModel(DialogCoordinator.Instance);
 		public SettingsViewModel SettingsVM = new SettingsViewModel(DialogCoordinator.Instance);
 
 		// This holds the values for the window position/size to be pulled from saved settings
-		public double WindowTop { get { return GeneralSettingsManager.GeneralSettings.WindowTop; } set { GeneralSettingsManager.GeneralSettings.WindowTop = value; } }
-		public double WindowLeft { get { return GeneralSettingsManager.GeneralSettings.WindowLeft; } set { GeneralSettingsManager.GeneralSettings.WindowLeft = value; } }
-		public double WindowHeight { get { return GeneralSettingsManager.GeneralSettings.WindowHeight; } set { GeneralSettingsManager.GeneralSettings.WindowHeight = value; } }
-		public double WindowWidth { get { return GeneralSettingsManager.GeneralSettings.WindowWidth; } set { GeneralSettingsManager.GeneralSettings.WindowWidth = value; } }
+		public double WindowTop
+		{ get { return GeneralSettingsManager.GeneralSettings.WindowTop; } set { GeneralSettingsManager.GeneralSettings.WindowTop = value; } }
+
+		public double WindowLeft
+		{ get { return GeneralSettingsManager.GeneralSettings.WindowLeft; } set { GeneralSettingsManager.GeneralSettings.WindowLeft = value; } }
+		public double WindowHeight
+		{ get { return GeneralSettingsManager.GeneralSettings.WindowHeight; } set { GeneralSettingsManager.GeneralSettings.WindowHeight = value; } }
+		public double WindowWidth
+		{ get { return GeneralSettingsManager.GeneralSettings.WindowWidth; } set { GeneralSettingsManager.GeneralSettings.WindowWidth = value; } }
 
 		// Status display at the top section of the app
 		public string ServerConfigStatus { get; set; } = "⚠";
+
 		public string ClientConfigStatus { get; set; } = "⚠";
 		public string SQLConnectionStatus { get; set; } = "⚠";
 
@@ -50,8 +57,13 @@ namespace SPP_LegionV2_Management
 					else
 						ServerConfigStatus = "⚠";
 
-					if (File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\config.wtf")
-						|| File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF\\config.wtf"))
+					var files = Directory.GetFiles(
+					GeneralSettingsManager.GeneralSettings.WOWConfigLocation,
+					"*.wtf",
+					SearchOption.AllDirectories);
+
+					// only need the first match
+					if (File.Exists(files[0]))
 						ClientConfigStatus = "✓";
 					else
 						ClientConfigStatus = "⚠";

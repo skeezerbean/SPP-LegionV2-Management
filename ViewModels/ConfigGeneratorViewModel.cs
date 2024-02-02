@@ -18,17 +18,20 @@ namespace SPP_LegionV2_Management
 	{
 		// IDialogCoordinator is for metro message boxes
 		private readonly IDialogCoordinator _dialogCoordinator;
+
 		private bool _exportRunning = false;
 
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
 		public BindableCollection<ConfigEntry> WorldCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
+
 		public BindableCollection<ConfigEntry> BnetCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
 
 		// stores the filesystem path to the files
 		public string WowConfigFile { get; set; } = string.Empty;
+
 		public string BnetConfFile { get; set; } = string.Empty;
 		public string WorldConfFile { get; set; } = string.Empty;
 
@@ -39,8 +42,11 @@ namespace SPP_LegionV2_Management
 		public string LogText { get; set; }
 
 		// For search/filtering
-		public ICollectionView WorldView { get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
-		public ICollectionView BnetView { get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
+		public ICollectionView WorldView
+		{ get { return CollectionViewSource.GetDefaultView(WorldCollection); } }
+
+		public ICollectionView BnetView
+		{ get { return CollectionViewSource.GetDefaultView(BnetCollection); } }
 		private string _SearchBox = "";
 
 		public string SearchBox
@@ -567,50 +573,50 @@ namespace SPP_LegionV2_Management
 		{
 			// Find our world/bnet configs
 			if (GeneralSettingsManager.GeneralSettings.SPPFolderLocation?.Length == 0)
+			{
 				Log("SPP Folder Location is empty, cannot find existing settings to parse.");
+			}
+			else if (File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\worldserver.conf")
+				|| File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\bnetserver.conf")
+				|| (Directory.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers")))
+			{
+				// Either we find the files themselves, or we found the Servers folder and we'll generate them here on saving
+				// since this is the best guess given our saved path info
+				WorldConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\worldserver.conf";
+				BnetConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\bnetserver.conf";
+			}
 			else
 			{
-				if (File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\worldserver.conf")
-					|| File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\bnetserver.conf"))
-				{
-					WorldConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\worldserver.conf";
-					BnetConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\bnetserver.conf";
-				}
-				else if (File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\worldserver.conf")
-					|| File.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\bnetserver.conf")
-					|| (Directory.Exists($"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers")))
-				{
-					// Either we find the files themselves, or we found the Servers folder and we'll generate them here on saving
-					// since this is the best guess given our saved path info
-					WorldConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\worldserver.conf";
-					BnetConfFile = $"{GeneralSettingsManager.GeneralSettings.SPPFolderLocation}\\Servers\\bnetserver.conf";
-				}
-				else
-				{
-					// In case folder location changed, may still need to update this
-					WorldConfFile = "";
-					BnetConfFile = "";
-					WorldCollection.Clear();
-					BnetCollection.Clear();
-				}
+				// In case folder location changed, may still need to update this
+				WorldConfFile = "";
+				BnetConfFile = "";
+				WorldCollection.Clear();
+				BnetCollection.Clear();
 			}
 
 			// Find our wow client config
 			if (GeneralSettingsManager.GeneralSettings.WOWConfigLocation?.Length == 0)
+			{
 				Log("WOW Client Folder Location is empty, cannot find existing settings to parse.");
+			}
 			else
 			{
-				if (File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\config.wtf"))
-					WowConfigFile = $"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\config.wtf";
-				else if (File.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF\\config.wtf")
-					|| (Directory.Exists($"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF")))
-					// Either we find the file, or we found the WTF folder and we'll assume this is it
-					// since this is the best guess given our saved path info. Won't be anything to parse, though
-					// if the file itself doesn't exist. Sad face...
-					WowConfigFile = $"{GeneralSettingsManager.GeneralSettings.WOWConfigLocation}\\WTF\\config.wtf";
+				var files = Directory.GetFiles(
+					GeneralSettingsManager.GeneralSettings.WOWConfigLocation,
+					"*.wtf",
+					SearchOption.AllDirectories);
+
+				// only need the first match
+				if (File.Exists(files[0]))
+				{
+					Log($"Using client config file: {files[0]}");
+					WowConfigFile = files[0];
+				}
 				else
+				{
 					// In case folder location was changed, this will catch
 					WowConfigFile = "";
+				}
 			}
 		}
 

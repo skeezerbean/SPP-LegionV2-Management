@@ -20,7 +20,7 @@
 				</Style>
 			</TabControl.Resources>
 			<TabItem Header="Accounts" Margin="1" Background="#353535">
-				<Grid >
+				<Grid>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
@@ -31,7 +31,7 @@
 					</Grid.RowDefinitions>
 
 					<!-- Buttons for left side -->
-					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" >
+					<WrapPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
 						<Button x:Name="RetrieveAccounts" Margin="5" MaxWidth="200"
 							local:EyeCandyForeGround.Image="/Resources/Buttons/ShowAccounts.png"
@@ -113,7 +113,7 @@
 								ToolTip="Password required when changing Bnet login, or can update a password if needed" />
 							<TextBox x:Name="CurrentUsername"  Width="125" HorizontalAlignment="Left" />
 							<TextBox x:Name="CurrentBattleCoins"  Width="125" HorizontalAlignment="Left"
-								ToolTip="Set this account's amount of Battle Coins"/>
+								ToolTip="Set this account's amount of Battle Coins" />
 							<TextBox x:Name="CurrentGMLevel"  Width="125" HorizontalAlignment="Left"
 								ToolTip="GM Level set to -1 or 0 to disable, or between 1 and 6 normally" />
 							<CheckBox x:Name="CurrentRareBattlePets" Margin="2" HorizontalAlignment="Left"
@@ -217,7 +217,7 @@
 							<ComboBox x:Name="Artifacts" Width="189" Margin="2" Height="4"
 								ItemsSource="{Binding Artifacts}" SelectedItem="{Binding SelectedArtifact}"
 								DisplayMemberPath="ItemGUID"
-								ToolTip="Select an artifact for the selected character"/>
+								ToolTip="Select an artifact for the selected character" />
 							<TextBox x:Name="CurrentArtifactPower" Width="125" HorizontalAlignment="Left">
 								<TextBox.ToolTip>
 									<TextBlock>

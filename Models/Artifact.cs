@@ -1,5 +1,4 @@
-﻿
-namespace SPP_LegionV2_Management
+﻿namespace SPP_LegionV2_Management
 {
 	public class Artifact
 	{

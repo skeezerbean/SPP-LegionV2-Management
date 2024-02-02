@@ -9,8 +9,10 @@ namespace SPP_LegionV2_Management
 		// IDialogCoordinator is for metro message boxes
 		private readonly IDialogCoordinator _dialogCoordinator;
 
-		public string SPPFolderLocation { get { return GeneralSettingsManager.GeneralSettings.SPPFolderLocation; } set { GeneralSettingsManager.GeneralSettings.SPPFolderLocation = value; } }
-		public string WOWConfigLocation { get { return GeneralSettingsManager.GeneralSettings.WOWConfigLocation; } set { GeneralSettingsManager.GeneralSettings.WOWConfigLocation = value; } }
+		public string SPPFolderLocation
+		{ get { return GeneralSettingsManager.GeneralSettings.SPPFolderLocation; } set { GeneralSettingsManager.GeneralSettings.SPPFolderLocation = value; } }
+		public string WOWConfigLocation
+		{ get { return GeneralSettingsManager.GeneralSettings.WOWConfigLocation; } set { GeneralSettingsManager.GeneralSettings.WOWConfigLocation = value; } }
 
 		// IDialogCoordinator is part of Metro, for dialog handling in the view model
 		public SettingsViewModel(IDialogCoordinator instance)
