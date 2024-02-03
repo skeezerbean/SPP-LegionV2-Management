@@ -18,8 +18,6 @@ Also special thanks for m1#2698 for splash/logo and other app images!
 
 This application requires .net framework 4.8. 
 
-(screenshots for setup and usage at the bottom) - Make sure the **SPP Database** engine is running.
-
 ### Updating
 
 To update your current app to the latest, you just download the latest release and extract. Overwrite your existing app. The release doesn't contain a settings file, so it won't overwrite your existing settings or your backups.
@@ -31,13 +29,13 @@ This tool helps build working World and Bnet server config files without duplica
 The MySQL server will probably error connecting unless you're running this on the same server. You should **keep the MySQL server set to 127.0.0.1** and user/password should be left to defaults in the config file. Delete the settings.json file to reset them.
 
 
-This tool can also update the **config.wtf** file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server. These addresses can be changed by using the **[Set IP]** button, and it can update the entries automatically. If you have your wow client on a machine other than the server, you can copy a 'fake' wow config.wtf to the server and set the location in the tool to bypass any errors for it. Just make sure you update your wow config manually if the portal address needs changed. When use the **[Set IP]** button, it sets the hosting IP in the bnet config and database realm entry, as well as the WOW client config.wtf file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
+This tool can also update the config file in your WOW client configuration to make sure it matches with the rest of the configuration, assuming that this tool can access the folder/file. If you run your WOW Client from another PC, then you may need to set this manually to match the **[LoginREST.ExternalAddress]** from the **bnetserver.conf**, otherwise you may have trouble with your WOW client contacting the server. These addresses can be changed by using the **[Set IP]** button, and it can update the entries automatically. If you have your wow client on a machine other than the server, you can copy a 'fake' wow config.wtf to the server and set the location in the tool to bypass any errors for it, or browse via UNC path as long as the tool has rights to access across the network. Just make sure you update your wow config manually if the portal address needs changed if it doesn't point to your actual config. When using the **[Set IP]** button, it sets the hosting IP in the bnet config and database realm entry, as well as the WOW client config file to keep them the same. This is the IP you'd set for hosting the WoW server on the local LAN, or internet, depending on your setup and helps to keep those settings synced
 
 
 If there is a problem, you can use the **[Set Defaults]** button to pull the wow config fresh from the local template files. **This will overwrite all previous settings** for the Bnet and World config files. 
 
 
-If you see an error similar to **[not allowed to connect to this MySQL server]** then you're probably running this on a different computer or the database isn't running. Run it from the SPP server (while the database server is running).
+If you see an error similar to **[not allowed to connect to this MySQL server]** then you're probably running this on a different computer or the database isn't running. Run it from the SPP server.
 
 
 To begin - **Make sure** the SPP Database is running
@@ -58,7 +56,7 @@ When browsing for the SPP folder, it will be the one that has these items where 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/SPP-server-folder.PNG)
 
 
-Browsing for the Wow Config Location will be your WoW Legion **Client** folder, which will look more or less like this. Please note that you need to run the client at least once to generate the config file so that the app can find it. No need to login, just run the client and then exit
+Browsing for the Wow Config Location will be your WoW Legion **Client** folder, which will look more or less like this. Go to the WTF folder and choose the config file. Please note that you need to run the client at least once to generate the config file so that the app can find it. No need to login, just run the client and then exit
 
 ![](https://github.com/skeezerbean/SPP-LegionV2-Management/blob/main/Resources/wow-client-folder.PNG)
 
