@@ -20,6 +20,7 @@ namespace SPP_LegionV2_Management
 		private readonly IDialogCoordinator _dialogCoordinator;
 
 		private bool _exportRunning = false;
+		private bool announcedClientConfig = false;
 
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
@@ -110,15 +111,12 @@ namespace SPP_LegionV2_Management
 		// then return back the updated collection
 		public BindableCollection<ConfigEntry> UpdateConfigCollection(BindableCollection<ConfigEntry> collection, string entry, string value)
 		{
-			foreach (var item in collection)
+			foreach (var item in collection.Where(item => string.Equals(item.Name, entry, StringComparison.OrdinalIgnoreCase)))
 			{
-				if (string.Equals(item.Name, entry, StringComparison.OrdinalIgnoreCase))
-				{
-					// Update the value, then stop processing in case there's a duplicate.
-					// We'll update the first, it's most likely the original/valid one
-					item.Value = value;
-					break;
-				}
+				// Update the value, then stop processing in case there's a duplicate.
+				// We'll update the first, it's most likely the original/valid one
+				item.Value = value;
+				break;
 			}
 
 			return collection;
@@ -240,10 +238,9 @@ namespace SPP_LegionV2_Management
 			// isn't empty. May no longer need to return a normalized string if the
 			// parsing was correct when reading from file. May remove later...
 			if (collection != null)
-				foreach (var item in collection)
-					if (string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase))
-						result = item.Value;
-
+				foreach (var item in collection.Where(item => string.Equals(NormalizeString(item.Name), NormalizeString(searchValue), StringComparison.OrdinalIgnoreCase)))
+					result = item.Value;
+				
 			return NormalizeString(result);
 		}
 
@@ -296,12 +293,8 @@ namespace SPP_LegionV2_Management
 		public string CheckCommentsInValueField(BindableCollection<ConfigEntry> collection)
 		{
 			string result = string.Empty;
-
-			foreach (var item in collection)
-			{
-				if (item.Value.Contains("#"))
-					result += $"\n⚠Warning - Entry [{item.Name}] has a \"#\" character in the value field. Best practices are to keep comments in their own line, separate from values.\n";
-			}
+			foreach (var item in collection.Where(item => item.Value.Contains("#")))
+				result += $"\n⚠Warning - Entry [{item.Name}] has a \"#\" character in the value field. Best practices are to keep comments in their own line, separate from values.\n";
 
 			return result;
 		}
@@ -431,12 +424,8 @@ namespace SPP_LegionV2_Management
 						{
 							foundEntry = true;
 							Log($"WoW Client config.wtf previous 'SET portal' entry is [{item}]");
-
-							foreach (var entry in BnetCollection)
-							{
-								if (entry.Name.Contains("LoginREST.ExternalAddress"))
-									tmpstr += $"SET portal \"{entry.Value}\"\n";
-							}
+							foreach (var entry in BnetCollection.Where(entry => entry.Name.Contains("LoginREST.ExternalAddress")))
+								tmpstr += $"SET portal \"{entry.Value}\"\n";
 						}
 						else
 							// otherwise pass it along, dump blank lines
@@ -601,22 +590,35 @@ namespace SPP_LegionV2_Management
 			}
 			else
 			{
-				var files = Directory.GetFiles(
-					GeneralSettingsManager.GeneralSettings.WOWConfigLocation,
-					"*.wtf",
-					SearchOption.AllDirectories);
+				WowConfigFile = "";
 
-				// only need the first match
-				if (File.Exists(files[0]))
+				// See if our saved location ends with .wtf for direct file
+				if (GeneralSettingsManager.GeneralSettings.WOWConfigLocation.EndsWith(".wtf"))
 				{
-					Log($"Using client config file: {files[0]}");
-					WowConfigFile = files[0];
+					if (File.Exists(GeneralSettingsManager.GeneralSettings.WOWConfigLocation))
+						WowConfigFile = GeneralSettingsManager.GeneralSettings.WOWConfigLocation;
 				}
-				else
+				else // pull files from the path if we're able
 				{
-					// In case folder location was changed, this will catch
-					WowConfigFile = "";
+					try
+					{
+						string[] files = Directory.GetFiles(GeneralSettingsManager.GeneralSettings.WOWConfigLocation, "*.wtf");
+						if (files.Any())
+							WowConfigFile = files[0];
+						else
+						{
+							files = Directory.GetFiles(GeneralSettingsManager.GeneralSettings.WOWConfigLocation + "\\WTF", "*.wtf");
+							if (files.Any())
+								WowConfigFile = files[0];
+						}
+					}
+					catch { }
 				}
+			}
+			if (WowConfigFile.EndsWith(".wtf") && !announcedClientConfig)
+			{
+				Log($"Using Client config: {WowConfigFile}");
+				announcedClientConfig = true;
 			}
 		}
 
@@ -721,9 +723,8 @@ namespace SPP_LegionV2_Management
 				}
 
 				// Check existing world entries, see if anything exists that isn't in the template.
-				foreach (var item in WorldCollection)
-					if (CheckCollectionForMatch(WorldCollectionTemplate, item.Name) == false)
-						result += $"⚠ Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
+				foreach (var item in WorldCollection.Where(item => !CheckCollectionForMatch(WorldCollectionTemplate, item.Name)))
+					result += $"⚠ Warning - [{item.Name}] exists in current World settings, but not in template. Please verify whether this entry is needed any longer.\n\n";
 
 				// Compare build# between bnet/world/realm
 				if (buildFromBnet != buildFromDB || buildFromBnet != buildFromWorld)
@@ -747,7 +748,7 @@ namespace SPP_LegionV2_Management
 					result += $"✓ - BindIP settings match [{worldBindIP}] and are set properly.\n\n";
 
 				// Gather WoW portal IP from config.wtf
-				if (File.Exists(WowConfigFile) == false)
+				if (!File.Exists(WowConfigFile))
 				{
 					Log("WOW Config File cannot be found - cannot parse SET portal entry");
 					result += "⚠ Alert - WOW Config file not found, cannot check [SET portal] entry to compare\n\n";
@@ -762,24 +763,20 @@ namespace SPP_LegionV2_Management
 						Log($"⚠ Warning - WoW Client config file [{WowConfigFile}] may be empty.");
 
 						// Alert the user to run Wow client at least once to populate the config
-						//_dialogCoordinator.ShowMessageAsync(this, "Client Config Issue", "The WOW Client Config is empty or near-empty, run the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly");
 						result += "⚠ Warning - The WOW Client Config is empty or near-empty, run the client at least once and then exit. This will populate the config with defaults, then this tool can update it properly\n\n";
 					}
 
-					foreach (var item in allLinesText)
+					// If it's the portal entry, process further
+					// split by " and 2nd item will be IP
+					foreach (var item in allLinesText.Where(item => item.Contains("SET portal")))
 					{
-						// If it's the portal entry, process further
-						// split by " and 2nd item will be IP
-						if (item.Contains("SET portal"))
-						{
-							string[] phrase = item.Split('"');
-							wowConfigPortal = phrase[1];
-						}
+						string[] phrase = item.Split('"');
+						wowConfigPortal = phrase[1];
 					}
 				}
 
 				// List our external/hosting IP settings
-				if ((loginRESTExternalAddress != addressFromDB) || ((loginRESTExternalAddress != wowConfigPortal) && (File.Exists(WowConfigFile) == true)))
+				if ((loginRESTExternalAddress != addressFromDB) || ((loginRESTExternalAddress != wowConfigPortal) && (File.Exists(WowConfigFile))))
 				{
 					result += $"LoginREST.ExternalAddress - {loginRESTExternalAddress}\n";
 					result += $"Address from DB Realm - {addressFromDB}\n";
@@ -788,7 +785,7 @@ namespace SPP_LegionV2_Management
 				}
 				else if ((loginRESTExternalAddress == addressFromDB) && (File.Exists(WowConfigFile) == false))
 					result += $"⚠ Warning - IP settings for DB and Bnet config match [{addressFromDB}], but client config could not be verified, may be missing\n\n";
-				else if (File.Exists(WowConfigFile) == false)
+				else if (!File.Exists(WowConfigFile))
 					result += $"⚠ Warning - IP settings for client config cannot be verified\n\n";
 				else
 					result += $"✓ - IP settings for hosting all match [{addressFromDB}]\n\n";
@@ -852,7 +849,7 @@ namespace SPP_LegionV2_Management
 				// Warn about grid related settings
 				if (baseMapLoadAllGrids || instanceMapLoadAllGrids)
 					result += "⚠ Warning - BaseMapLoadAllGrids and InstanceMapLoadAllGrids should be set to 0. If the worldserver crashes on loading maps or runs out of memory, this may be why.\n\n";
-				
+
 				// Notify if Disallow.Multiple.Client is enabled
 				if (disallowMultipleClients)
 				{

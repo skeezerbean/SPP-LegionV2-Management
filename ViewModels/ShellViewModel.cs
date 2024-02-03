@@ -1,6 +1,7 @@
 ﻿using MahApps.Metro.Controls.Dialogs;
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -57,16 +58,30 @@ namespace SPP_LegionV2_Management
 					else
 						ServerConfigStatus = "⚠";
 
-					var files = Directory.GetFiles(
-					GeneralSettingsManager.GeneralSettings.WOWConfigLocation,
-					"*.wtf",
-					SearchOption.AllDirectories);
-
-					// only need the first match
-					if (File.Exists(files[0]))
-						ClientConfigStatus = "✓";
+					if (GeneralSettingsManager.GeneralSettings.WOWConfigLocation.EndsWith(".wtf"))
+					{
+						if (File.Exists(GeneralSettingsManager.GeneralSettings.WOWConfigLocation))
+							ClientConfigStatus = "✓";
+					}
 					else
-						ClientConfigStatus = "⚠";
+					{
+						try
+						{
+							// only need the first match
+							string[] files = Directory.GetFiles(GeneralSettingsManager.GeneralSettings.WOWConfigLocation, "*.wtf");
+							if (files.Any() && File.Exists(files[0]))
+									ClientConfigStatus = "✓";
+								else
+								{
+									files = Directory.GetFiles(GeneralSettingsManager.GeneralSettings.WOWConfigLocation + "\\WTF", "*.wtf");
+									if (files.Any() && File.Exists(files[0]))
+										ClientConfigStatus = "✓";
+									else
+										ClientConfigStatus = "⚠";
+								}
+						}
+						catch { ClientConfigStatus = "⚠"; }
+					}
 
 					if (await CheckSQLStatus())
 					{

@@ -1,5 +1,6 @@
 ﻿using Caliburn.Micro;
 using MahApps.Metro.Controls.Dialogs;
+using Microsoft.Win32;
 using Ookii.Dialogs.Wpf;
 
 namespace SPP_LegionV2_Management
@@ -47,18 +48,14 @@ namespace SPP_LegionV2_Management
 		// Method to browse to a folder
 		public string BrowseFolder()
 		{
-			const string baseFolder = @"C:\";
 			string result = string.Empty;
-			try
-			{
-				VistaFolderBrowserDialog dialog = new VistaFolderBrowserDialog();
-				dialog.Description = "Please select a folder.";
-				dialog.UseDescriptionForTitle = true; // This applies to the Vista style dialog only, not the old dialog.
-				dialog.SelectedPath = baseFolder; // place to start search
-				if ((bool)dialog.ShowDialog())
-					result = dialog.SelectedPath;
-			}
-			catch { return string.Empty; }
+
+			OpenFileDialog openFileDialog = new OpenFileDialog();
+			openFileDialog.Filter = "wtf files (*.wtf)|*.wtf";
+			openFileDialog.InitialDirectory = @"C:\";
+			openFileDialog.Title = "Please select a WoW client config file.";
+			if (openFileDialog.ShowDialog() == true)
+				result = openFileDialog.FileName;
 
 			return result;
 		}

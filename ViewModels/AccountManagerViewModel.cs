@@ -56,9 +56,9 @@ namespace SPP_LegionV2_Management
 		public string AccountStatus
 		{ get { return (CharacterStatus == null) ? string.Empty : CharacterStatus; } set { CharacterStatus = value; } }
 		public bool CurrentRareBattlePets
-		{ get { return (SelectedAccount == null) ? false : SelectedAccount.RareBattlePets; } set { SelectedAccount.RareBattlePets = value; } }
+		{ get { return (SelectedAccount != null) && SelectedAccount.RareBattlePets; } set { SelectedAccount.RareBattlePets = value; } }
 		public bool CurrentXPBattlePets
-		{ get { return (SelectedAccount == null) ? false : SelectedAccount.XPBattlePets; } set { SelectedAccount.XPBattlePets = value; } }
+		{ get { return SelectedAccount != null && SelectedAccount.XPBattlePets; } set { SelectedAccount.XPBattlePets = value; } }
 
 		// Characters
 		public BindableCollection<Artifact> Artifacts
@@ -304,7 +304,6 @@ namespace SPP_LegionV2_Management
 			// this lets us used the existing more-secure method than simply taking text input
 			await _dialogCoordinator.ShowMessageAsync(this, "Account added", "Note - once the account list refreshes, you will need to set a password for this account before it can be used.");
 			await RetrieveAccounts();
-			return;
 		}
 
 		// Called from button, pass to actual character deletion
@@ -536,8 +535,6 @@ namespace SPP_LegionV2_Management
 
 			CharacterStatus = "Finished";
 			_gettingObjects = false;
-
-			return;
 		}
 
 		// Check the DB against our list, see if any orphaned objects exist. If so, remove
