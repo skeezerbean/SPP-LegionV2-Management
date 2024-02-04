@@ -25,7 +25,7 @@ namespace SPP_LegionV2_Management
 		public void SPPFolderBrowse()
 		{
 			// If it's empty, then it was cancelled and we keep the old setting
-			string tmp = BrowseFolder();
+			string tmp = BrowseFolder(true);
 			if (tmp != string.Empty)
 			{
 				SPPFolderLocation = tmp;
@@ -46,16 +46,33 @@ namespace SPP_LegionV2_Management
 		}
 
 		// Method to browse to a folder
-		public string BrowseFolder()
+		public string BrowseFolder(bool folderOnly = false)
 		{
 			string result = string.Empty;
 
-			OpenFileDialog openFileDialog = new OpenFileDialog();
-			openFileDialog.Filter = "wtf files (*.wtf)|*.wtf";
-			openFileDialog.InitialDirectory = @"C:\";
-			openFileDialog.Title = "Please select a WoW client config file.";
-			if (openFileDialog.ShowDialog() == true)
-				result = openFileDialog.FileName;
+			if (folderOnly)
+			{
+				const string baseFolder = @"C:\";
+				try
+				{
+					VistaFolderBrowserDialog dialog = new VistaFolderBrowserDialog();
+					dialog.Description = "Please select a folder.";
+					dialog.UseDescriptionForTitle = true; // This applies to the Vista style dialog only, not the old dialog.
+					dialog.SelectedPath = baseFolder; // place to start search
+					if ((bool)dialog.ShowDialog())
+						result = dialog.SelectedPath;
+				}
+				catch { return string.Empty; }
+			}
+			else
+			{
+				OpenFileDialog openFileDialog = new OpenFileDialog();
+				openFileDialog.Filter = "wtf files (*.wtf)|*.wtf";
+				openFileDialog.InitialDirectory = @"C:\";
+				openFileDialog.Title = "Please select a WoW client config file.";
+				if (openFileDialog.ShowDialog() == true)
+					result = openFileDialog.FileName;
+			}
 
 			return result;
 		}
