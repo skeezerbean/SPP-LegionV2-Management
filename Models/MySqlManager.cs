@@ -1,5 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
+using System.Web.UI.WebControls;
 
 namespace SPP_LegionV2_Management
 {
@@ -58,28 +59,28 @@ namespace SPP_LegionV2_Management
 
 			try
 			{
-				using (MySqlConnection connection = new MySqlConnection(connectionString))
-				{
-					connection.Open();
+				// create a MySQL command and set the SQL statement with parameters
+				MySqlConnection connection = new MySqlConnection(connectionString);
+				connection.Open();
+				MySqlCommand myCommand = new MySqlCommand();
+				myCommand.Connection = connection;
+				myCommand.CommandText = query;
 
-					using (var cmd = connection.CreateCommand())
+				// exe(cute the command and read the results
+				if (update)
+				{
+					response = $"{myCommand.ExecuteNonQuery().ToString()} rows affected";
+				}
+				else
+				{
+					using (var reader = myCommand.ExecuteReader())
 					{
-						cmd.CommandText = query;
-						if (update)
-							response = $"{cmd.ExecuteNonQuery()} rows affected.";
-						else
-						{
-							using (var reader = cmd.ExecuteReader())
-							{
-								while (reader.Read()) { }
-								if (!reader.IsDBNull(0))
-									response = reader.GetString(0);
-								else
-									response = string.Empty;
-							}
-						}
+						while (reader.Read()) { }
+						if (!reader.IsDBNull(0))
+							response = reader.GetValue(0).ToString();
 					}
 				}
+				connection.Close();
 			}
 			catch (Exception e)
 			{

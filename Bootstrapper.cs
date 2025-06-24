@@ -24,7 +24,7 @@ namespace SPP_LegionV2_Management
 			while (ss.Opacity > 0) { await Task.Delay(1); }
 
 			// Pop up our main view, and close splash screen
-			DisplayRootViewFor<ShellViewModel>();
+			DisplayRootViewForAsync<ShellViewModel>();
 			ss.Close();
 		}
 	}

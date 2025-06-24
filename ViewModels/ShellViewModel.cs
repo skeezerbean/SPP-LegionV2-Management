@@ -115,17 +115,17 @@ namespace SPP_LegionV2_Management
 
 		public void LoadPageConfigGenerator()
 		{
-			ActivateItem(ConfigGeneratorVM);
+			ActivateItemAsync(ConfigGeneratorVM);
 		}
 
 		public void LoadPageAccountManager()
 		{
-			ActivateItem(AccountManagerVM);
+			ActivateItemAsync(AccountManagerVM);
 		}
 
 		public void LoadPageSettings()
 		{
-			ActivateItem(SettingsVM);
+			ActivateItemAsync(SettingsVM);
 		}
 	}
 }

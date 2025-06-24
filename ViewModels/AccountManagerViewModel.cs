@@ -1,8 +1,10 @@
 ﻿using Caliburn.Micro;
 using MahApps.Metro.Controls.Dialogs;
 using MySql.Data.MySqlClient;
+using Renci.SshNet.Messages;
 using System;
 using System.Security;
+using System.Security.Principal;
 using System.Threading.Tasks;
 
 namespace SPP_LegionV2_Management
@@ -276,33 +278,46 @@ namespace SPP_LegionV2_Management
 
 			string result = string.Empty;
 			string loginName = string.Empty;
+			string passHash = string.Empty;
 
 			while (result != "-1")
 			{
-				// This should run through the process of adding an account with the login name,
-				// to uppercase, the rest happens at account list screen to manage password/GM level
-				string tmp = await _dialogCoordinator.ShowInputAsync(this, "Create Account", "Enter the login name for the account");
-
-				// Hit cancel/escape
-				if (tmp == null || tmp.Length == 0)
+				// This should run through the process of adding an account 
+				LoginDialogData resultLogin = await _dialogCoordinator.ShowLoginAsync(this, "New Account", "Enter your login info");
+				if (resultLogin == null)
 					return;
-
+				
+				if (resultLogin.Username == null ||
+					resultLogin.SecurePassword == null ||
+					resultLogin.Username.Length < 1 ||
+					resultLogin.Password.Length < 1)
+				{
+					await _dialogCoordinator.ShowMessageAsync(this, "Alert", $"⚠ Login or password was empty. Please try again.");
+					continue;
+				}
+				
 				// Move account name to uppercase
-				loginName = tmp.ToUpper();
+				loginName = resultLogin.Username.ToString().ToUpper();
 
 				result = MySqlManager.MySQLQueryToString($"SELECT IFNULL((SELECT `email` FROM `legion_auth`.`battlenet_accounts` WHERE `email` = '{loginName}'), \"-1\")");
 				if (result != "-1")
+				{
 					await _dialogCoordinator.ShowMessageAsync(this, "Alert", $"⚠ BattleNet Login \"{loginName}\" already exists. Please try again.");
+					continue;
+				}
+
+				passHash = Extensions.SecureStringExtensions.sha256_hash(Extensions.SecureStringExtensions.sha256_hash(loginName).ToUpper()
+							+ ":" + Extensions.SecureStringExtensions.ToUnsecuredString(resultLogin.SecurePassword).ToUpper(), true).ToUpper();
 			}
 
 			// Create the DB entries, battle_net first, then we can pull the ID it creates and add to account table after
-			MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`battlenet_accounts` (`email`) VALUES ('{loginName}')", true);
+			MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`battlenet_accounts` (`email`,`sha_pass_hash`) VALUES ('{loginName}','{passHash}')", true);
 			int battlenetID = Int32.Parse(MySqlManager.MySQLQueryToString($"SELECT `id` FROM `legion_auth`.`battlenet_accounts` WHERE `email`='{loginName}'"));
 			MySqlManager.MySQLQueryToString($"INSERT INTO `legion_auth`.`account` (`username`,`email`,`battlenet_account`) VALUES ('{loginName}','{loginName}','{battlenetID}')", true);
 
 			// Pop up to let user know to create a password on the account page once the list is refreshed.
 			// this lets us used the existing more-secure method than simply taking text input
-			await _dialogCoordinator.ShowMessageAsync(this, "Account added", "Note - once the account list refreshes, you will need to set a password for this account before it can be used.");
+			//await _dialogCoordinator.ShowMessageAsync(this, "Account added", "Note - once the account list refreshes, you will need to set a password for this account before it can be used.");
 			await RetrieveAccounts();
 		}
 
