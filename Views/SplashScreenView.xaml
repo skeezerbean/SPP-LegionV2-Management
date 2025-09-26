@@ -18,7 +18,7 @@
 		</EventTrigger>
 	</Window.Triggers>
 	<Window.Background>
-		<ImageBrush ImageSource="/Resources/SPP-Config-Splash.png"></ImageBrush>
+		<ImageBrush ImageSource="/Resources/SPP-Config-Splash.png" Stretch="None"></ImageBrush>
 	</Window.Background>
 	<Grid Background="{x:Null}" Opacity="0">
 	</Grid>

@@ -7,7 +7,7 @@ namespace SPP_LegionV2_Management
 	/// </summary>
 	public partial class SplashScreenView : Window
 	{
-		// Graphics for splash screen designed by m1#2698 and are pretty awesome!
+		// Graphics for splash screen
 		public SplashScreenView()
 		{
 			InitializeComponent();
