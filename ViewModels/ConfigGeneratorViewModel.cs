@@ -25,14 +25,12 @@ namespace SPP_LegionV2_Management
 		// These are the collections we'll be using, pulled from the Default Templates folder,
 		// or from the existing WoW installation if the folder is defined
 		public BindableCollection<ConfigEntry> WorldCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
-
 		public BindableCollection<ConfigEntry> BnetCollectionTemplate { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> WorldCollection { get; set; } = new BindableCollection<ConfigEntry>();
 		public BindableCollection<ConfigEntry> BnetCollection { get; set; } = new BindableCollection<ConfigEntry>();
 
 		// stores the filesystem path to the files
 		public string WowConfigFile { get; set; } = string.Empty;
-
 		public string BnetConfFile { get; set; } = string.Empty;
 		public string WorldConfFile { get; set; } = string.Empty;
 
@@ -396,7 +394,7 @@ namespace SPP_LegionV2_Management
 				else
 					build = Task.Run(async () => await BuildConfFile(WorldCollection, WorldConfFile));
 			}
-			while (!build.IsCompleted) { await Task.Delay(1); }
+			while (build != null && !build.IsCompleted) { await Task.Delay(1); }
 			_exportRunning = false;
 		}
 
