@@ -72,12 +72,16 @@ namespace SPP_LegionV2_Management
 			{
 				// write commands to the file to wait for close, extract, move to current folder, restart this app
 				writer.WriteLine("@echo off");
+				writer.WriteLine("echo Updating app...");
 				writer.WriteLine("powershell Start-Sleep 2");
-				writer.WriteLine($"powershell.exe -Command \"Move-Item -Path '.\\{extractedFolderName}\\*' -Destination. -ErrorAction SilentlyContinue -Force");
-				writer.WriteLine("cmd /c start SPP-LegionV2-Management.exe");
+				writer.WriteLine($"del \"{path}\\Default Templates\\bnetserver.conf\"");
+				writer.WriteLine($"del \"{path}\\Default Templates\\worldserver.conf\"");
+				writer.WriteLine($"powershell.exe -Command \"Move-Item -Path '{path}\\{extractedFolderName}\\*' -Destination '{path}' -ErrorAction SilentlyContinue -Force");
+				writer.WriteLine($"powershell.exe -Command \"Move-Item -Path '{path}\\{extractedFolderName}\\Default Templates\\*' -Destination '{path}\\Default Templates' -ErrorAction SilentlyContinue -Force");
+				writer.WriteLine($"cmd /c start \"\" \"{path}\\SPP-LegionV2-Management.exe\"");
 				writer.WriteLine($"rmdir /q /s \"{extractedFolderName}\"");
-				writer.WriteLine($"del temp.zip");
-				writer.WriteLine($"del DoUpdate.bat");
+				writer.WriteLine("del temp.zip");
+				writer.WriteLine("del DoUpdate.bat");
 			}
 
 			Process ps = new Process();
